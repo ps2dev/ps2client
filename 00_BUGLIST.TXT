@@ -1,0 +1,4 @@
+
+ - ps2link.c: execiop doesn't seem to work
+ - No support yet for arguments to execee/execiop.
+
