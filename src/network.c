@@ -1,12 +1,17 @@
 
  #include <stdio.h>
- #include <stdlib.h>
  #include <string.h>
+#ifdef _WIN32
+ #include <windows.h>
+ #include <winsock2.h>
+#else
+ #include <stdlib.h>
  #include <netdb.h>
  #include <unistd.h>
  #include <sys/time.h>
  #include <sys/socket.h>
  #include <netinet/in.h>
+#endif
  #include "network.h"
 
  int sock[10] = { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
@@ -16,6 +21,16 @@
  ///////////////////////
  // NETWORK FUNCTIONS //
  ///////////////////////
+
+#ifdef _WIN32
+ int network_startup() {
+  WSADATA wsaData;
+  
+  if (WSAStartup(MAKEWORD(2, 0), &wsaData) != 0) { printf("[ERROR] Unable to startup winsock\n"); return -1; }
+  
+  return 0;
+ }
+#endif
 
  int network_connect(char *hostname, int port, int type) { int result = 0;
   struct sockaddr_in sockaddr; int loop0, nd = -1;
@@ -212,7 +227,11 @@
  int network_disconnect(int nd) { int result = 0;
 
   // Close the socket.
+#ifdef _WIN32
+  result = closesocket(sock[nd]);
+#else
   result = close(sock[nd]);
+#endif
   if (result < 0) { printf("[ERROR] Close socket failed. (%d)\n", result); return -1; }
 
   // Clear the descriptor.

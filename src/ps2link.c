@@ -4,12 +4,22 @@
  #include <fcntl.h>
  #include <stdlib.h>
  #include <string.h>
- #include <unistd.h>
  #include <dirent.h>
  #include <sys/stat.h>
+#ifdef _WIN32
+ #include <windows.h>
+ #include <winsock2.h>
+#else
+ #include <unistd.h>
+ #include <sys/stat.h>
  #include <netinet/in.h>
+#endif
  #include "network.h"
  #include "ps2link.h"
+
+#ifdef _WIN32
+#define usleep(x) Sleep(x/1000)
+#endif
 
  char buffer[65536];
 
@@ -88,7 +98,11 @@
   // Fix the flags.
   if (flags & 0x0001) { result |= O_RDONLY;   }
   if (flags & 0x0002) { result |= O_WRONLY;   }
+#ifndef _WIN32
   if (flags & 0x0010) { result |= O_NONBLOCK; }
+#else
+  if (flags & 0x0010) { printf("[ERROR] NONBLOCK is not supported under win32\n"); return -3; }
+#endif
   if (flags & 0x0100) { result |= O_APPEND;   }
   if (flags & 0x0200) { result |= O_CREAT;    }
   if (flags & 0x0400) { result |= O_TRUNC;    }
@@ -337,7 +351,11 @@
   int fd, size;
 
   // Get the file size.
+#ifdef _WIN32
+  fd = open(pathname, O_RDONLY | O_BINARY); size = lseek(fd, 0, SEEK_END); close(fd);
+#else
   fd = open(pathname, O_RDONLY); size = lseek(fd, 0, SEEK_END); close(fd);
+#endif
 
   // Build the gsexec command.
   command.number = htonl(0xBABE020B);
@@ -425,7 +443,11 @@
   // Build the open response.
   response.number = htonl(0xBABE0112);
   response.length = htons(sizeof(response));
+#ifdef _WIN32
+  response.result = htonl(open(request.pathname, ps2link_fixflags(ntohl(request.flags)) | O_BINARY, 0644));
+#else
   response.result = htonl(open(request.pathname, ps2link_fixflags(ntohl(request.flags)), 0644));
+#endif
 
   // Send the open response.
   result = ps2link_send_response(&response, sizeof(response));
@@ -603,7 +625,7 @@
  int ps2link_request_dread(void) { int result = 0;
   struct { int dd; } __attribute__((packed)) request;
   struct { int number; short length; int result, mode, attr, size; char ctime[8], atime[8], mtime[8]; int hisize; char name[256]; } __attribute__((packed)) response;
-  struct dirent *direptr; struct stat stats; struct tm loctime;
+  struct dirent *direptr; struct stat stats; struct tm * loctime;
 
   // Read the dread request arguments.
   result = ps2link_recv_request(&request, sizeof(request));
@@ -623,7 +645,9 @@
    // Convert and add the mode.
    response.mode = (stats.st_mode & 0x07);
    if (S_ISDIR(stats.st_mode)) { response.mode |= 0x20; }
+#ifndef _WIN32
    if (S_ISLNK(stats.st_mode)) { response.mode |= 0x08; }
+#endif
    if (S_ISREG(stats.st_mode)) { response.mode |= 0x10; }
    response.mode = htonl(response.mode);
 
@@ -634,33 +658,33 @@
    response.size = htonl(stats.st_size);
 
    // Convert and add the creation time.
-   if (localtime_r(&(stats.st_ctime), &loctime)) {
-     response.ctime[6] = (char)loctime.tm_year;
-     response.ctime[5] = (char)loctime.tm_mon + 1;
-     response.ctime[4] = (char)loctime.tm_mday;
-     response.ctime[3] = (char)loctime.tm_hour;
-     response.ctime[2] = (char)loctime.tm_min;
-     response.ctime[1] = (char)loctime.tm_sec;
+   if ((loctime = localtime(&(stats.st_ctime)))) {
+     response.ctime[6] = (char)loctime->tm_year;
+     response.ctime[5] = (char)loctime->tm_mon + 1;
+     response.ctime[4] = (char)loctime->tm_mday;
+     response.ctime[3] = (char)loctime->tm_hour;
+     response.ctime[2] = (char)loctime->tm_min;
+     response.ctime[1] = (char)loctime->tm_sec;
    }
 
    // Convert and add the access time.
-   if (localtime_r(&(stats.st_atime), &loctime)) {
-     response.atime[6] = (char)loctime.tm_year;
-     response.atime[5] = (char)loctime.tm_mon + 1;
-     response.atime[4] = (char)loctime.tm_mday;
-     response.atime[3] = (char)loctime.tm_hour;
-     response.atime[2] = (char)loctime.tm_min;
-     response.atime[1] = (char)loctime.tm_sec;
+   if ((loctime = localtime(&(stats.st_atime)))) {
+     response.atime[6] = (char)loctime->tm_year;
+     response.atime[5] = (char)loctime->tm_mon + 1;
+     response.atime[4] = (char)loctime->tm_mday;
+     response.atime[3] = (char)loctime->tm_hour;
+     response.atime[2] = (char)loctime->tm_min;
+     response.atime[1] = (char)loctime->tm_sec;
    }
 
    // Convert and add the modification time.
-   if (localtime_r(&(stats.st_mtime), &loctime)) {
-     response.mtime[6] = (char)loctime.tm_year;
-     response.mtime[5] = (char)loctime.tm_mon + 1;
-     response.mtime[4] = (char)loctime.tm_mday;
-     response.mtime[3] = (char)loctime.tm_hour;
-     response.mtime[2] = (char)loctime.tm_min;
-     response.mtime[1] = (char)loctime.tm_sec;
+   if ((loctime = localtime(&(stats.st_mtime)))) {
+     response.mtime[6] = (char)loctime->tm_year;
+     response.mtime[5] = (char)loctime->tm_mon + 1;
+     response.mtime[4] = (char)loctime->tm_mday;
+     response.mtime[3] = (char)loctime->tm_hour;
+     response.mtime[2] = (char)loctime->tm_min;
+     response.mtime[1] = (char)loctime->tm_sec;
    }
 
    // Add the hsize. (what is this?)

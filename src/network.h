@@ -12,6 +12,10 @@
  // NETWORK FUNCTIONS //
  ///////////////////////
 
+#ifdef _WIN32
+ int network_startup();
+#endif
+
  int network_connect(char *hostname, int port, int type);
 
  int network_listen(int port, int type);

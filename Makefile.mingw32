@@ -1,0 +1,45 @@
+
+ GCC = i586-mingw32msvc-gcc -Wall
+ INC =
+ LIB = -lwsock32
+
+ ifeq "$(DEBUG)" "YES"
+  GCC += -D__DEBUG__
+ endif
+
+ ifeq "x$(PREFIX)" "x"
+  PREFIX = $(PS2DEV)
+ endif
+
+ all: bin/ps2client.exe
+
+ clean:
+	rm -f obj/*.o bin/ps2client*
+
+ ####################
+ ## PS2CLIENT LIBS ##
+ ####################
+
+ HFILES += src/network.h src/ps2link.h src/ps2netfs.h
+ CFILES += src/network.c src/ps2link.c src/ps2netfs.c
+ OFILES += obj/network.o obj/ps2link.o obj/ps2netfs.o
+
+ obj/network.o: src/network.h src/network.c
+	@mkdir -p obj
+	$(GCC) $(INC) -c src/network.c -o obj/network.o
+
+ obj/ps2link.o: src/ps2link.h src/ps2link.c
+	@mkdir -p obj
+	$(GCC) $(INC) -c src/ps2link.c -o obj/ps2link.o
+
+ obj/ps2netfs.o: src/ps2netfs.h src/ps2netfs.c
+	@mkdir -p obj
+	$(GCC) $(INC) -c src/ps2netfs.c -o obj/ps2netfs.o
+
+ #######################
+ ## PS2CLIENT PROGRAM ##
+ #######################
+
+ bin/ps2client.exe: $(HFILES) $(CFILES) $(OFILES)
+	@mkdir -p bin
+	$(GCC) $(INC) $(OFILES) src/ps2client.c -o bin/ps2client.exe $(LIB)

@@ -6,6 +6,7 @@
  #include "ps2link.h"
  #include "ps2netfs.h"
  #include "ps2client.h"
+ #include "network.h"
 
  char hostname[256], command[256], argvalues[256]; int argcount = 0;
 
@@ -66,6 +67,11 @@
   if (argc > count) { strncpy(arg1, argv[count++], sizeof(arg1)); } else { sprintf(arg1, "NULL"); }
   if (argc > count) { strncpy(arg2, argv[count++], sizeof(arg2)); } else { sprintf(arg2, "NULL"); }
   if (argc > count) { strncpy(arg3, argv[count++], sizeof(arg3)); } else { sprintf(arg3, "NULL"); }
+  
+#ifdef _WIN32
+  // Startup network, under windows.
+  if (network_startup() == -1) return 1;
+#endif
 
   // Peform any ps2link commands.
   if (strcmp(command, "reset")    == 0) { return ps2link_command_reset(hostname); }

@@ -3,8 +3,13 @@
  #include <fcntl.h>
  #include <stdlib.h>
  #include <string.h>
+#ifdef _WIN32
+ #include <windows.h>
+ #include <winsock2.h>
+#else
  #include <unistd.h>
  #include <netinet/in.h>
+#endif
  #include "network.h"
  #include "ps2netfs.h"
 
@@ -82,7 +87,11 @@
   if (size < 0) { printf("[ERROR] Get source file size failed. (%d)\n", size); return -3; }
 
   // Open the destination file.
+#ifdef _WIN32
+  fd1 = open(destination, O_RDWR | O_CREAT | O_BINARY, 0644);
+#else
   fd1 = open(destination, O_RDWR | O_CREAT, 0644);
+#endif
   if (fd0 < 1) { printf("[ERROR] Open destination file failed. (%d)\n", fd1); return -4; }
 
   // Output the display header.
@@ -132,7 +141,11 @@
   if (result < 0) { printf("[ERROR] Connect to ps2netfs failed. (%d)\n", result); return -1; }
 
   // Open the source file.
+#ifdef _WIN32
+  fd0 = open(source, O_RDONLY | O_BINARY);
+#else
   fd0 = open(source, O_RDONLY);
+#endif
   if (fd0 < 0) { printf("[ERROR] Open source file failed. (%d)\n", fd0); return -2; }
 
   // Get the source file size.
