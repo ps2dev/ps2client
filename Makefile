@@ -4,7 +4,7 @@
  LIB = 
 
  ifeq "$(DEBUG)" "YES"
-  GCC += -D__DEBUG__
+  GCC += -D__DEBUG__ -g
  endif
 
  ifeq "x$(PREFIX)" "x"
