@@ -7,8 +7,8 @@
   GCC += -D__CYGWIN__
  endif
 
- ifeq "$(CHATTY)" "YES"
-  GCC += -D__CHATTY__
+ ifeq "$(QUIET)" "YES"
+  GCC += -D__QUIET__
  endif
 
  ifeq "$(DEBUG)" "YES"

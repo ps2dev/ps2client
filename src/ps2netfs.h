@@ -21,9 +21,9 @@
 
  typedef struct { int mode, attr, size; char ctime[8], atime[8], mtime[8]; int hisize; char name[256]; } DIRENT;
 
- ////////////////////////
- // PS2NETFS FUNCTIONS //
- ////////////////////////
+ /////////////////////////////
+ // PS2NETFS MAIN FUNCTIONS //
+ /////////////////////////////
 
  int ps2netfs_connect(char *hostname);
 

@@ -24,6 +24,6 @@
 
  int network_recvfrom(int nd, void *buffer, int size);
 
- int network_close(int nd);
+ int network_disconnect(int nd);
 
 #endif

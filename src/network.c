@@ -145,7 +145,7 @@
 
  }
 
- int network_close(int nd) { int result = 0;
+ int network_disconnect(int nd) { int result = 0;
 
   // Close the socket.
   result = close(sock[nd]);

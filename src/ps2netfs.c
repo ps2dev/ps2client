@@ -10,9 +10,9 @@
 
  int request_sock;
 
- ////////////////////////
- // PS2NETFS FUNCTIONS //
- ////////////////////////
+ /////////////////////////////
+ // PS2NETFS MAIN FUNCTIONS //
+ /////////////////////////////
 
  int ps2netfs_connect(char *hostname) {
 
@@ -44,10 +44,10 @@
 
  }
 
- int ps2netfs_close(void) {
+ int ps2netfs_disconnect(void) {
 
   // Close the connection.
-  return network_close(request_sock);
+  return network_disconnect(request_sock);
 
  }
 
@@ -58,7 +58,7 @@
  int ps2netfs_command_copyfrom(char *hostname, char *source, char *destination) {
   int fd0, fd1, size, total; char buffer[65536];
 
-#ifdef __CHATTY__
+#ifndef __QUIET__
 
   // Tell the user about the command.
   printf("[***] Copying a file to remote...\n");
@@ -104,7 +104,7 @@
   ps2netfs_request_close(fd1);
 
   // Close the connection.
-  ps2netfs_close();
+  ps2netfs_disconnect();
 
   // End function.
   return 0;
@@ -114,7 +114,7 @@
  int ps2netfs_command_copyto(char *hostname, char *source, char *destination) {
   int fd0, fd1, size, total; char buffer[65536];
 
-#ifdef __CHATTY__
+#ifndef __QUIET__
 
   // Tell the user about the command.
   printf("[***] Copying a file from remote...\n");
@@ -160,7 +160,7 @@
   ps2netfs_request_close(fd1);
 
   // Close the connection.
-  ps2netfs_close();
+  ps2netfs_disconnect();
 
   // End function.
   return 0;
@@ -169,7 +169,7 @@
 
  int ps2netfs_command_delete(char *hostname, char *pathname) { int result = 0;
 
-#ifdef __CHATTY__
+#ifndef __QUIET__
 
   // Tell the user about the command.
   printf("[***] Deleting old file (%s)... ", pathname);
@@ -183,9 +183,9 @@
   result = ps2netfs_request_delete(pathname, 0);
 
   // Close the connection.
-  ps2netfs_close();
+  ps2netfs_disconnect();
 
-#ifdef __CHATTY__
+#ifndef __QUIET__
 
   // Output the result.
   if (result < 0) { printf("Error!\n"); } else { printf("Done!\n"); }
@@ -200,7 +200,7 @@
  int ps2netfs_command_devlist(char *hostname) {
   int loop0, devcount; char devlist[256], *temp = devlist;
 
-#ifdef __CHATTY__
+#ifndef __QUIET__
 
   // Tell the user about the command.
   printf("[***] Requesting a device listing...\n");
@@ -237,7 +237,7 @@
   printf("\n [%d Devices Found]\n\n", devcount);
 
   // Close the connection.
-  ps2netfs_close();
+  ps2netfs_disconnect();
 
   // End function.
   return 0;
@@ -247,7 +247,7 @@
  int ps2netfs_command_dir(char *hostname, char *pathname) {
   int dd, files = 0, size = 0; DIRENT dirent;
 
-#ifdef __CHATTY__
+#ifndef __QUIET__
 
   // Tell the user about the command.
   printf("[***] Requesting a directory listing...\n");
@@ -304,7 +304,7 @@
   ps2netfs_request_dclose(dd);
 
   // Close the connection.
-  ps2netfs_close();
+  ps2netfs_disconnect();
 
   // End function.
   return 0;
@@ -316,7 +316,7 @@
 
  int ps2netfs_command_mkdir(char *hostname, char *pathname) { int result = 0;
 
-#ifdef __CHATTY__
+#ifndef __QUIET__
 
   // Tell the user about the command.
   printf("[***] Creating new directory (%s)... ", pathname);
@@ -330,9 +330,9 @@
   result = ps2netfs_request_mkdir(pathname, 0);
 
   // Close the connection.
-  ps2netfs_close();
+  ps2netfs_disconnect();
 
-#ifdef __CHATTY__
+#ifndef __QUIET__
 
   // Output the result.
   if (result < 0) { printf("Error!\n"); } else { printf("Done!\n"); }
@@ -349,7 +349,7 @@
 
  int ps2netfs_command_mount(char *hostname, char *device, char *fsname) { int result = 0;
 
-#ifdef __CHATTY__
+#ifndef __QUIET__
 
   // Tell the user about the command.
   printf("[***] Mounting device (%s) as (%s)... ", device, fsname);
@@ -363,9 +363,9 @@
   result = ps2netfs_request_mount(device, fsname, MOUNT_READWRITE, "", 0);
 
   // Close the connection.
-  ps2netfs_close();
+  ps2netfs_disconnect();
 
-#ifdef __CHATTY__
+#ifndef __QUIET__
 
   // Output the result.
   if (result < 0) { printf("Error!\n"); } else { printf("Done!\n"); }
@@ -385,7 +385,7 @@
 
  int ps2netfs_command_rmdir(char *hostname, char *pathname) { int result = 0;
 
-#ifdef __CHATTY__
+#ifndef __QUIET__
 
   // Tell the user about the command.
   printf("[***] Removing old directory (%s)... ", pathname);
@@ -399,9 +399,9 @@
   result = ps2netfs_request_rmdir(pathname, 0);
 
   // Close the connection.
-  ps2netfs_close();
+  ps2netfs_disconnect();
 
-#ifdef __CHATTY__
+#ifndef __QUIET__
 
   // Output the result.
   if (result < 0) { printf("Error!\n"); } else { printf("Done!\n"); }
@@ -415,7 +415,7 @@
 
  int ps2netfs_command_sync(char *hostname, char *device) { int result = 0;
 
-#ifdef __CHATTY__
+#ifndef __QUIET__
 
   // Tell the user about the command.
   printf("[***] Requesting a sync for device (%s)... ", device);
@@ -429,9 +429,9 @@
   result = ps2netfs_request_sync(device, 0);
 
   // Close the connection.
-  ps2netfs_close();
+  ps2netfs_disconnect();
 
-#ifdef __CHATTY__
+#ifndef __QUIET__
 
   // Output the result.
   if (result < 0) { printf("Error!\n"); } else { printf("Done!\n"); }
@@ -445,7 +445,7 @@
 
  int ps2netfs_command_umount(char *hostname, char *device) { int result = 0;
 
-#ifdef __CHATTY__
+#ifndef __QUIET__
 
   // Tell the user about the command.
   printf("[***] Umounting device (%s)... ", device);
@@ -459,9 +459,9 @@
   result = ps2netfs_request_umount(device, 0);
 
   // Close the connection.
-  ps2netfs_close();
+  ps2netfs_disconnect();
 
-#ifdef __CHATTY__
+#ifndef __QUIET__
 
   // Output the result.
   if (result < 0) { printf("Error!\n"); } else { printf("Done!\n"); }

@@ -5,95 +5,133 @@
  #include <string.h>
  #include "ps2link.h"
  #include "ps2netfs.h"
+ #include "ps2client.h"
 
- char hostname[256], command[256], arg0[256], arg1[256], arg2[256], arg3[256];
+ char hostname[256], command[256];
 
- int ps2client_usage(char *progname) {
+ char arg0[256], arg1[256], arg2[256], arg3[256];
 
-  // Output the usage instructions.
-  printf("\n Basic usage:\n\n");
-  printf("  %s <hostname> <command> [arguments]\n\n", progname);
+ int timeout = DEFAULT_TIMEOUT;
 
-  // Output the ps2link commands.
-  printf(" Commands for ps2link:\n\n");
-  printf("  %s <hostname> reset\n", progname);
-  printf("  %s <hostname> execiop <filename> [timeout]\n", progname);
-  printf("  %s <hostname> execee <filename> [timeout]\n", progname);
-  printf("  %s <hostname> poweroff\n", progname);
-  printf("  %s <hostname> dumpmem <filename> <offset> <size> [timeout]\n", progname);
-  printf("  %s <hostname> startvu <0/1>\n", progname);
-  printf("  %s <hostname> stopvu <0/1>\n", progname);
-  printf("  %s <hostname> dumpreg <filename> <type> [timeout]\n", progname);
-  printf("  %s <hostname> gsexec <filename> <size> [timeout]\n", progname);
-  printf("  %s <hostname> listen\n\n", progname);
+ //////////////////////////////
+ // PS2CLIENT MAIN FUNCTIONS //
+ //////////////////////////////
 
-  // Output the ps2netfs commands.
-  printf(" Commands for ps2netfs:\n\n");
-  printf("  %s <hostname> copyfrom <source> <destination>\n", progname);
-  printf("  %s <hostname> copyto <source> <destination>\n", progname);
-  printf("  %s <hostname> delete <filename>\n", progname);
-  printf("  %s <hostname> devlist\n", progname);
-  printf("  %s <hostname> dir <directory>\n", progname);
-  printf("  %s <hostname> format <device>\n", progname);
-  printf("  %s <hostname> mkdir <directory>\n", progname);
-  printf("  %s <hostname> mount <device> <fsname>\n", progname);
-  printf("  %s <hostname> rename <source> <destination>\n", progname);
-  printf("  %s <hostname> rmdir <directory>\n", progname);
-  printf("  %s <hostname> sync <device>\n", progname);
-  printf("  %s <hostname> umount <device>\n\n", progname);
+ int main(int argc, char *argv[], char *env[]) { int loop0, count = 1; setbuf(stdout, NULL);
 
-  // End function.
+  // First, we parse the optional arguments.
+  for(loop0=0;loop0<argc;loop0++) {
+
+   // A hostname has been specified.
+   if (strcmp(argv[loop0], "-h") == 0) { count = loop0++ + 2; strncpy(hostname, argv[loop0], sizeof(hostname)); }
+
+   // A timeout has been specified.
+   if (strcmp(argv[loop0], "-t") == 0) { count = loop0++ + 2; timeout = atoi(argv[loop0]); }
+
+  }
+
+  // Make sure that we have a hostname.
+  if (strlen(hostname) == 0) {
+
+   // Assign a default hostname...
+   sprintf(hostname, DEFAULT_HOSTNAME);
+
+   // ...but if $PS2HOSTNAME is found we'll use that instead.
+   for(loop0=0;env[loop0];loop0++) { if (strncmp(env[loop0], "PS2HOSTNAME", 11) == 0) { sprintf(hostname, &env[loop0][12]); } }
+
+  }
+
+  // Next, the command and its arguments.
+  if (argc > count) { strncpy(command, argv[count++], sizeof(command)); } else { sprintf(command, "NULL"); }
+  if (argc > count) { strncpy(arg0, argv[count++], sizeof(arg0)); } else { sprintf(arg0, "NULL"); }
+  if (argc > count) { strncpy(arg1, argv[count++], sizeof(arg1)); } else { sprintf(arg1, "NULL"); }
+  if (argc > count) { strncpy(arg2, argv[count++], sizeof(arg2)); } else { sprintf(arg2, "NULL"); }
+  if (argc > count) { strncpy(arg3, argv[count++], sizeof(arg3)); } else { sprintf(arg3, "NULL"); }
+
+#ifndef __QUIET__
+
+  // Output the startup message.
+  printf("[***] %s - Your friendly, neighbourhood ps2 client.\n", argv[0]);
+  printf("[***] Using ps2 located at: %s\n", hostname);
+
+#endif
+
+  // Peform any ps2link commands.
+  if (strcmp(command, "reset")    == 0) { return ps2link_command_reset     (hostname); }
+  if (strcmp(command, "execiop")  == 0) { return ps2link_command_execiop   (hostname, timeout, arg0); }
+  if (strcmp(command, "execee")   == 0) { return ps2link_command_execee    (hostname, timeout, arg0); }
+  if (strcmp(command, "poweroff") == 0) { return ps2link_command_poweroff  (hostname); }
+  if (strcmp(command, "dumpmem")  == 0) { return ps2link_command_dumpmem   (hostname, timeout, arg0, atoi(arg1), atoi(arg2)); }
+  if (strcmp(command, "startvu")  == 0) { return ps2link_command_startvu   (hostname, atoi(arg0)); }
+  if (strcmp(command, "stopvu")   == 0) { return ps2link_command_stopvu    (hostname, atoi(arg0)); }
+  if (strcmp(command, "dumpreg")  == 0) { return ps2link_command_dumpreg   (hostname, timeout, arg0, atoi(arg1)); }
+  if (strcmp(command, "gsexec")   == 0) { return ps2link_command_gsexec    (hostname, timeout, arg0); }
+  if (strcmp(command, "listen")   == 0) { return ps2link_command_listen    (hostname, timeout); }
+
+  // Perform any ps2netfs commands.
+  if (strcmp(command, "copyfrom") == 0) { return ps2netfs_command_copyfrom (hostname, arg0, arg1); }
+  if (strcmp(command, "copyto")   == 0) { return ps2netfs_command_copyto   (hostname, arg0, arg1); }
+  if (strcmp(command, "delete")   == 0) { return ps2netfs_command_delete   (hostname, arg0);       }
+  if (strcmp(command, "devlist")  == 0) { return ps2netfs_command_devlist  (hostname);             }
+  if (strcmp(command, "dir")      == 0) { return ps2netfs_command_dir      (hostname, arg0);       }
+  if (strcmp(command, "format")   == 0) { return ps2netfs_command_format   (hostname, arg0);       }
+  if (strcmp(command, "mkdir")    == 0) { return ps2netfs_command_mkdir    (hostname, arg0);       }
+  if (strcmp(command, "mount")    == 0) { return ps2netfs_command_mount    (hostname, arg0, arg1); }
+  if (strcmp(command, "rename")   == 0) { return ps2netfs_command_rename   (hostname, arg0, arg1); }
+  if (strcmp(command, "rmdir")    == 0) { return ps2netfs_command_rmdir    (hostname, arg0);       }
+  if (strcmp(command, "sync")     == 0) { return ps2netfs_command_sync     (hostname, arg0);       }
+  if (strcmp(command, "umount")   == 0) { return ps2netfs_command_umount   (hostname, arg0);       }
+
+  // Command not found.
+  ps2client_printusage(argv[0]);
+
+  // End program.
   return 0;
 
  }
 
- int main(int argc, char *argv[]) { setbuf(stdout, NULL);
+ /////////////////////////////////
+ // PS2CLIENT TOOLBOX FUNCTIONS //
+ /////////////////////////////////
 
-#ifdef __CHATTY__
+ int ps2client_printusage(char *program) {
 
   // Output the startup message.
-  printf("[***] ps2client - Your friendly, neighbourhood PS2 client.\n");
+  printf("[***] %s - Your friendly, neighbourhood ps2 client.\n", program);
 
-#endif
+  // Output the usage instructions.
+  printf("\n Basic usage:\n\n");
+  printf("  %s [-h hostname] [-t timeout] <command> [arguments]\n\n", program);
 
-  // Check the arguments.
-  if (argc > 1) { strncpy(hostname, argv[1], 256); } else { ps2client_usage(argv[0]); return -1; }
-  if (argc > 2) { strncpy(command,  argv[2], 256); } else { ps2client_usage(argv[0]); return -1; }
-  if (argc > 3) { strncpy(arg0,     argv[3], 256); } else { sprintf(arg0, "BLANK"); }
-  if (argc > 4) { strncpy(arg1,     argv[4], 256); } else { sprintf(arg1, "BLANK"); }
-  if (argc > 5) { strncpy(arg2,     argv[5], 256); } else { sprintf(arg2, "BLANK"); }
-  if (argc > 6) { strncpy(arg2,     argv[6], 256); } else { sprintf(arg3, "BLANK"); }
+  // Output the ps2link commands.
+  printf(" Commands for ps2link:\n\n");
+  printf("  reset\n");
+  printf("  execiop <filename>\n");
+  printf("  execee <filename>\n");
+  printf("  poweroff\n");
+  printf("  dumpmem <filename> <offset> <size>\n");
+  printf("  startvu <vu>\n");
+  printf("  stopvu <vu>\n");
+  printf("  dumpreg <filename> <type>\n");
+  printf("  gsexec <filename>\n");
+  printf("  listen\n\n");
 
-  // Peform any ps2link commands.
-  if (!strcmp(command, "reset"))    { return ps2link_command_reset(hostname); }
-  if (!strcmp(command, "execiop"))  { ps2link_connect(hostname); ps2link_command_execiop(hostname, arg0); ps2link_mainloop(atoi(arg1)); return ps2link_disconnect(); }
-  if (!strcmp(command, "execee"))   { ps2link_connect(hostname); ps2link_command_execee(hostname, arg0); ps2link_mainloop(atoi(arg1)); return ps2link_disconnect(); }
-  if (!strcmp(command, "poweroff")) { return ps2link_command_poweroff(hostname); }
-  if (!strcmp(command, "dumpmem"))  { ps2link_connect(hostname); ps2link_command_dumpmem(hostname, arg0, atoi(arg1), atoi(arg2)); ps2link_mainloop(atoi(arg3)); return ps2link_disconnect(); }
-  if (!strcmp(command, "startvu"))  { return ps2link_command_startvu(hostname, atoi(arg0)); }
-  if (!strcmp(command, "stopvu"))   { return ps2link_command_stopvu(hostname, atoi(arg0)); }
-  if (!strcmp(command, "dumpreg"))  { ps2link_connect(hostname); ps2link_command_dumpreg(hostname, arg0, atoi(arg1)); ps2link_mainloop(atoi(arg2)); return ps2link_disconnect(); }
-  if (!strcmp(command, "gsexec"))   { ps2link_connect(hostname); ps2link_command_gsexec(hostname, arg0, atoi(arg1)); ps2link_mainloop(atoi(arg2)); return ps2link_disconnect(); }
-  if (!strcmp(command, "listen"))   { ps2link_connect(hostname); ps2link_mainloop(-1); return ps2link_disconnect(); }
+  // Output the ps2netfs commands.
+  printf(" Commands for ps2netfs:\n\n");
+  printf("  copyfrom <source> <destination>\n");
+  printf("  copyto <source> <destination>\n");
+  printf("  delete <filename>\n");
+  printf("  devlist\n");
+  printf("  dir <directory>\n");
+  printf("  format <device>\n");
+  printf("  mkdir <directory>\n");
+  printf("  mount <device> <fsname>\n");
+  printf("  rename <source> <destination>\n");
+  printf("  rmdir <directory>\n");
+  printf("  sync <device>\n");
+  printf("  umount <device>\n\n");
 
-  // Perform any ps2netfs commands.
-  if (!strcmp(command, "copyfrom")) { return ps2netfs_command_copyfrom(hostname, arg0, arg1); }
-  if (!strcmp(command, "copyto"))   { return ps2netfs_command_copyto(hostname, arg0, arg1); }
-  if (!strcmp(command, "delete"))   { return ps2netfs_command_delete(hostname, arg0); }
-  if (!strcmp(command, "devlist"))  { return ps2netfs_command_devlist(hostname); }
-  if (!strcmp(command, "dir"))      { return ps2netfs_command_dir(hostname, arg0); }
-  if (!strcmp(command, "format"))   { return ps2netfs_command_format(hostname, arg0); }
-  if (!strcmp(command, "mkdir"))    { return ps2netfs_command_mkdir(hostname, arg0); }
-  if (!strcmp(command, "mount"))    { return ps2netfs_command_mount(hostname, arg0, arg1); }
-  if (!strcmp(command, "rename"))   { return ps2netfs_command_rename(hostname, arg0, arg1); }
-  if (!strcmp(command, "rmdir"))    { return ps2netfs_command_rmdir(hostname, arg0); }
-  if (!strcmp(command, "sync"))     { return ps2netfs_command_sync(hostname, arg0); }
-  if (!strcmp(command, "umount"))   { return ps2netfs_command_umount(hostname, arg0); }
-
-  // Unknown command.
-  ps2client_usage(argv[0]);
-
-  // End program.
+  // End function.
   return 0;
 
  }

@@ -25,84 +25,66 @@
 
    make install
 
-  If you want to get fancy, you can even do:
+  There are some build options:
 
-   make install PREFIX=/some/directory
+   PREFIX=/dir	- Install directory, defaults to: $PS2DEV/bin
 
-  Otherwise, it'll default to $PS2DEV as a prefix. There also are
-  options for cygwin, as well as general level of output.
+   CYGWIN=YES	- Compile for Cygwin usage.
 
-   make install CYGWIN=YES	- Compile for Cygwin usage.
+   QUIET=YES	- Disable non-essential text output.
 
-   make install CHATTY=YES	- Enable informational output.
+   DEBUG=YES	- Enable all debug text output.
 
-   make install DEBUG=YES	- Enable debug output.
+  A building example:
+
+   make clean; make CYGWIN=YES QUIET=YES install
 
  ---------------
  PS2CLIENT USAGE
  ---------------
 
-  Basic Usage:
+  Basic usage:
 
-   ps2client <hostname> <command> [arguments]
+   ps2client [-h hostname] [-t timeout] <command> [arguments]
 
-   <hostname> is the actual hostname of the PS2. This can be either
-   a hostname or an ip. You get to choose, but choose carefully...
+   The hostname is the actual address, or ip of the PS2. If none is
+   specified, ps2client will check for a hostname in $PS2HOSTNAME.
 
-   <command> is what you would like the PS2 to do. Valid commands are 
-   reset, poweroff, execiop and execee. Examples will follow, relax!
+   Timeout is the length of inactivity (in ms) that ps2client will wait
+   before exiting. If none is specified, -1 (never exit) is assumed.
 
-   [argument] is an optional argument for specifying a filename to 
-   either execiop or execee to be executed. Don't worry, it is quite 
-   humane - those executed can't feel the pain. Honest.
+   <command> is what you would like the ps2 to do. Some valid commands
+   are reset, poweroff, execiop and execee. See below for a full listing.
+
+   [argument] is an optional argument for the given command.
 
   Commands for ps2link:
 
-   ps2client <hostname> reset
-
-   ps2client <hostname> execiop <filename> [timeout]
-
-   ps2client <hostname> execee <filename> [timeout]
-
-   ps2client <hostname> poweroff
-
-   ps2client <hostname> dumpmem <filename> <offset> <size> [timeout]
-
-   ps2client <hostname> startvu <0/1>
-
-   ps2client <hostname> stopvu <0/1>
-
-   ps2client <hostname> dumpreg <filename> <type> [timeout]
-
-   ps2client <hostname> gsexec <filename> <size> [timeout]
-
-   ps2client <hostname> listen
+   reset
+   execiop <filename>
+   execee <filename>
+   poweroff
+   dumpmem <filename> <offset> <size>
+   startvu <vu>
+   stopvu <vu>
+   dumpreg <filename> <type>
+   gsexec <filename>
+   listen
 
   Commands for ps2netfs:
 
-   ps2client <hostname> copyfrom <source> <destination>
-
-   ps2client <hostname> copyto <source> <destination>
-
-   ps2client <hostname> delete <filename>
-
-   ps2client <hostname> devlist
-
-   ps2client <hostname> dir <directory>
-
-   ps2client <hostname> format <device>
-
-   ps2client <hostname> mkdir <directory>
-
-   ps2client <hostname> mount <device> <fsname>
-
-   ps2client <hostname> rename <source> <destination>
-
-   ps2client <hostname> rmdir <directory>
-
-   ps2client <hostname> sync <device>
-
-   ps2client <hostname> umount <device>
+   copyfrom <source> <destination>
+   copyto <source> <destination>
+   delete <filename>
+   devlist
+   dir <directory>
+   format <device>
+   mkdir <directory>
+   mount <device> <fsname>
+   rename <source> <destination>
+   rmdir <directory>
+   sync <device>
+   umount <device>
 
  ----------------
  MORE INFORMATION

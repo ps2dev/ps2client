@@ -15,9 +15,9 @@
 
  int command_sock, request_sock, textlog_sock;
 
- ///////////////////////
- // PS2LINK FUNCTIONS //
- ///////////////////////
+ ////////////////////////////
+ // PS2LINK MAIN FUNCTIONS //
+ ////////////////////////////
 
  int ps2link_connect(char *hostname) {
 
@@ -33,22 +33,8 @@
 
  }
 
- int ps2link_disconnect(void) {
-
-  // Close the connections.
-  network_close(request_sock);
-  network_close(textlog_sock);
-
-  // End function.
-  return 0;
-
- }
-
  int ps2link_mainloop(int timeout) {
   struct { int number; short length; char data[65544]; } __attribute__((packed)) request;
-
-  // Check the timeout value.
-  if (timeout < 1) { timeout = -1; } else  if (timeout < 1000) { timeout = 1000; }
 
   // Main loop.
   while (1) {
@@ -77,6 +63,21 @@
   return 0;
 
  }
+
+ int ps2link_disconnect(void) {
+
+  // Close the connections.
+  network_disconnect(request_sock);
+  network_disconnect(textlog_sock);
+
+  // End function.
+  return 0;
+
+ }
+
+ ///////////////////////////////
+ // PS2LINK TOOLBOX FUNCTIONS //
+ ///////////////////////////////
 
  int ps2link_fixflags(int flags) { int retval = 0;
 
@@ -133,7 +134,7 @@
   network_send(command_sock, packet, size);
 
   // Close the connection.
-  network_close(command_sock);
+  network_disconnect(command_sock);
 
   // End function.
   return 0;
@@ -143,7 +144,7 @@
  int ps2link_command_reset(char *hostname) {
   struct { int number; short length; } __attribute__((packed)) command;
 
-#ifdef __CHATTY__
+#ifndef __QUIET__
 
   // Tell the user what we're doing.
   printf("[***] Sending reset() command...\n");
@@ -162,10 +163,10 @@
 
  }
 
- int ps2link_command_execiop(char *hostname, char *pathname) {
+ int ps2link_command_execiop(char *hostname, int timeout, char *pathname) {
   struct { int number; short length; int argc; char argv[256]; } __attribute__((packed)) command;
 
-#ifdef __CHATTY__
+#ifndef __QUIET__
 
   // Tell the user what we're doing.
   printf("[***] Sending execiop(\"%s\") command...\n", pathname);
@@ -178,18 +179,27 @@
   command.argc   = htonl(1);
   if (pathname) { strncpy(command.argv, pathname, 256); }
 
+  // Connect to the host.
+  ps2link_connect(hostname);
+
   // Send the command packet.
   ps2link_send_command(hostname, &command, sizeof(command));
+
+  // Enter the main loop.
+  ps2link_mainloop(timeout);
+
+  // Close the connection.
+  ps2link_disconnect();
 
   // End function.
   return 0;
 
  }
 
- int ps2link_command_execee(char *hostname, char *pathname) {
+ int ps2link_command_execee(char *hostname, int timeout, char *pathname) {
   struct { int number; short length; int argc; char argv[256]; } __attribute__((packed)) command;
 
-#ifdef __CHATTY__
+#ifndef __QUIET__
 
   // Tell the user what we're doing.
   printf("[***] Sending execee(\"%s\") command...\n", pathname);
@@ -200,11 +210,19 @@
   command.number = htonl(0xBABE0203);
   command.length = htons(sizeof(command));
   command.argc   = htonl(1);
-  sprintf(command.argv, pathname);
-  // if (pathname) { strncpy(command.argv, pathname, 256); }
+  if (pathname) { strncpy(command.argv, pathname, 256); }
+
+  // Connect to the host.
+  ps2link_connect(hostname);
 
   // Send the command packet.
   ps2link_send_command(hostname, &command, sizeof(command));
+
+  // Enter the main loop.
+  ps2link_mainloop(timeout);
+
+  // Close the connection.
+  ps2link_disconnect();
 
   // End function.
   return 0;
@@ -214,7 +232,7 @@
  int ps2link_command_poweroff(char *hostname) {
   struct { int number; short length; } __attribute__((packed)) command;
 
-#ifdef __CHATTY__
+#ifndef __QUIET__
 
   // Tell the user what we're doing.
   printf("[***] Sending poweroff() command...\n");
@@ -233,10 +251,10 @@
 
  }
 
- int ps2link_command_dumpmem(char *hostname, char *pathname, int offset, int size) {
+ int ps2link_command_dumpmem(char *hostname, int timeout, char *pathname, int offset, int size) {
   struct { int number; short length; int offset, size; char pathname[256]; } __attribute__((packed)) command;
 
-#ifdef __CHATTY__
+#ifndef __QUIET__
 
   // Tell the user what we're doing.
   printf("[***] Sending dumpmem(\"%s\", %d, %d) command...\n", pathname, offset, size);
@@ -250,8 +268,17 @@
   command.size   = htonl(size);
   if (pathname) { strncpy(command.pathname, pathname, 256); }
 
+  // Connect to the host.
+  ps2link_connect(hostname);
+
   // Send the command packet.
   ps2link_send_command(hostname, &command, sizeof(command));
+
+  // Enter the main loop.
+  ps2link_mainloop(timeout);
+
+  // Close the connection.
+  ps2link_disconnect();
 
   // End function.
   return 0;
@@ -261,7 +288,7 @@
  int ps2link_command_startvu(char *hostname, int vu) {
   struct { int number; short length; int vu; } __attribute__((packed)) command;
 
-#ifdef __CHATTY__
+#ifndef __QUIET__
 
   // Tell the user what we're doing.
   printf("[***] Sending startvu(%d) command...\n", vu);
@@ -284,7 +311,7 @@
  int ps2link_command_stopvu(char *hostname, int vu) {
   struct { int number; short length; int vu; } __attribute__((packed)) command;
 
-#ifdef __CHATTY__
+#ifndef __QUIET__
 
   // Tell the user what we're doing.
   printf("[***] Sending stopvu(%d) command...\n", vu);
@@ -304,10 +331,10 @@
 
  }
 
- int ps2link_command_dumpreg(char *hostname, char *pathname, int type) {
+ int ps2link_command_dumpreg(char *hostname, int timeout, char *pathname, int type) {
   struct { int number; short length; int type; char pathname[256]; } command;
 
-#ifdef __CHATTY__
+#ifndef __QUIET__
 
   // Tell the user what we're doing.
   printf("[***] Sending dumpreg(\"%s\", %d) command...\n", pathname, type);
@@ -320,23 +347,36 @@
   command.type   = htonl(type);
   if (pathname) { strncpy(command.pathname, pathname, 256); }
 
+  // Connect to the host.
+  ps2link_connect(hostname);
+
   // Send the command packet.
   ps2link_send_command(hostname, &command, sizeof(command));
+
+  // Enter the main loop.
+  ps2link_mainloop(timeout);
+
+  // Close the connection.
+  ps2link_disconnect();
 
   // End function.
   return 0;
 
  }
 
- int ps2link_command_gsexec(char *hostname, char *pathname, int size) {
+ int ps2link_command_gsexec(char *hostname, int timeout, char *pathname) {
   struct { int number; short length; int size; char pathname[256]; } command;
+  int fd, size;
 
-#ifdef __CHATTY__
+#ifndef __QUIET__
 
   // Tell the user what we're doing.
   printf("[***] Sending gsexec(\"%s\", %d) command...\n", pathname, size);
 
 #endif
+
+  // Get the file size.
+  fd = open(pathname, O_RDONLY); size = lseek(fd, 0, SEEK_END); close(fd);
 
   // Build the command packet.
   command.number = htonl(0xBABE020B);
@@ -344,8 +384,40 @@
   command.size   = htonl(size);
   if (pathname) { strncpy(command.pathname, pathname, 256); }
 
+  // Connect to the host.
+  ps2link_connect(hostname);
+
   // Send the command packet.
   ps2link_send_command(hostname, &command, sizeof(command));
+
+  // Enter the main loop.
+  ps2link_mainloop(timeout);
+
+  // Close the connection.
+  ps2link_disconnect();
+
+  // End function.
+  return 0;
+
+ }
+
+ int ps2link_command_listen(char *hostname, int timeout) {
+
+#ifndef __QUIET__
+
+  // Tell the user what we're doing.
+  printf("[***] Entering listen mode...\n");
+
+#endif
+
+  // Connect to the host.
+  ps2link_connect(hostname);
+
+  // Enter the main loop.
+  ps2link_mainloop(timeout);
+
+  // Close the connection.
+  ps2link_disconnect();
 
   // End function.
   return 0;
