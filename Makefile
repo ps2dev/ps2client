@@ -14,8 +14,7 @@
  all: bin/ps2client
 
  clean:
-	rm obj/*.o
-	rm bin/ps2client*
+	rm -f obj/*.o bin/ps2client*
 
  install: bin/ps2client
 	mkdir -p $(PREFIX)/bin
