@@ -93,9 +93,6 @@
    // Increment the counters.
    if (result > 0) { total += result; temp += result; }
 
-   // Rest for a moment.
-   // usleep(1);
-
   }
 
   // End function.
@@ -162,9 +159,6 @@
    // Increment the counters.
    if (result > 0) { total += result; temp += result; }
 
-   // Rest for a moment.
-   // usleep(1);
-
   }
 
   // End function.
@@ -208,9 +202,6 @@
    // Increment the counters.
    if (result > 0) { total += result; temp += result; }
 
-   // Rest for a moment.
-   // usleep(1);
-
   }
 
   // End function.
@@ -218,7 +209,7 @@
 
  }
 
-int network_disconnect(int nd) { int result = 0;
+ int network_disconnect(int nd) { int result = 0;
 
   // Close the socket.
   result = close(sock[nd]);

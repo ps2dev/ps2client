@@ -3,92 +3,164 @@
                       PS2CLIENT USAGE AND INFORMATION
                     ===================================
 
- ----------------
- THE INTRODUCTION
- ----------------
-
-  This program is a simple, command-line tool used to access a PS2 
-  running either pukklink or ps2link for development purposes. It allows
-  you to reset or poweroff the PS2, or upload a program to either the EE
-  or IOP. Other features will most likely be added in the future as the
-  PS2-side software expands and improves.
-
  ------------------
- BUILDING PS2CLIENT
+  THE INTRODUCTION
  ------------------
 
-  Building ps2client is very simple:
+  This program, ps2client, is a command line tool used for interacting with
+  a ps2 system running either ps2link or ps2netfs. It will allow you to send
+  various commands as well as respond to requests for data. This program was
+  written and tested under Linux, Cygwin and Mac OS X but should compile in
+  any reasonably unixlike environment.
 
-   make
+  If you have any requests, questions or sugestions please feel free to contact
+  me at peori@oopo.net. Also, don't be afraid to check out the latest development
+  version of ps2client located at cvs.ps2dev.org.
 
-  But say you want to install it? Try:
+ --------------------
+  BUILDING PS2CLIENT
+ --------------------
 
-   make install
+  Building and installing is very simple:
 
-  There are some build options:
+   make clean; make install
+
+  There are some build options, however:
 
    PREFIX=/dir	- Install directory, defaults to: $PS2DEV/bin
 
    DEBUG=YES	- Enable all debug text output.
 
-  A building example:
+  These options can be used as follows:
 
-   make clean; make DEBUG=NO install
+   make clean; make DEBUG=NO PREFIX=$PS2DEV/bin install
 
- ---------------
- PS2CLIENT USAGE
- ---------------
+ -----------------
+  PS2CLIENT USAGE
+ -----------------
 
   Basic usage:
 
    ps2client [-h hostname] [-t timeout] <command> [arguments]
 
-   The hostname is the actual address, or ip of the PS2. If none is
-   specified, ps2client will check for a hostname in $PS2HOSTNAME.
+   [-h hostname]
 
-   Timeout is the length of inactivity (in seconds) that ps2client will
-   wait before exiting. If none is specified, -1 (never exit) is assumed.
+    The address of the remote ps2. This can be an IP or a hostname. If none
+    is given, the environment variable $PS2HOSTNAME will be checked for a
+    valid address. If this variable isn't set, a default of 192.168.0.10
+    will be used.
 
-   <command> is what you would like the ps2 to do. Some valid commands
-   are reset, poweroff, execiop and execee. See below for a full listing.
+   [-t timeout]
 
-   [argument] is an optional argument for the given command.
+    An idle timeout period that ps2client will wait before exiting. This is
+    useful to allow a script to continue after calling ps2client to send a
+    command to the ps2.
 
-  Commands for ps2link:
+ ------------------
+  PS2LINK COMMANDS
+ ------------------
 
-   reset
-   execiop <filename> [arguments]
-   execee <filename> [arguments]
-   poweroff
-   dumpmem <filename> <offset> <size>
-   startvu <vu>
-   stopvu <vu>
-   dumpreg <filename> <type>
-   gsexec <filename>
-   listen
+  reset
 
-  Commands for ps2netfs:
+   - Send a reset request to the ps2.
 
-   copyfrom <source> <destination>
-   copyto <source> <destination>
-   delete <filename>
-   devlist
-   dir <directory>
-   format <device>
-   mkdir <directory>
-   mount <device> <fsname>
-   rename <source> <destination>
-   rmdir <directory>
-   sync <device>
-   umount <device>
+  execiop <filename> [arguments]
 
- ----------------
- MORE INFORMATION
- ----------------
+   - Tell ps2link to load and execute a file on the IOP.
 
-  If you want to get into the wonderful world of homebrew PS2
+  execee <filename> [arguments]
+
+   - Tell ps2link to load and execute a file on the EE.
+
+  poweroff
+
+   - Send a poweroff request to the ps2.
+
+  dumpmem <filename> <offset> <size>
+
+   - Dump the contents of memory at a given offset into a file.
+
+  startvu <vu>
+
+   - Tell the specified vector unit to start operation.
+
+  stopvu <vu>
+
+   - Tell the specified vector unit to stop operation.
+
+  dumpreg <filename> <type>
+
+   - Dump the registers of a given type into a file.
+
+  gsexec <filename>
+
+   - Tell ps2link to load and send a file to the GS.
+
+  listen
+
+   - Listen for text messages from the ps2.
+
+ -------------------
+  PS2NETFS COMMANDS
+ -------------------
+
+  copyfrom <source> <destination>
+
+   - Copy a file from the ps2. (download)
+
+  copyto <source> <destination>
+
+   - Copy a file to the ps2. (upload)
+
+  delete <filename>
+
+   - Delete a file on the ps2.
+
+  devlist
+
+   - Get a device listing from the ps2.
+
+  dir <directory>
+
+   - Get a directory listing from the ps2.
+
+  format <device>
+
+   - Format a device on the ps2.
+
+  mkdir <directory>
+
+   - Make a directory on the ps2.
+
+  mount <device> <fsname>
+
+   - Mount a filesystem as a device on the ps2.
+
+  rename <source> <destination>
+
+   - Rename a file on the ps2.
+
+  rmdir <directory>
+
+   - Remove a directory on the ps2.
+
+  sync <device>
+
+   - Sync a device on the ps2.
+
+  umount <device>
+
+   - Unmount a device on the ps2.
+
+ ------------------
+  MORE INFORMATION
+ ------------------
+
+  If you want to get into the wonderful world of homebrew ps2
   development, there's a few places you can check out:
 
-  http://www.ps2dev.org  - News, tutorials and documentation.
+  http://www.ps2dev.org     - News, tutorials and documentation.
 
-  #ps2dev on efnet (IRC) - Come banter in realtime.
+  http://forums.ps2dev.org  - The official ps2dev forums.
+
+  #ps2dev on efnet (IRC)    - Come banter in realtime.

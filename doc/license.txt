@@ -1,5 +1,5 @@
 /*
- * ps2client v1.2.x
+ * ps2client v2.x.x
  *
  * Copyright (c) 2004 Dan Peori. All rights reserved.
  *

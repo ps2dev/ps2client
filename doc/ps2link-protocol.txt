@@ -274,12 +274,13 @@
   -----------------------------
 
    A request from ps2link to write size bytes to the file specified by the
-   file descriptor, fd. The result of the write() call is returned in the
-   response packet. The current maximum size for any given write is 64k.
+   file descriptor, fd. The data to be written immediately follows the request
+   packet itself. The result of the write() call is returned in the response
+   packet. The current maximum size for any given write is 64k.
 
    PACKET STRUCTURES
 
-    struct { int number; short length; int fd, size; char buffer[65536]; } request;
+    struct { int number; short length; int fd, size; } request;
     struct { int number; short length; int result; } response;
 
    RESPONSE VALUES

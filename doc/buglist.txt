@@ -1,5 +1,0 @@
-
- - No support yet for arguments to execee/execiop.
- - Some LOG messages are printed late. (test this)
- - ps2netfs-protocol.txt: This is unfinished.
- - ps2netfs.c: Commands format and rename aren't done.

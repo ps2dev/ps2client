@@ -1,9 +1,15 @@
 
- --------------------------
-  PS2NETFS REQUEST PACKETS
- --------------------------
+                     ---------------------------------
+                      PS2NETFS OPERATION AND PROTOCOL
+                        Dan Peori (peori@oopo.net)
+                       Current as of March 6th, 2004
+                     ---------------------------------
 
-  Blah blah blah blah blah blah blah blah blah blah blah.
+  Communication with ps2netfs takes place on TCP socket 0x4713. A connection is
+  opened then a request packet is sent. Soon afterwards, a response packet will
+  be received and the connection closed. Through these simple request/response
+  pairs more complex functions can be created to do things like copy files to
+  and from the ps2 itself. For examples see ps2netfs.c in the ps2client source.
 
   ----------------------------
    0xBEEF8011 (open request)
@@ -210,30 +216,19 @@
     request.length = htons(sizeof(request));
     request.dd     = htonl(dd);
 
-  -------------------------------
-   0xBEEF80D1 (getstat request)
-   0xBEEF80D2 (getstat response)
-  -------------------------------
-
-  ------------------------------
-   0xBEEF80E1 (chstat request)
-   0xBEEF80E2 (chstat response)
-  ------------------------------
-
   ------------------------------
    0xBEEF80F1 (format request)
    0xBEEF80F2 (format response)
   ------------------------------
+
+   UNDOCUMENTED
 
   ------------------------------
    0xBEEF8111 (rename request)
    0xBEEF8112 (rename response)
   ------------------------------
 
-  ------------------------------
-   0xBEEF8121 (chdir request)
-   0xBEEF8122 (chdir response)
-  ------------------------------
+   UNDOCUMENTED
 
   ----------------------------
    0xBEEF8131 (sync request)
@@ -293,41 +288,6 @@
     request.length = htons(sizeof(request));
     request.flags  = htonl(flags);
     if (device) { strncpy(request.device, device, 256); }
-
-  -------------------------------
-   0xBEEF8161 (lseek64 request)
-   0xBEEF8162 (lseek64 response)
-  -------------------------------
-
-  ------------------------------
-   0xBEEF8171 (devctl request)
-   0xBEEF8172 (devctl response)
-  ------------------------------
-
-  -------------------------------
-   0xBEEF8181 (symlink request)
-   0xBEEF8182 (symlink response)
-  -------------------------------
-
-  --------------------------------
-   0xBEEF8191 (readlink request)
-   0xBEEF8192 (readlink response)
-  --------------------------------
-
-  ------------------------------
-   0xBEEF81A1 (ioctl2 request)
-   0xBEEF81A2 (ioctl2 response)
-  ------------------------------
-
-  ----------------------------
-   0xBEEF8F01 (info request)
-   0xBEEF8F02 (info response)
-  ----------------------------
-
-  ------------------------------
-   0xBEEF8F11 (fstype request)
-   0xBEEF8F12 (fstype response)
-  ------------------------------
 
   -------------------------------
    0xBEEF8F21 (devlist request)
