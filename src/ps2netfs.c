@@ -345,12 +345,12 @@
 
  }
 
- int ps2netfs_command_ps2mount(char *hostname, char *pathname, char *device) { int result = 0;
+ int ps2netfs_command_ps2mount(char *hostname, char *device, char *fsname) { int result = 0;
 
 #ifdef __CHATTY__
 
   // Tell the user about the command.
-  printf("[***] Mounting (%s) as device (%s)... ", pathname, device);
+  printf("[***] Mounting device (%s) as (%s)... ", device, fsname);
 
 #endif
 
@@ -358,7 +358,7 @@
   ps2netfs_connect(hostname);
 
   // Mount the device.
-  result = ps2netfs_request_mount(pathname, device, MOUNT_READWRITE, "", 0);
+  result = ps2netfs_request_mount(device, fsname, MOUNT_READWRITE, "", 0);
 
   // Close the connection.
   ps2netfs_close();
@@ -369,7 +369,7 @@
   if (result < 0) { printf("Error!\n"); } else { printf("Done!\n"); }
 
   // Display the new device.
-  if (result >= 0) { char temp[256]; sprintf(temp, "%s/", pathname); usleep(1); ps2netfs_command_ps2dir(hostname, temp); }
+  if (result >= 0) { char temp[256]; sprintf(temp, "%s/", device); usleep(1); ps2netfs_command_ps2dir(hostname, temp); }
 
 #endif
 
@@ -795,8 +795,8 @@
 
  }
 
- int ps2netfs_request_mount(char *pathname, char *device, int flags, char *argv, int argc) {
-  struct { int number; short length; char pathname[256], device[256]; int flags; char argv[256]; int argc; } __attribute__((packed)) request;
+ int ps2netfs_request_mount(char *device, char *fsname, int flags, char *argv, int argc) {
+  struct { int number; short length; char device[256], fsname[256]; int flags; char argv[256]; int argc; } __attribute__((packed)) request;
   struct { int number; short length; int result; } __attribute__((packed)) response;
 
   // Build the request packet.
@@ -804,8 +804,8 @@
   request.length = htons(sizeof(request));
   request.flags  = htonl(flags);
   request.argc   = htonl(argc);
-  if (pathname) { strncpy(request.pathname, pathname, 256); }
   if (device) { strncpy(request.device, device, 256); }
+  if (fsname) { strncpy(request.fsname, fsname, 256); }
   if (argv) { strncpy(request.argv, argv, 256); }
 
   // Send the request and receive the response.
@@ -815,7 +815,7 @@
 #ifdef __DEBUG__
 
   // Tell the user about the request and its result.
-  printf("[***] mount(\"%s\", \"%s\", %d) = %d\n", pathname, device, flags, ntohl(response.result));
+  printf("[***] mount(\"%s\", \"%s\", %d) = %d\n", device, fsname, flags, ntohl(response.result));
 
 #endif
 

@@ -37,7 +37,7 @@
   printf("  %s <hostname> ps2dir <directory>\n", progname);
   printf("  %s <hostname> ps2format <device>\n", progname);
   printf("  %s <hostname> ps2mkdir <directory>\n", progname);
-  printf("  %s <hostname> ps2mount <directory> <device>\n", progname);
+  printf("  %s <hostname> ps2mount <device> <fsname>\n", progname);
   printf("  %s <hostname> ps2rename <source> <destination>\n", progname);
   printf("  %s <hostname> ps2rmdir <directory>\n", progname);
   printf("  %s <hostname> ps2sync <device>\n", progname);

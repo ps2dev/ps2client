@@ -90,7 +90,7 @@
 
    ps2client <hostname> ps2mkdir <directory>
 
-   ps2client <hostname> ps2mount <directory> <device>
+   ps2client <hostname> ps2mount <device> <fsname>
 
    ps2client <hostname> ps2rename <source> <destination>
 
@@ -107,6 +107,6 @@
   If you want to get into the wonderful world of homebrew PS2
   development, there's a few places you can check out:
 
-  http://www.ps2dev.org			- News, tutorials and documentation.
+  http://www.ps2dev.org  - News, tutorials and documentation.
 
-  #ps2dev on efnet (IRC)		- Come banter in realtime.
+  #ps2dev on efnet (IRC) - Come banter in realtime.

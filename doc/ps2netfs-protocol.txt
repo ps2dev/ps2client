@@ -259,7 +259,7 @@
 
    PACKET STRUCTURES
 
-    struct { int number; short length; char pathname[256], device[256]; int flags; char argv[256]; int argc; } request;
+    struct { int number; short length; char device[256], fsname[256]; int flags; char argv[256]; int argc; } request;
     struct { int number; short length; int result; } response;
 
    FLAG VALUES
@@ -273,8 +273,8 @@
     request.length = htons(sizeof(request));
     request.flags  = htonl(flags);
     request.argc   = htonl(argc);
-    if (pathname) { strncpy(request.pathname, pathname, 256); }
     if (device) { strncpy(request.device, device, 256); }
+    if (fsname) { strncpy(request.fsname, fsname, 256); }
     if (argv) { strncpy(request.argv, argv, 256); }
 
   ------------------------------

@@ -51,7 +51,7 @@
 
  int ps2netfs_command_ps2mkdir(char *hostname, char *pathname);
 
- int ps2netfs_command_ps2mount(char *hostname, char *pathname, char *device);
+ int ps2netfs_command_ps2mount(char *hostname, char *device, char *fsname);
 
  int ps2netfs_command_ps2rename(char *hostname, char *source, char *destination);
 
@@ -101,7 +101,7 @@
 
  int ps2netfs_request_sync(char *pathname, int flags);
 
- int ps2netfs_request_mount(char *pathname, char *device, int flags, char *argv, int argc);
+ int ps2netfs_request_mount(char *device, char *fsname, int flags, char *argv, int argc);
 
  int ps2netfs_request_umount(char *device, int flags);
 
