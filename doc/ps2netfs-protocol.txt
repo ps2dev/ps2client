@@ -1,0 +1,322 @@
+
+ --------------------------
+  PS2NETFS REQUEST PACKETS
+ --------------------------
+
+  Blah blah blah blah blah blah blah blah blah blah blah.
+
+  ----------------------------
+   0xBEEF8011 (open request)
+   0xBEEF8012 (open response)
+  ----------------------------
+
+   PACKET STRUCTURES
+
+    struct { int number; short length; int flags; char pathname[256]; } request;
+    struct { int number; short length; int result; } response;
+
+   FLAG VALUES
+
+    #define OPEN_READ		0x0001
+    #define OPEN_WRITE		0x0002
+    #define OPEN_NONBLOCK	0x0010
+    #define OPEN_APPEND		0x0100
+    #define OPEN_CREATE		0x0200
+    #define OPEN_TRUNCATE	0x0400
+
+   REQUEST PACKET CONTENTS
+
+    request.number = htonl(0xBEEF8011);
+    request.length = htons(sizeof(request));
+    request.flags  = htonl(mode);
+    if (pathname) { strncpy(request.pathname, pathname, 256); }
+
+  -----------------------------
+   0xBEEF8021 (close request)
+   0xBEEF8022 (close response)
+  -----------------------------
+
+   PACKET STRUCTURES
+
+    struct { int number; short length; int fd; } request;
+    struct { int number; short length; int result; } response;
+
+   REQUEST PACKET CONTENTS
+
+    request.number = htonl(0xBEEF8021);
+    request.length = htons(sizeof(request));
+    request.fd     = htonl(fd);
+
+  ----------------------------
+   0xBEEF8031 (read request)
+   0xBEEF8032 (read response)
+  ----------------------------
+
+   PACKET STRUCTURES
+
+    struct { int number; short length; int fd, size; } request;
+    struct { int number; short length; int result, size; } response;
+
+   REQUEST PACKET CONTENTS
+
+    request.number = htonl(0xBEEF8031);
+    request.length = htons(sizeof(request));
+    request.fd     = htonl(fd);
+    request.size   = htonl(size);
+
+  -----------------------------
+   0xBEEF8041 (write request)
+   0xBEEF8042 (write response)
+  -----------------------------
+
+   PACKET STRUCTURES
+
+    struct { int number; short length; int fd, size; } request;
+    struct { int number; short length; int result; } response;
+
+   REQUEST PACKET CONTENTS
+
+    request.number = htonl(0xBEEF8041);
+    request.length = htons(sizeof(request));
+    request.fd     = htonl(fd);
+    request.size   = htonl(size);
+
+  -----------------------------
+   0xBEEF8051 (lseek request)
+   0xBEEF8052 (lseek response)
+  -----------------------------
+
+   PACKET STRUCTURES
+
+    struct { int number; short length; int fd, offset, whence; } request;
+    struct { int number; short length; int result; } response;
+
+   WHENCE VALUES
+
+    #define LSEEK_SET		0x0000
+    #define LSEEK_CURRENT	0x0001
+    #define LSEEK_END		0x0002
+
+   REQUEST PACKET CONTENTS
+
+    request.number = htonl(0xBEEF8051);
+    request.length = htons(sizeof(request));
+    request.fd     = htonl(fd);
+    request.offset = htonl(offset);
+    request.whence = htonl(whence);
+
+  -----------------------------
+   0xBEEF8061 (ioctl request)
+   0xBEEF8062 (ioctl response)
+  -----------------------------
+
+  ------------------------------
+   0xBEEF8071 (remove request)
+   0xBEEF8072 (remove response)
+  ------------------------------
+
+  -----------------------------
+   0xBEEF8081 (mkdir request)
+   0xBEEF8082 (mkdir response)
+  -----------------------------
+
+   PACKET STRUCTURES
+
+    struct { int number; short length; int flags; char pathname[256]; } request;
+    struct { int number; short length; int result; } response;
+
+   REQUEST PACKET CONTENTS
+
+    request.number = htonl(0xBEEF8071);
+    request.length = htons(sizeof(request));
+    request.flags  = htonl(flags);
+    if (pathname) { strncpy(request.pathname, pathname, 256); }
+
+  -----------------------------
+   0xBEEF8091 (rmdir request)
+   0xBEEF8092 (rmdir response)
+  -----------------------------
+
+  ------------------------------
+   0xBEEF80A1 (dopen request)
+   0xBEEF80A2 (dopen response)
+  ------------------------------
+
+   PACKET STRUCTURES
+
+    struct { int number; short length; int flags; char pathname[256]; } request;
+    struct { int number; short length; int result; } response;
+
+   REQUEST PACKET CONTENTS
+
+    request.number = htonl(0xBEEF80A1);
+    request.length = htons(sizeof(request));
+    request.flags  = htonl(flags);
+    if (pathname) { strncpy(request.pathname, pathname, 256); }
+
+  ------------------------------
+   0xBEEF80B1 (dclose request)
+   0xBEEF80B2 (dclose response)
+  ------------------------------
+
+   PACKET STRUCTURES
+
+    struct { int number; short length; int dd; } request;
+    struct { int number; short length; int result; } response;
+
+   REQUEST PACKET CONTENTS
+
+    request.number = htonl(0xBEEF80B1);
+    request.length = htons(sizeof(request));
+    request.dd     = htonl(dd);
+
+  -----------------------------
+   0xBEEF80C1 (dread request)
+   0xBEEF80C2 (dread response)
+  -----------------------------
+
+   PACKET STRUCTURES
+
+    struct { int number; short length; int dd; } request;
+    struct { int number; short length; int result; int mode, attr, size; char ctime[8], atime[8], mtime[8]; int hisize; char name[256]; } response;
+
+   REQUEST PACKET CONTENTS
+
+    request.number = htonl(0xBEEF80C1);
+    request.length = htons(sizeof(request));
+    request.dd     = htonl(dd);
+
+  -------------------------------
+   0xBEEF80D1 (getstat request)
+   0xBEEF80D2 (getstat response)
+  -------------------------------
+
+  ------------------------------
+   0xBEEF80E1 (chstat request)
+   0xBEEF80E2 (chstat response)
+  ------------------------------
+
+  ------------------------------
+   0xBEEF80F1 (format request)
+   0xBEEF80F2 (format response)
+  ------------------------------
+
+  ------------------------------
+   0xBEEF8111 (rename request)
+   0xBEEF8112 (rename response)
+  ------------------------------
+
+  ------------------------------
+   0xBEEF8121 (chdir request)
+   0xBEEF8122 (chdir response)
+  ------------------------------
+
+  ----------------------------
+   0xBEEF8131 (sync request)
+   0xBEEF8132 (sync response)
+  ----------------------------
+
+   PACKET STRUCTURES
+
+    struct { int number; short length; int flags; char device[256]; } request;
+    struct { int number; short length; int result; } response;
+
+   REQUEST PACKET CONTENTS
+
+    request.number = htonl(0xBEEF8131);
+    request.length = htons(sizeof(request));
+    request.flags  = htonl(flags);
+    if (device) { strncpy(request.device, device, 256); }
+
+  -----------------------------
+   0xBEEF8141 (mount request)
+   0xBEEF8142 (mount response)
+  -----------------------------
+
+   PACKET STRUCTURES
+
+    struct { int number; short length; char pathname[256], device[256]; int flags; char argv[256]; int argc; } request;
+    struct { int number; short length; int result; } response;
+
+   FLAG VALUES
+
+    #define MOUNT_READWRITE	0x00
+    #define MOUNT_READONLY	0x01
+
+   REQUEST PACKET CONTENTS
+
+    request.number = htonl(0xBEEF8141);
+    request.length = htons(sizeof(request));
+    request.flags  = htonl(flags);
+    request.argc   = htonl(argc);
+    if (pathname) { strncpy(request.pathname, pathname, 256); }
+    if (device) { strncpy(request.device, device, 256); }
+    if (argv) { strncpy(request.argv, argv, 256); }
+
+  ------------------------------
+   0xBEEF8151 (umount request)
+   0xBEEF8152 (umount response)
+  ------------------------------
+
+   PACKET STRUCTURES
+
+    struct { int number; short length; int flags; char pathname[256]; } request;
+    struct { int number; short length; int result; } response;
+
+   REQUEST PACKET CONTENTS
+
+    request.number = htonl(0xBEEF8151);
+    request.length = htons(sizeof(request));
+    if (pathname) { strncpy(request.pathname, pathname, 256); }
+
+  -------------------------------
+   0xBEEF8161 (lseek64 request)
+   0xBEEF8162 (lseek64 response)
+  -------------------------------
+
+  ------------------------------
+   0xBEEF8171 (devctl request)
+   0xBEEF8172 (devctl response)
+  ------------------------------
+
+  -------------------------------
+   0xBEEF8181 (symlink request)
+   0xBEEF8182 (symlink response)
+  -------------------------------
+
+  --------------------------------
+   0xBEEF8191 (readlink request)
+   0xBEEF8192 (readlink response)
+  --------------------------------
+
+  ------------------------------
+   0xBEEF81A1 (ioctl2 request)
+   0xBEEF81A2 (ioctl2 response)
+  ------------------------------
+
+  ----------------------------
+   0xBEEF8F01 (info request)
+   0xBEEF8F02 (info response)
+  ----------------------------
+
+  ------------------------------
+   0xBEEF8F11 (fstype request)
+   0xBEEF8F12 (fstype response)
+  ------------------------------
+
+  -------------------------------
+   0xBEEF8F21 (devlist request)
+   0xBEEF8F22 (devlist response)
+  -------------------------------
+
+   PACKET STRUCTURES
+
+    struct { int number; short length; int flags; char pathname[256]; } request;
+    struct { int number; short length; int result; int count; char devlist[256]; } response;
+
+   REQUEST PACKET CONTENTS
+
+    request.number = htonl(0xBEEF8F21);
+    request.length = htons(sizeof(request));
+    request.flags  = htonl(flags);
+    if (pathname) { strncpy(request.pathname, pathname, 256); }

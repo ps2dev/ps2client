@@ -1,0 +1,438 @@
+
+                     --------------------------------
+                      PS2LINK OPERATION AND PROTOCOL
+                        Dan Peori (peori@oopo.net)
+                       Current as of: ps2link v1.22
+                     --------------------------------
+
+  Communication with ps2link takes place on three ports. I'm not entirely
+  sure why, but it does. One udp port is used to send commands to ps2link
+  in the form of command packets. A tcp port is used to receive requests
+  and send responses during program runtime. And another udp port is used
+  to receive log text from ps2link for debug or informational purposes.
+
+   PS2LINK PORT NUMBERS
+
+    Command (UDP) 0x4712 - One way communication to send commands.
+    Request (TCP) 0x4711 - Two way communication to serve requests.
+    Log (UDP)     0x4712 - One way communication to receive log text.
+
+  Typical operation is to send a command, then enter a loop that waits for
+  requests and log text from ps2link. If at any time contact is lost with
+  ps2link, close and exit. Extra points are given if you close the command
+  port during the loop to allow other commands to be sent to ps2link while
+  your client is handling requests.
+
+ -------------------------
+  PS2LINK COMMAND PACKETS
+ -------------------------
+
+  When ps2link is finished booting, it waits for a command from a client to
+  tell it what to do. These are simple commands sent as single packets for
+  executing programs, resetting ps2link or other things. This list may grow
+  as time goes on and new functionality is added to ps2link.
+  
+  ----------------------------
+   0xBABE0201 (reset command)
+  ----------------------------
+
+   Tell ps2link to reset and reload back to its information screen.
+
+   PACKET STRUCTURE
+
+    struct { int number; short length; } command;
+
+   PACKET CONTENTS
+
+    command.number = htonl(0xBABE0201);
+    command.length = htons(sizeof(command));
+
+  ------------------------------
+   0xBABE0202 (execiop command)
+  ------------------------------
+
+   Tell ps2link to load and run the given program (IRX) on the IOP.
+
+   PACKET STRUCTURE
+
+    struct { int number; short length; int argc; char argv[256]; } command;
+
+   PACKET CONTENTS
+
+    command.number = htonl(0xBABE0202);
+    command.length = htons(sizeof(command));
+    command.argc   = htonl(1);
+    if (pathname) { strncpy(command.argv, argv, 256); }
+
+  -----------------------------
+   0xBABE0203 (execee command)
+  -----------------------------
+
+   Tell ps2link to load and run the given program (ELF) on the EE.
+
+   PACKET STRUCTURE
+
+    struct { int number; short length; int argc; char argv[256]; } command;
+
+   PACKET CONTENTS
+
+    command.number = htonl(0xBABE0203);
+    command.length = htons(sizeof(command));
+    command.argc   = htonl(1);
+    if (pathname) { strncpy(command.argv, pathname, 256); }
+
+  -------------------------------
+   0xBABE0204 (poweroff command)
+  -------------------------------
+
+   Tell ps2link to power off the PS2.
+
+   PACKET STRUCTURE
+
+    struct { int number; short length; } command;
+
+   PACKET CONTENTS
+
+    command.number = htonl(0xBABE0204);
+    command.length = htons(sizeof(command));
+
+  ------------------------------
+   0xBABE0207 (dumpmem command)
+  ------------------------------
+
+   Tell ps2link to dump memory starting at offset and of size bytes into
+   the file specified by pathname.
+
+   PACKET STRUCTURE
+
+    struct { int number; short length; int offset, size; char pathname[256]; } command;
+
+   PACKET CONTENTS
+
+    command.number = htonl(0xBABE0207);
+    command.length = htons(sizeof(command));
+    command.offset = htonl(offset);
+    command.size   = htonl(size);
+    if (argv) { strncpy(command.pathname, pathname, 256); }
+
+  ------------------------------
+   0xBABE0208 (startvu command)
+  ------------------------------
+
+   Tell the specified vector unit to start operation.
+
+   PACKET STRUCTURE
+
+    struct { int number; short length; int vu; } command;
+
+   PACKET CONTENTS
+
+    command.number = htonl(0xBABE0208);
+    command.length = htons(sizeof(command));
+    command.vu     = htonl(vu);
+
+  -----------------------------
+   0xBABE0209 (stopvu command)
+  -----------------------------
+
+   Tell the specified vector unit to stop operation.
+
+   PACKET STRUCTURE
+
+    struct { int number; short length; int vu; } command;
+
+   PACKET CONTENTS
+
+    command.number = htonl(0xBABE0209);
+    command.length = htons(sizeof(command));
+    command.vu     = htonl(vu);
+
+  ------------------------------
+   0xBABE020A (dumpreg command)
+  ------------------------------
+
+   Tell ps2link to dump the specified register type into the file specified
+   by pathname.
+
+   PACKET STRUCTURE
+
+    struct { int number; short length; int type; char pathname[256]; } command;
+
+   REGISTER TYPES
+
+    DMAC (0), INTC (1), Timer (2), GS (3), SIF (4), FIFO (5), GIF (6),
+    VIF0 (7), VIF1 (8) IPU (9), all registers (10), VU0 (11), VU1 (12)
+
+   PACKET CONTENTS
+
+    command.number = htonl(0xBABE020A);
+    command.length = htons(sizeof(command));
+    command.type   = htonl(type);
+    if (pathname) { strncpy(command.pathname, pathname, 256); }
+
+  -----------------------------
+   0xBABE020B (gsexec command)
+  -----------------------------
+
+   Tell ps2link to load and send the file specified by pathname to the GS.
+
+   PACKET STRUCTURE
+
+    struct { int number; short length; int size; char pathname[256]; } command;
+
+   PACKET CONTENTS
+
+    command.number = htonl(0xBABE020B);
+    command.length = htons(sizeof(command));
+    command.size   = htonl(size);
+    if (pathname) { strncpy(command.pathname, pathname, 256); }
+
+ --------------------------------------
+  PS2LINK REQUEST AND RESPONSE PACKETS
+ --------------------------------------
+
+  During runtime, ps2link will send requests to the client for various things,
+  usually to manipulate data on the 'host:' device. These requests are a single
+  packet with a command number, the packet length, and its arguments. A single
+  response packet is sent with the result of the operation.
+
+  ----------------------------
+   0xBABE0111 (open request)
+   0xBABE0112 (open response)
+  ----------------------------
+
+   A request from ps2link to open the file specified by pathname with the given
+   flags. Note that the flags are similar but not the same as the standard unix
+   command open() and need to be converted before passing them on. The resulting
+   file descriptor is returned as the result in the response packet.
+
+   PACKET STRUCTURES
+
+    struct { int number; short length; int flags; char pathname[256]; } request;
+    struct { int number; short length; int result; } response;
+
+   FLAG VALUES
+
+    #define OPEN_READ		0x0001
+    #define OPEN_WRITE		0x0002
+    #define OPEN_NONBLOCK	0x0010
+    #define OPEN_APPEND		0x0100
+    #define OPEN_CREATE		0x0200
+    #define OPEN_TRUNCATE	0x0400
+
+   RESPONSE VALUES
+
+    response.number = htonl(0xBABE0112);
+    response.length = htons(sizeof(response));
+    response.result = htonl(open(request.pathname, converted_flags, 0644));
+
+  -----------------------------
+   0xBABE0121 (close request)
+   0xBABE0122 (close response)
+  -----------------------------
+
+   A request from ps2link to close the file specified by the file descriptor,
+   fd. The result of the close() call is returned in the response packet.
+
+   PACKET STRUCTURES
+
+    struct { int number; short length; int fd; } request;
+    struct { int number; short length; int result; } response;
+
+   RESPONSE VALUES
+
+    response.number = htonl(0xBABE0122);
+    response.length = htons(sizeof(response));
+    response.result = htonl(close(ntohl(request->fd)));
+
+  ----------------------------
+   0xBABE0131 (read request)
+   0xBABE0132 (read response)
+  ----------------------------
+
+   A request from ps2link to read size bytes from the file specified by the
+   file descriptor, fd. The result of the read() call is returned in the
+   response packet, followed by the read data itself in the next packet. The
+   current maximum size for any given read is 64k.
+
+   PACKET STRUCTURES
+
+    char buffer[65536];
+    struct { int number; short length; int fd, size; } request;
+    struct { int number; short length; int result, size; } response;
+
+   RESPONSE VALUES
+
+    response.number = htonl(0xBABE0132);
+    response.length = htons(sizeof(response));
+    response.result = htonl(read(ntohl(request->fd), buffer, ntohl(request->size)));
+    response.size   = response.result;
+
+  -----------------------------
+   0xBABE0141 (write request)
+   0xBABE0142 (write response)
+  -----------------------------
+
+   A request from ps2link to write size bytes to the file specified by the
+   file descriptor, fd. The result of the write() call is returned in the
+   response packet. The current maximum size for any given write is 64k.
+
+   PACKET STRUCTURES
+
+    struct { int number; short length; int fd, size; char buffer[65536]; } request;
+    struct { int number; short length; int result; } response;
+
+   RESPONSE VALUES
+
+    response.number = htonl(0xBABE0142);
+    response.length = htons(sizeof(response));
+    response.result = htonl(write(ntohl(request->fd), request->data, ntohl(request->size)));
+
+  -----------------------------
+   0xBABE0151 (lseek request)
+   0xBABE0152 (lseek response)
+  -----------------------------
+
+   A request from ps2link to perform a lseek on the file specified by the
+   file descriptor, fd. The result of the lseek() call is returned in the
+   response packet. Note that unlike the open request, the values in this
+   lseek request are the same as in the unix lseek().
+
+   PACKET STRUCTURES
+
+    struct { int number; short length; int fd, offset, whence; } request;
+    struct { int number; short length; int result; } response;
+
+   WHENCE VALUES
+
+    #define LSEEK_SET		0x0000
+    #define LSEEK_CURRENT	0x0001
+    #define LSEEK_END		0x0002
+
+   RESPONSE VALUES
+
+    response.number = htonl(0xBABE0152);
+    response.length = htons(sizeof(response));
+    response.result = htonl(lseek(ntohl(request->fd), ntohl(request->offset), ntohl(request->whence)));
+
+  -----------------------------
+   0xBABE0161 (dopen request)
+   0xBABE0162 (dopen response)
+  -----------------------------
+
+   A request from ps2link to open the directory specified by the pathname with
+   with the given flags. The resulting directory descriptor is returned as the
+   result in the response packet.
+
+   PACKET STRUCTURES
+
+    struct { int number; short length; int flags; char pathname[256]; } request;
+    struct { int number; short length; int result; } response;
+
+   RESPONSE VALUES
+
+    response.number = htonl(0xBABE0162);
+    response.length = htons(sizeof(response));
+    response.dd     = htonl((int)opendir(request->pathname));
+
+  ------------------------------
+   0xBABE0171 (dread request)
+   0xBABE0172 (dread response)
+  ------------------------------
+
+   A request from ps2link to read the next directory entry specified by the
+   directory descriptor, dd. The result of the readdir() call is returned in
+   the response packet, along with the actual entry information. To maintain
+   compatibility with existing PS2 directory functions, this data must be
+   almost entirely converted to a different format.
+
+   PACKET STRUCTURES
+
+    struct tm timem;
+    struct stat stats;
+    struct dirent *direptr;
+    struct { int number; short length; int dd; } request;
+    struct { int number; short length; int ret; u32 mode, attr, size; u08 ctime[8], atime[8], mtime[8]; u32 hisize; u08 name[256]; } reponse;
+
+   RESPONSE VALUES
+
+    response.number = htonl(0xBABE0182);
+    response.length = htons(sizeof(packet));
+    response.result = htonl((int)direptr = readdir((DIR *)ntohl(request->dd)));
+
+    // Fetch the stats for the entry.
+    stat(direptr->d_name, &stats);
+
+    // Convert and add the mode.
+    response.mode = (stats.st_mode & 0x07);
+    if (S_ISDIR(stats.st_mode)) { response.mode |= 0x20; }
+    if (S_ISLNK(stats.st_mode)) { response.mode |= 0x08; }
+    if (S_ISREG(stats.st_mode)) { response.mode |= 0x10; }
+    response.mode = htonl(response.mode);
+
+    // Add the attributes.
+    response.attr = htonl(0);
+
+    // Add the size.
+    response.size = htonl(stats.st_size);
+
+    // Convert and add the creation time.
+    if (localtime_r(&(stats.st_ctime), &timem)) {
+      response.ctime[6] = (u08)loctime.tm_year;
+      response.ctime[5] = (u08)loctime.tm_mon + 1;
+      response.ctime[4] = (u08)loctime.tm_mday;
+      response.ctime[3] = (u08)loctime.tm_hour;
+      response.ctime[2] = (u08)loctime.tm_min;
+      response.ctime[1] = (u08)loctime.tm_sec;
+    }
+
+    // Convert and add the access time.
+    if (localtime_r(&(stats.st_atime), &timem)) {
+      response.atime[6] = (u08)loctime.tm_year;
+      response.atime[5] = (u08)loctime.tm_mon + 1;
+      response.atime[4] = (u08)loctime.tm_mday;
+      response.atime[3] = (u08)loctime.tm_hour;
+      response.atime[2] = (u08)loctime.tm_min;
+      response.atime[1] = (u08)loctime.tm_sec;
+    }
+
+    // Convert and add the modification time.
+    if (localtime_r(&(stats.st_mtime), &timem)) {
+      response.mtime[6] = (u08)loctime.tm_year;
+      response.mtime[5] = (u08)loctime.tm_mon + 1;
+      response.mtime[4] = (u08)loctime.tm_mday;
+      response.mtime[3] = (u08)loctime.tm_hour;
+      response.mtime[2] = (u08)loctime.tm_min;
+      response.mtime[1] = (u08)loctime.tm_sec;
+    }
+
+    // Add the hsize. (what is this?)
+    response.hisize = htonl(0);
+
+  ------------------------------
+   0xBABE0181 (dclose request)
+   0xBABE0182 (dclose response)
+  ------------------------------
+
+   A request from ps2link to close the directory specified by the directory
+   descriptor, dd. The result of the closedir() call is returned in the
+   response packet.
+
+   PACKET STRUCTURES
+
+    struct { int number; short length; int dd; } request;
+    struct { int number; short length; int result; } response;
+
+   RESPONSE VALUES
+
+    response.number = htonl(0xBABE0172);
+    response.length = htons(sizeof(reponse));
+    response.result = htonl(closedir((DIR *)ntohl(request->dd)));
+
+ ---------------------
+  PS2LINK LOG PACKETS
+ ---------------------
+
+  Any data received from the log port from ps2link is meant to be displayed
+  to the user via a simple printf. There is no special processing required
+  or any packet format - just output to the screen.
