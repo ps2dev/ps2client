@@ -4,6 +4,8 @@
  #include <string.h>
  #include <dirent.h>
  #include <unistd.h>
+ #include <time.h>
+ #include <sys/stat.h>
  #include <pthread.h>
  #include <netinet/in.h>
 
@@ -19,6 +21,8 @@
  pthread_t request_thread_id;
 
  int ps2link_counter = 0;
+
+ DIR *ps2link_dd[10] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
 
  #define PACKED	__attribute__((packed))
 
@@ -246,8 +250,14 @@
  }
 
  int ps2link_command_iopexcep(void) {
+  struct { unsigned int number; unsigned short length; } PACKED command;
 
-  // FIXME: Unimplemented.
+  // Build the command packet.
+  command.number = htonl(PS2LINK_COMMAND_IOPEXCEP);
+  command.length = htons(sizeof(command));
+
+  // Send the command packet.
+  return network_send(command_socket, &command, sizeof(command));
 
   // End function.
   return 0;
@@ -328,15 +338,18 @@
 
  }
 
- int ps2link_request_opendir(void *packet) {
+ int ps2link_request_opendir(void *packet) { int loop0 = 0;
   struct { unsigned int command; unsigned short length; int flags; char pathname[256]; } PACKED *request = packet;
   int result = -1;
 
   // Fix the arguments.
   fix_pathname(request->pathname);
 
+  // Allocate an available directory descriptor.
+  for (loop0=0; loop0<10; loop0++) { if (ps2link_dd[loop0] == NULL) { result = loop0; break; } }
+
   // Perform the request.
-  result = (int)opendir(request->pathname);
+  if (result != -1) { ps2link_dd[result] = opendir(request->pathname); }
 
   // Send the response.
   return ps2link_response_opendir(result);
@@ -348,7 +361,10 @@
   int result = -1;
 
   // Perform the request.
-  result = closedir((DIR *)ntohl(request->dd));
+  result = closedir(ps2link_dd[ntohl(request->dd)]);
+
+  // Free the directory descriptor.
+  ps2link_dd[ntohl(request->dd)] = NULL;
 
   // Send the response.
   return ps2link_response_closedir(result);
@@ -356,11 +372,59 @@
  }
 
  int ps2link_request_readdir(void *packet) {
+  struct { unsigned int number; unsigned short length; int dd; } PACKED *request = packet;
+  int result = -1; struct dirent *dirent; struct stat stats; struct tm loctime;
+  unsigned int mode; unsigned char ctime[8]; unsigned char atime[8]; unsigned char mtime[8];
 
-  // FIXME: Unimplemented.
+  // Perform the request.
+  dirent = readdir(ps2link_dd[ntohl(request->dd)]);
 
-  // End function.
-  return 0;
+  // If no more entries were found...
+  if (dirent <= 0) {
+
+   // Tell the user an entry wasn't found.
+   return ps2link_response_readdir(0, 0, 0, 0, NULL, NULL, NULL, 0, NULL);
+
+  }
+
+  // Fetch the entry's statistics.
+  stat(dirent->d_name, &stats);
+
+  // Convert the mode.
+  mode = (stats.st_mode & 0x07);
+  if (S_ISDIR(stats.st_mode)) { mode |= 0x20; }
+  if (S_ISLNK(stats.st_mode)) { mode |= 0x08; }
+  if (S_ISREG(stats.st_mode)) { mode |= 0x10; }
+
+  // Convert the creation time.
+  localtime_r(&(stats.st_ctime), &loctime);
+  ctime[6] = (unsigned char)loctime.tm_year;
+  ctime[5] = (unsigned char)loctime.tm_mon + 1;
+  ctime[4] = (unsigned char)loctime.tm_mday;
+  ctime[3] = (unsigned char)loctime.tm_hour;
+  ctime[2] = (unsigned char)loctime.tm_min;
+  ctime[1] = (unsigned char)loctime.tm_sec;
+
+  // Convert the access time.
+  localtime_r(&(stats.st_atime), &loctime);
+  atime[6] = (unsigned char)loctime.tm_year;
+  atime[5] = (unsigned char)loctime.tm_mon + 1;
+  atime[4] = (unsigned char)loctime.tm_mday;
+  atime[3] = (unsigned char)loctime.tm_hour;
+  atime[2] = (unsigned char)loctime.tm_min;
+  atime[1] = (unsigned char)loctime.tm_sec;
+
+  // Convert the last modified time.
+  localtime_r(&(stats.st_mtime), &loctime);
+  mtime[6] = (unsigned char)loctime.tm_year;
+  mtime[5] = (unsigned char)loctime.tm_mon + 1;
+  mtime[4] = (unsigned char)loctime.tm_mday;
+  mtime[3] = (unsigned char)loctime.tm_hour;
+  mtime[2] = (unsigned char)loctime.tm_min;
+  mtime[1] = (unsigned char)loctime.tm_sec;
+
+  // Send the response.
+  return ps2link_response_readdir(1, mode, 0, stats.st_size, ctime, atime, mtime, 0, dirent->d_name);
 
  }
 
@@ -460,12 +524,24 @@
 
  }
 
- int ps2link_response_readdir(int result, unsigned int size, char *name) {
+ int ps2link_response_readdir(int result, unsigned int mode, unsigned int attr, unsigned int size, unsigned char *ctime, unsigned char *atime, unsigned char *mtime, unsigned int hisize, char *name) {
+  struct { unsigned int number; unsigned short length; int result; unsigned int mode; unsigned int attr; unsigned int size; unsigned char ctime[8]; unsigned char atime[8]; unsigned char mtime[8]; unsigned int hisize; char name[256]; } PACKED response;
 
-  // FIXME: Unimplemented.
+  // Build the response packet.
+  response.number = htonl(PS2LINK_RESPONSE_READDIR);
+  response.length = htons(sizeof(response));
+  response.result = htonl(result);
+  response.mode   = htonl(mode);
+  response.attr   = htonl(attr);
+  response.size   = htonl(size);
+  if (ctime) { memcpy(response.ctime, ctime, 8); }
+  if (atime) { memcpy(response.atime, atime, 8); }
+  if (mtime) { memcpy(response.mtime, mtime, 8); }
+  response.hisize = htonl(hisize);
+  if (name) { snprintf(response.name, 256, "%s", name); }
 
-  // End function.
-  return 0;
+  // Send the response packet.
+  return network_send(request_socket, &response, sizeof(response));
 
  }
 

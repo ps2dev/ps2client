@@ -22,7 +22,10 @@
   if (flags & 0x0400) { result |= O_TRUNC;            }
 
 #ifdef _WIN32
+
+  // Binary mode file access.
   result |= O_BINARY;
+
 #endif
 
   // End function.

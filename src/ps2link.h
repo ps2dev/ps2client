@@ -111,7 +111,7 @@
 
  int ps2link_response_closedir(int result);
 
- int ps2link_response_readdir(int result, unsigned int size, char *name);
+ int ps2link_response_readdir(int result, unsigned int mode, unsigned int attr, unsigned int size, unsigned char *ctime, unsigned char *atime, unsigned char *mtime, unsigned int hisize, char *name);
 
  //////////////////////////////
  // PS2LINK THREAD FUNCTIONS //
