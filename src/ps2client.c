@@ -10,8 +10,6 @@
 
  int ps2client_usage(char *progname) {
 
-#ifdef __CHATTY__
-
   // Output the usage instructions.
   printf("\n Basic usage:\n\n");
   printf("  %s <hostname> <command> [arguments]\n\n", progname);
@@ -43,8 +41,6 @@
   printf("  %s <hostname> rmdir <directory>\n", progname);
   printf("  %s <hostname> sync <device>\n", progname);
   printf("  %s <hostname> umount <device>\n\n", progname);
-
-#endif
 
   // End function.
   return 0;
