@@ -60,21 +60,21 @@
 
    ps2client <hostname> reset
 
-   ps2client <hostname> execiop <filename>
+   ps2client <hostname> execiop <filename> [timeout]
 
-   ps2client <hostname> execee <filename>
+   ps2client <hostname> execee <filename> [timeout]
 
    ps2client <hostname> poweroff
 
-   ps2client <hostname> dumpmem <filename> <offset> <size>
+   ps2client <hostname> dumpmem <filename> <offset> <size> [timeout]
 
    ps2client <hostname> startvu <0/1>
 
    ps2client <hostname> stopvu <0/1>
 
-   ps2client <hostname> dumpreg <filename> <type>
+   ps2client <hostname> dumpreg <filename> <type> [timeout]
 
-   ps2client <hostname> gsexec <filename>
+   ps2client <hostname> gsexec <filename> [timeout]
 
    ps2client <hostname> listen
 

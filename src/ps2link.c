@@ -47,6 +47,9 @@
  int ps2link_mainloop(int timeout) {
   struct { int number; short length; char data[65544]; } __attribute__((packed)) request;
 
+  // Check the timeout value.
+  if (timeout < 1) { timeout = -1; } else  if (timeout < 1000) { timeout = 1000; }
+
   // Main loop.
   while (1) {
 

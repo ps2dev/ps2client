@@ -6,7 +6,7 @@
  #include "ps2link.h"
  #include "ps2netfs.h"
 
- char hostname[256], command[256], arg0[256], arg1[256], arg2[256];
+ char hostname[256], command[256], arg0[256], arg1[256], arg2[256], arg3[256];
 
  int ps2client_usage(char *progname) {
 
@@ -17,14 +17,14 @@
   // Output the ps2link commands.
   printf(" Commands for ps2link:\n\n");
   printf("  %s <hostname> reset\n", progname);
-  printf("  %s <hostname> execiop <filename>\n", progname);
-  printf("  %s <hostname> execee <filename>\n", progname);
+  printf("  %s <hostname> execiop <filename> [timeout]\n", progname);
+  printf("  %s <hostname> execee <filename> [timeout]\n", progname);
   printf("  %s <hostname> poweroff\n", progname);
-  printf("  %s <hostname> dumpmem <filename> <offset> <size>\n", progname);
+  printf("  %s <hostname> dumpmem <filename> <offset> <size> [timeout]\n", progname);
   printf("  %s <hostname> startvu <0/1>\n", progname);
   printf("  %s <hostname> stopvu <0/1>\n", progname);
-  printf("  %s <hostname> dumpreg <filename> <type>\n", progname);
-  printf("  %s <hostname> gsexec <filename>\n", progname);
+  printf("  %s <hostname> dumpreg <filename> <type> [timeout]\n", progname);
+  printf("  %s <hostname> gsexec <filename> [timeout]\n", progname);
   printf("  %s <hostname> listen\n\n", progname);
 
   // Output the ps2netfs commands.
@@ -62,17 +62,18 @@
   if (argc > 3) { strncpy(arg0,     argv[3], 256); } else { sprintf(arg0, "BLANK"); }
   if (argc > 4) { strncpy(arg1,     argv[4], 256); } else { sprintf(arg1, "BLANK"); }
   if (argc > 5) { strncpy(arg2,     argv[5], 256); } else { sprintf(arg2, "BLANK"); }
+  if (argc > 6) { strncpy(arg2,     argv[6], 256); } else { sprintf(arg3, "BLANK"); }
 
   // Peform any ps2link commands.
   if (!strcmp(command, "reset"))    { return ps2link_command_reset(hostname); }
-  if (!strcmp(command, "execiop"))  { ps2link_connect(hostname); ps2link_command_execiop(hostname, arg0); ps2link_mainloop(5000); return ps2link_disconnect(); }
-  if (!strcmp(command, "execee"))   { ps2link_connect(hostname); ps2link_command_execee(hostname, arg0); ps2link_mainloop(-1); return ps2link_disconnect(); }
+  if (!strcmp(command, "execiop"))  { ps2link_connect(hostname); ps2link_command_execiop(hostname, arg0); ps2link_mainloop(atoi(arg1)); return ps2link_disconnect(); }
+  if (!strcmp(command, "execee"))   { ps2link_connect(hostname); ps2link_command_execee(hostname, arg0); ps2link_mainloop(atoi(arg1)); return ps2link_disconnect(); }
   if (!strcmp(command, "poweroff")) { return ps2link_command_poweroff(hostname); }
-  if (!strcmp(command, "dumpmem"))  { ps2link_connect(hostname); ps2link_command_dumpmem(hostname, arg0, atoi(arg1), atoi(arg2)); ps2link_mainloop(5000); return ps2link_disconnect(); }
+  if (!strcmp(command, "dumpmem"))  { ps2link_connect(hostname); ps2link_command_dumpmem(hostname, arg0, atoi(arg1), atoi(arg2)); ps2link_mainloop(atoi(arg3)); return ps2link_disconnect(); }
   if (!strcmp(command, "startvu"))  { return ps2link_command_startvu(hostname, atoi(arg0)); }
   if (!strcmp(command, "stopvu"))   { return ps2link_command_stopvu(hostname, atoi(arg0)); }
-  if (!strcmp(command, "dumpreg"))  { ps2link_connect(hostname); ps2link_command_dumpreg(hostname, arg0, atoi(arg1)); ps2link_mainloop(5000); return ps2link_disconnect(); }
-  if (!strcmp(command, "gsexec"))   { ps2link_connect(hostname); ps2link_command_gsexec(hostname, arg0,  atoi(arg1)); ps2link_mainloop(5000); return ps2link_disconnect(); }
+  if (!strcmp(command, "dumpreg"))  { ps2link_connect(hostname); ps2link_command_dumpreg(hostname, arg0, atoi(arg1)); ps2link_mainloop(atoi(arg2)); return ps2link_disconnect(); }
+  if (!strcmp(command, "gsexec"))   { ps2link_connect(hostname); ps2link_command_gsexec(hostname, arg0, atoi(arg1)); ps2link_mainloop(atoi(arg2)); return ps2link_disconnect(); }
   if (!strcmp(command, "listen"))   { ps2link_connect(hostname); ps2link_mainloop(-1); return ps2link_disconnect(); }
 
   // Perform any ps2netfs commands.
