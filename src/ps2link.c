@@ -121,7 +121,7 @@
   for(loop0=0;loop0<strlen(pathname);loop0++) { if (pathname[loop0] == '\\') { pathname[loop0] = '/'; } }
 
   // Check for a leading slash.
-  if (pathname[0] == '/') {
+  if ((pathname[0] == '/') && (pathname[1] != 0)) {
 
    // Kill off the leading slash.
    for(loop0=0;loop0<strlen(pathname)-1;loop0++) { pathname[loop0] = pathname[loop0+1]; }
