@@ -7,7 +7,9 @@
   GCC += -D__DEBUG__
  endif
 
- PREFIX = $(PS2DEV)
+ ifeq "x$(PREFIX)" "x"
+  PREFIX = $(PS2DEV)
+ endif
 
  all: bin/ps2client
 
