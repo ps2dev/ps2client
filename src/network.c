@@ -103,10 +103,7 @@
  int network_wait(int timeout) {
 
   // Wait for data to become available.
-  poll(ufsd, 10, timeout);
-
-  // End function.
-  return 0;
+  return poll(ufsd, 10, timeout);
 
  }
 

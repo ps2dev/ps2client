@@ -44,14 +44,14 @@
 
  }
 
- int ps2link_mainloop(void) {
+ int ps2link_mainloop(int timeout) {
   struct { int number; short length; char data[65544]; } __attribute__((packed)) request;
 
   // Main loop.
   while (1) {
 
    // Wait until something happens.
-   network_wait(100000);
+   if (network_wait(timeout) == 0) { return -1; };
 
    // Read and perform any requests as needed.
    if (network_recv(request_sock, &request, sizeof(request)) > 0) {

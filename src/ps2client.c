@@ -69,15 +69,15 @@
 
   // Peform any ps2link commands.
   if (!strcmp(command, "reset"))    { return ps2link_command_reset(hostname); }
-  if (!strcmp(command, "execiop"))  { ps2link_connect(hostname); ps2link_command_execiop(hostname, arg0); ps2link_mainloop(); return ps2link_disconnect(); }
-  if (!strcmp(command, "execee"))   { ps2link_connect(hostname); ps2link_command_execee(hostname, arg0); ps2link_mainloop(); return ps2link_disconnect(); }
+  if (!strcmp(command, "execiop"))  { ps2link_connect(hostname); ps2link_command_execiop(hostname, arg0); ps2link_mainloop(5000); return ps2link_disconnect(); }
+  if (!strcmp(command, "execee"))   { ps2link_connect(hostname); ps2link_command_execee(hostname, arg0); ps2link_mainloop(-1); return ps2link_disconnect(); }
   if (!strcmp(command, "poweroff")) { return ps2link_command_poweroff(hostname); }
-  if (!strcmp(command, "dumpmem"))  { ps2link_connect(hostname); ps2link_command_dumpmem(hostname, arg0, atoi(arg1), atoi(arg2)); ps2link_mainloop(); return ps2link_disconnect(); }
+  if (!strcmp(command, "dumpmem"))  { ps2link_connect(hostname); ps2link_command_dumpmem(hostname, arg0, atoi(arg1), atoi(arg2)); ps2link_mainloop(5000); return ps2link_disconnect(); }
   if (!strcmp(command, "startvu"))  { return ps2link_command_startvu(hostname, atoi(arg0)); }
   if (!strcmp(command, "stopvu"))   { return ps2link_command_stopvu(hostname, atoi(arg0)); }
-  if (!strcmp(command, "dumpreg"))  { ps2link_connect(hostname); ps2link_command_dumpreg(hostname, arg0, atoi(arg1)); ps2link_mainloop(); return ps2link_disconnect(); }
-  if (!strcmp(command, "gsexec"))   { ps2link_connect(hostname); ps2link_command_gsexec(hostname, arg0,  atoi(arg1)); ps2link_mainloop(); return ps2link_disconnect(); }
-  if (!strcmp(command, "listen"))   { ps2link_connect(hostname); ps2link_mainloop(); return ps2link_disconnect(); }
+  if (!strcmp(command, "dumpreg"))  { ps2link_connect(hostname); ps2link_command_dumpreg(hostname, arg0, atoi(arg1)); ps2link_mainloop(5000); return ps2link_disconnect(); }
+  if (!strcmp(command, "gsexec"))   { ps2link_connect(hostname); ps2link_command_gsexec(hostname, arg0,  atoi(arg1)); ps2link_mainloop(5000); return ps2link_disconnect(); }
+  if (!strcmp(command, "listen"))   { ps2link_connect(hostname); ps2link_mainloop(-1); return ps2link_disconnect(); }
 
   // Perform any ps2netfs commands.
   if (!strcmp(command, "copyfrom")) { return ps2netfs_command_copyfrom(hostname, arg0, arg1); }

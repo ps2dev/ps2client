@@ -9,7 +9,7 @@
 
  int ps2link_disconnect(void);
 
- int ps2link_mainloop(void);
+ int ps2link_mainloop(int timeout);
 
  int ps2link_fixflags(int flags);
 

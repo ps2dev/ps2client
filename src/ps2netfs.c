@@ -224,6 +224,8 @@
    if (!strcmp(temp, "cdrom")) { printf("  cdrom  - Standard cd/dvd device. (cdrom:)\n");	} else
    if (!strcmp(temp, "host"))  { printf("  host   - Host file system. (host:)\n");		} else
    if (!strcmp(temp, "mc"))    { printf("  mc     - Memory card driver. (mc0: mc1:)\n");	} else
+   if (!strcmp(temp, "hdd"))   { printf("  hdd    - Internal HDD unit.\n");			} else
+   if (!strcmp(temp, "pfs"))   { printf("  pfs    - Playstation File System.\n");		} else
    if (!strcmp(temp, "dev9x")) { printf("  dev9x  - Blah blah blah.\n");			} else { printf("  %s\n", temp); }
 
    // Increment temp.
