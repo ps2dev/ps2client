@@ -81,13 +81,25 @@
  }
 
  int network_sendall(int nd, void *buffer, int size) { int result = 0;
+  int total = 0; char *temp = buffer;
 
-  // Send all the data.
-  result = send(sock[nd], buffer, size, MSG_WAITALL);
-  if (result < 0) { printf("[ERROR] Send all data failed. (%d)\n", result); return -1; }
+  // Repeat until all the data has been sent.
+  while (total < size) {
+
+   // Send all the data.
+   result = send(sock[nd], temp, size - total, 0);
+   if (result < 0) { printf("[ERROR] Error sending all data. (%d)\n", result); return -1; }
+
+   // Increment the counters.
+   if (result > 0) { total += result; temp += result; }
+
+   // Rest for a moment.
+   // usleep(1);
+
+  }
 
   // End function.
-  return result;
+  return total;
 
  }
 
@@ -124,7 +136,7 @@
 
   // Read the data.
   result = recv(sock[nd], buffer, size, 0);
-  if (result < 0) { printf("[ERROR] Read data failure. (%d)\n", result); return -1; }
+  if (result < 0) { printf("[ERROR] Read data failed. (%d)\n", result); return -1; }
 
   // End function.
   return result;
@@ -132,6 +144,7 @@
  }
 
  int network_recvall(int nd, void *buffer, int size) { int result = 0;
+  int total = 0; char *temp = buffer;
 
   // Clear the buffer.
   memset(buffer, 0, size);
@@ -139,12 +152,23 @@
   // Check to see if data is available.
   if (!FD_ISSET(sock[nd], &rfds)) { return 0; }
 
-  // Read all the data.
-  result = recv(sock[nd], buffer, size, MSG_WAITALL);
-  if (result < 0) { printf("[ERROR] Read all data failure. (%d)\n", result); return -1; }
+  // Repeat until all the data has been read.
+  while (total < size) {
+
+   // Read all the data.
+   result = recv(sock[nd], temp, size - total, 0);
+   if (result < 0) { printf("[ERROR] Error reading all data. (%d)\n", result); return -1; }
+
+   // Increment the counters.
+   if (result > 0) { total += result; temp += result; }
+
+   // Rest for a moment.
+   // usleep(1);
+
+  }
 
   // End function.
-  return result;
+  return total;
 
  }
 
@@ -166,6 +190,7 @@
  }
 
  int network_recvallfrom(int nd, void *buffer, int size) { int result = 0;
+  int total = 0; char *temp = buffer;
 
   // Clear the buffer.
   memset(buffer, 0, size);
@@ -173,16 +198,27 @@
   // Check to see if data is available.
   if (!FD_ISSET(sock[nd], &rfds)) { return 0; }
 
-  // Read all the data.
-  result = recvfrom(sock[nd], buffer, size, MSG_WAITALL, NULL, NULL);
-  if (result < 0) { printf("[ERROR] Read all data failure. (%d)\n", result); return -1; }
+  // Repeat until all the data has been read.
+  while (total < size) {
+
+   // Read all the data.
+   result = recvfrom(sock[nd], temp, size - total, 0, NULL, NULL);
+   if (result < 0) { printf("[ERROR] Error reading all data. (%d)\n", result); return -1; }
+
+   // Increment the counters.
+   if (result > 0) { total += result; temp += result; }
+
+   // Rest for a moment.
+   // usleep(1);
+
+  }
 
   // End function.
-  return result;
+  return total;
 
  }
 
- int network_disconnect(int nd) { int result = 0;
+int network_disconnect(int nd) { int result = 0;
 
   // Close the socket.
   result = close(sock[nd]);

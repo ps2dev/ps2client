@@ -13,7 +13,7 @@
 
  char buffer[65536];
 
- int command_sock, request_sock, textlog_sock;
+ int command_sock = -1, request_sock = -1, textlog_sock = -1;
 
  ///////////////////////
  // PS2LINK FUNCTIONS //
@@ -35,25 +35,31 @@
  }
 
  int ps2link_mainloop(int timeout) {
-  struct { int number; short length; char data[65544]; } __attribute__((packed)) request;
+  struct { int number; short length; } __attribute__((packed)) request;
 
   // Main loop.
   while (network_wait(timeout) > 0) {
 
-   // Read and perform any requests as needed.
-   if (network_recv(request_sock, &request, sizeof(request)) > 0) {
-    if (ntohl(request.number) == 0xBABE0111) { ps2link_request_open(&request);   } else
-    if (ntohl(request.number) == 0xBABE0121) { ps2link_request_close(&request);  } else
-    if (ntohl(request.number) == 0xBABE0131) { ps2link_request_read(&request);   } else
-    if (ntohl(request.number) == 0xBABE0141) { ps2link_request_write(&request);  } else
-    if (ntohl(request.number) == 0xBABE0151) { ps2link_request_lseek(&request);  } else
-    if (ntohl(request.number) == 0xBABE0161) { ps2link_request_dopen(&request);  } else
-    if (ntohl(request.number) == 0xBABE0171) { ps2link_request_dclose(&request); } else
-    if (ntohl(request.number) == 0xBABE0181) { ps2link_request_dread(&request);  }
+   // Read in the next request.
+   if (ps2link_recv_request(&request, sizeof(request)) > 0) {
+
+    // Perform the given request.
+    if (ntohl(request.number) == 0xBABE0111) { ps2link_request_open();   } else
+    if (ntohl(request.number) == 0xBABE0121) { ps2link_request_close();  } else
+    if (ntohl(request.number) == 0xBABE0131) { ps2link_request_read();   } else
+    if (ntohl(request.number) == 0xBABE0141) { ps2link_request_write();  } else
+    if (ntohl(request.number) == 0xBABE0151) { ps2link_request_lseek();  } else
+    if (ntohl(request.number) == 0xBABE0161) { ps2link_request_dopen();  } else
+    if (ntohl(request.number) == 0xBABE0171) { ps2link_request_dclose(); } else
+    if (ntohl(request.number) == 0xBABE0181) { ps2link_request_dread();  }
+
+    // The request was unsupported.
+    else { printf("[ERROR] Unsupported request received from ps2link. (0x%X)\n", ntohl(request.number)); }
+
    }
 
    // Read and display any textlog information.
-   if (network_recvfrom(textlog_sock, buffer, sizeof(buffer)) > 0) { fprintf(stdout, buffer); }
+   if (ps2link_recv_textlog(buffer, sizeof(buffer)) > 0) { printf(buffer); }
 
   }
 
@@ -127,7 +133,7 @@
   if (command_sock < 0) { printf("[ERROR] Connect to command port. (%d)\n", result); return -1; }
 
   // Send the command.
-  result = network_send(command_sock, command, size);
+  result = network_sendall(command_sock, command, size);
   if (result < 0) { printf("[ERROR] Send command failed. (%d)\n", result); return -2; }
 
   // Disconnect from the command port.
@@ -383,176 +389,230 @@
  // PS2LINK REQUEST FUNCTIONS //
  ///////////////////////////////
 
- int ps2link_request_open(void *packet) { int result = 0;
-  struct { int number; short length; int flags; char pathname[256]; } __attribute__((packed)) *request = packet;
+ int ps2link_recv_request(void *buffer, int size) { int result = 0;
+
+  // Read the request data.
+  result = network_recvall(request_sock, buffer, size);
+  if (result < 0) { printf("[ERROR] Read request data failed. (%d)\n", result); }
+
+  // End function.
+  return result;
+
+ }
+
+ int ps2link_send_response(void *buffer, int size) { int result = 0;
+
+  // Send the response data.
+  result = network_sendall(request_sock, buffer, size);
+  if (result < 0) { printf("[ERROR] Send response data failed. (%d)\n", result); }
+
+  // End function.
+  return result;
+
+ }
+
+ int ps2link_request_open(void) { int result = 0;
+  struct { int flags; char pathname[256]; } __attribute__((packed)) request;
   struct { int number; short length; int result; } __attribute__((packed)) response;
 
-  // Fix the requested pathname.
-  ps2link_fixpathname(request->pathname);
+  // Read the open request arguments.
+  result = ps2link_recv_request(&request, sizeof(request));
+  if (result < 0) { printf("[ERROR] Read open request arguments failed. (%d)\n", result); return -1; }
+
+  // Fix the request pathname.
+  ps2link_fixpathname(request.pathname);
 
   // Build the open response.
   response.number = htonl(0xBABE0112);
   response.length = htons(sizeof(response));
-  response.result = htonl(open(request->pathname, ps2link_fixflags(ntohl(request->flags)), 0644));
+  response.result = htonl(open(request.pathname, ps2link_fixflags(ntohl(request.flags)), 0644));
 
   // Send the open response.
-  result = network_send(request_sock, &response, sizeof(response));
-  if (result < 0) { printf("[ERROR] Send open response failed. (%d)\n", result); return -1; }
+  result = ps2link_send_response(&response, sizeof(response));
+  if (result < 0) { printf("[ERROR] Send open response failed. (%d)\n", result); return -2; }
 
 #ifdef __DEBUG__
 
   // Tell the user about the request and its result.
-  printf("[DEBUG] open(\"host0:%s\", %d) = %d\n", request->pathname, ps2link_fixflags(ntohl(request->flags)), ntohl(response.result));
+  printf("[DEBUG] open(\"host0:%s\", %d) = %d\n", request.pathname, ps2link_fixflags(ntohl(request.flags)), ntohl(response.result));
 
 #endif
 
   // End function.
-  return 0;
+  return ntohl(response.result);
 
  }
 
- int ps2link_request_close(void *packet) { int result = 0;
-  struct { int number; short length; int fd; } __attribute__((packed)) *request = packet;
+ int ps2link_request_close(void) { int result = 0;
+  struct { int fd; } __attribute__((packed)) request;
   struct { int number; short length; int result; } __attribute__((packed)) response;
+
+  // Read the close request arguments.
+  result = ps2link_recv_request(&request, sizeof(request));
+  if (result < 0) { printf("[ERROR] Read close request arguments failed. (%d)\n", result); return -1; }
 
   // Build the close response.
   response.number = htonl(0xBABE0122);
   response.length = htons(sizeof(response));
-  response.result = htonl(close(ntohl(request->fd)));
+  response.result = htonl(close(ntohl(request.fd)));
 
   // Send the close response.
-  result = network_send(request_sock, &response, sizeof(response));
-  if (result < 0) { printf("[ERROR] Send close response failed. (%d)\n", result); return -1; }
+  result = ps2link_send_response(&response, sizeof(response));
+  if (result < 0) { printf("[ERROR] Send close response failed. (%d)\n", result); return -2; }
 
 #ifdef __DEBUG__
 
   // Tell the user about the request and its result.
-  printf("[DEBUG] close(%d) = %d\n", ntohl(request->fd), ntohl(response.result));
+  printf("[DEBUG] close(%d) = %d\n", ntohl(request.fd), ntohl(response.result));
 
 #endif
 
   // End function.
-  return 0;
+  return ntohl(response.result);
 
  }
 
- int ps2link_request_read(void *packet) { int result = 0;
-  struct { int number; short length; int fd, size; } __attribute__((packed)) *request = packet;
+ int ps2link_request_read(void) { int result = 0;
+  struct { int fd, size; } __attribute__((packed)) request;
   struct { int number; short length; int result, size; } __attribute__((packed)) response;
+
+  // Read the read request arguments.
+  result = ps2link_recv_request(&request, sizeof(request));
+  if (result < 0) { printf("[ERROR] Read read request arguments failed. (%d)\n", result); return -1; }
 
   // Build the read response.
   response.number = htonl(0xBABE0132);
   response.length = htons(sizeof(response));
-  response.result = htonl(read(ntohl(request->fd), buffer, ntohl(request->size)));
+  response.result = htonl(read(ntohl(request.fd), buffer, ntohl(request.size)));
   response.size   = response.result;
 
   // Send the read response.
-  result = network_send(request_sock, &response, sizeof(response));
-  if (result < 0) { printf("[ERROR] Send read response failed. (%d)\n", result); return -1; }
+  result = ps2link_send_response(&response, sizeof(response));
+  if (result < 0) { printf("[ERROR] Send read response failed. (%d)\n", result); return -2; }
 
   // Send the read response data.
-  result = network_send(request_sock, buffer, ntohl(response.result));
-  if (result < 0) { printf("[ERROR] Send read response data failed. (%d)\n", result); return -2; }
+  result = ps2link_send_response(buffer, ntohl(response.result));
+  if (result < 0) { printf("[ERROR] Send read response data failed. (%d)\n", result); return -3; }
 
 #ifdef __DEBUG__
 
   // Tell the user about the request and its result.
-  printf("[DEBUG] read(%d, buffer, %d) = %d\n", ntohl(request->fd), ntohl(request->size), ntohl(response.result));
+  printf("[DEBUG] read(%d, buffer, %d) = %d\n", ntohl(request.fd), ntohl(request.size), ntohl(response.result));
 
 #endif
 
   // End function.
-  return 0;
+  return ntohl(response.result);
 
  }
 
- int ps2link_request_write(void *packet) { int result = 0;
-  struct { int number; short length; int fd, size; char data[65536]; } __attribute__((packed)) *request = packet;
+ int ps2link_request_write(void) { int result = 0;
+  struct { int fd, size; } __attribute__((packed)) request;
   struct { int number; short length; int result; } __attribute__((packed)) response;
+
+  // Read the write request arguments.
+  result = ps2link_recv_request(&request, sizeof(request));
+  if (result < 0) { printf("[ERROR] Read write request arguments failed. (%d)\n", result); return -1; }
+
+  // Read the write request data.
+  result = ps2link_recv_request(buffer, ntohl(request.size));
+  if (result < 0) { printf("[ERROR] Read write request data failed. (%d)\n", result); return -2; }
 
   // Build the write response.
   response.number = htonl(0xBABE0142);
   response.length = htons(sizeof(response));
-  response.result = htonl(write(ntohl(request->fd), request->data, ntohl(request->size)));
+  response.result = htonl(write(ntohl(request.fd), buffer, ntohl(request.size)));
 
   // Send the write response.
-  result = network_send(request_sock, &response, sizeof(response));
-  if (result < 0) { printf("[ERROR] Send write response failed. (%d)\n", result); return -1; }
+  result = ps2link_send_response(&response, sizeof(response));
+  if (result < 0) { printf("[ERROR] Send write response failed. (%d)\n", result); return -3; }
 
 #ifdef __DEBUG__
 
   // Tell the user about the request and its result.
-  printf("[DEBUG] write(%d, buffer, %d) = %d\n", ntohl(request->fd), ntohl(request->size), ntohl(response.result));
+  printf("[DEBUG] write(%d, buffer, %d) = %d\n", ntohl(request.fd), ntohl(request.size), ntohl(response.result));
 
 #endif
 
   // End function.
-  return 0;
+  return ntohl(response.result);
 
  }
 
- int ps2link_request_lseek(void *packet) { int result = 0;
-  struct { int number; short length; int fd, offset, whence; } __attribute__((packed)) *request = packet;
+ int ps2link_request_lseek(void) { int result = 0;
+  struct { int fd, offset, whence; } __attribute__((packed)) request;
   struct { int number; short length; int result; } __attribute__((packed)) response;
+
+  // Read the lseek request arguments.
+  result = ps2link_recv_request(&request, sizeof(request));
+  if (result < 0) { printf("[ERROR] Read lseek request arguments failed. (%d)\n", result); return -1; }
 
   // Build the lseek response.
   response.number = htonl(0xBABE0152);
   response.length = htons(sizeof(response));
-  response.result = htonl(lseek(ntohl(request->fd), ntohl(request->offset), ntohl(request->whence)));
+  response.result = htonl(lseek(ntohl(request.fd), ntohl(request.offset), ntohl(request.whence)));
 
   // Send the lseek response.
-  result = network_send(request_sock, &response, sizeof(response));
-  if (result < 0) { printf("[ERROR] Send lseek response failed. (%d)\n", result); return -1; }
+  result = ps2link_send_response(&response, sizeof(response));
+  if (result < 0) { printf("[ERROR] Send lseek response failed. (%d)\n", result); return -2; }
 
 #ifdef __DEBUG__
 
   // Tell the user about the request and its result.
-  printf("[DEBUG] lseek(%d, %d, %d) = %d\n", ntohl(request->fd), ntohl(request->offset), ntohl(request->whence), ntohl(response.result));
+  printf("[DEBUG] lseek(%d, %d, %d) = %d\n", ntohl(request.fd), ntohl(request.offset), ntohl(request.whence), ntohl(response.result));
 
 #endif
 
   // End function.
-  return 0;
+  return ntohl(response.result);
 
  }
 
- int ps2link_request_dopen(void *packet) { int result = 0;
-  struct { int number; short length; int flags; char pathname[256]; } __attribute__((packed)) *request = packet;
-  struct { int number; short length; int dd; } __attribute__((packed)) response;
+ int ps2link_request_dopen(void) { int result = 0;
+  struct { int flags; char pathname[256]; } __attribute__((packed)) request;
+  struct { int number; short length; int result; } __attribute__((packed)) response;
 
-  // Fix the requested pathname.
-  ps2link_fixpathname(request->pathname);
+  // Read the dopen request arguments.
+  result = ps2link_recv_request(&request, sizeof(request));
+  if (result < 0) { printf("[ERROR] Read dopen request arguments failed. (%d)\n", result); return -1; }
+
+  // Fix the request pathname.
+  ps2link_fixpathname(request.pathname);
 
   // Build the dopen response.
   response.number = htonl(0xBABE0162);
   response.length = htons(sizeof(response));
-  response.dd     = htonl((int)opendir(request->pathname));
+  response.result = htonl((int)opendir(request.pathname));
 
   // Send the dopen response.
-  result = network_send(request_sock, &response, sizeof(response));
-  if (result < 0) { printf("[ERROR] Send dopen response failed. (%d)\n", result); return -1; }
+  result = ps2link_send_response(&response, sizeof(response));
+  if (result < 0) { printf("[ERROR] Send dopen response failed. (%d)\n", result); return -2; }
 
 #ifdef __DEBUG__
 
   // Tell the user about the request and its result.
-  printf("[DEBUG] dopen(\"host0:%s\") = %d\n", request->pathname, ntohl(response.dd));
+  printf("[DEBUG] dopen(\"host0:%s\") = %d\n", request.pathname, ntohl(response.result));
 
 #endif
 
   // End function.
-  return 0;
+  return ntohl(response.result);
 
  }
 
- int ps2link_request_dread(void *packet) { int result = 0;
-  struct { int number; short length; int dd; } __attribute__((packed)) *request = packet;
+ int ps2link_request_dread(void) { int result = 0;
+  struct { int dd; } __attribute__((packed)) request;
   struct { int number; short length; int result, mode, attr, size; char ctime[8], atime[8], mtime[8]; int hisize; char name[256]; } __attribute__((packed)) response;
   struct dirent *direptr; struct stat stats; struct tm loctime;
+
+  // Read the dread request arguments.
+  result = ps2link_recv_request(&request, sizeof(request));
+  if (result < 0) { printf("[ERROR] Read dread request arguments failed. (%d)\n", result); return -1; }
 
   // Build the dread response.
   response.number = htonl(0xBABE0182);
   response.length = htons(sizeof(response));
-  response.result = htonl((int)direptr = readdir((DIR *)ntohl(request->dd)));
+  response.result = htonl((int)direptr = readdir((DIR *)ntohl(request.dd)));
 
   // If an entry was returned, add the entry information.
   if (direptr != 0) {
@@ -612,43 +672,47 @@
   }
 
   // Send the dread response.
-  result = network_send(request_sock, &response, sizeof(response));
-  if (result < 0) { printf("[ERROR] Send dread response packet. (%d)\n", result); return -1; }
+  result = ps2link_send_response(&response, sizeof(response));
+  if (result < 0) { printf("[ERROR] Send dread response packet. (%d)\n", result); return -2; }
 
 #ifdef __DEBUG__
 
   // Tell the user about the request and its result.
-  printf("[DEBUG] dread(%d) = %d\n", ntohl(request->dd), ntohl(response.result));
+  printf("[DEBUG] dread(%d) = %d\n", ntohl(request.dd), ntohl(response.result));
 
 #endif
 
   // End function.
-  return 0;
+  return ntohl(response.result);
 
  }
 
- int ps2link_request_dclose(void *packet) { int result = 0;
-  struct { int number; short length; int dd; } __attribute__((packed)) *request = packet;
+ int ps2link_request_dclose(void) { int result = 0;
+  struct { int dd; } __attribute__((packed)) request;
   struct { int number; short length; int result; } __attribute__((packed)) response;
+
+  // Read the dclose request arguments.
+  result = ps2link_recv_request(&request, sizeof(request));
+  if (result < 0) { printf("[ERROR] Read dclose request arguments failed. (%d)\n", result); return -1; }
 
   // Build the dclose response.
   response.number = htonl(0xBABE0172);
   response.length = htons(sizeof(response));
-  response.result = htonl(closedir((DIR *)ntohl(request->dd)));
+  response.result = htonl(closedir((DIR *)ntohl(request.dd)));
 
   // Send the dclose response.
-  result = network_send(request_sock, &response, sizeof(response));
-  if (result < 0) { printf("[ERROR] Send dclose response failed. (%d)\n", result); return -1; }
+  result = ps2link_send_response(&response, sizeof(response));
+  if (result < 0) { printf("[ERROR] Send dclose response failed. (%d)\n", result); return -2; }
 
 #ifdef __DEBUG__
 
   // Tell the user about the request and its result.
-  printf("[DEBUG] dclose(%d) = %d\n", ntohl(request->dd), ntohl(response.result));
+  printf("[DEBUG] dclose(%d) = %d\n", ntohl(request.dd), ntohl(response.result));
 
 #endif
 
   // End function.
-  return 0;
+  return ntohl(response.result);
 
  }
 
@@ -656,10 +720,13 @@
  // PS2LINK TEXTLOG FUNCTIONS //
  ///////////////////////////////
 
- int ps2link_read_textlog(void *packet, int size) {
+ int ps2link_recv_textlog(void *buffer, int size) { int result = 0;
 
-  // Read the textlog packet.
-  return network_recvfrom(textlog_sock, packet, size);
+  // Read the textlog data.
+  result = network_recvfrom(textlog_sock, buffer, size);
+  if (result < 0) { printf("[ERROR] Read textlog data failed. (%d)\n", result); }
+
+  // End function.
+  return result;
 
  }
-

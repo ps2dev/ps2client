@@ -27,9 +27,9 @@
 
  int ps2netfs_connect(char *hostname);
 
- int ps2netfs_send(void *buffer, int size);
+ int ps2netfs_send_request(void *buffer, int size);
 
- int ps2netfs_recv(void *buffer, int size);
+ int ps2netfs_recv_response(void *buffer, int size);
 
  int ps2netfs_disconnect(void);
 

@@ -19,7 +19,7 @@
  // PS2LINK COMMAND FUNCTIONS //
  ///////////////////////////////
 
- int ps2link_send_command(char *hostname, void *command, int size);
+ int ps2link_send_command(char *hostname, void *buffer, int size);
 
  int ps2link_command_reset(char *hostname);
 
@@ -45,20 +45,30 @@
  // PS2LINK REQUEST FUNCTIONS //
  ///////////////////////////////
 
- int ps2link_request_open(void *request);
+ int ps2link_recv_request(void *buffer, int size);
 
- int ps2link_request_close(void *request);
+ int ps2link_send_response(void *buffer, int size);
 
- int ps2link_request_read(void *request);
+ int ps2link_request_open(void);
 
- int ps2link_request_write(void *request);
+ int ps2link_request_close(void);
 
- int ps2link_request_lseek(void *request);
+ int ps2link_request_read(void);
 
- int ps2link_request_dopen(void *request);
+ int ps2link_request_write(void);
 
- int ps2link_request_dclose(void *request);
+ int ps2link_request_lseek(void);
 
- int ps2link_request_dread(void *request);
+ int ps2link_request_dopen(void);
+
+ int ps2link_request_dclose(void);
+
+ int ps2link_request_dread(void);
+
+ ///////////////////////////////
+ // PS2LINK TEXTLOG FUNCTIONS //
+ ///////////////////////////////
+
+ int ps2link_recv_textlog(void *buffer, int size);
 
 #endif
