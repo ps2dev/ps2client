@@ -92,11 +92,11 @@
   while (total < size) { printf("#");
 
    // Read the source data.
-   result = ps2netfs_request_read(fd0, buffer, sizeof(buffer)); // printf("READ: %d\n", result);
+   result = ps2netfs_request_read(fd0, buffer, sizeof(buffer));
    if (result < 0) { printf("[ERROR] Read source data failed. (%d)\n", result); return -5; }
 
    // Write the destination data.
-   result = write(fd1, buffer, result); // printf("WRITE: %d\n", result);
+   result = write(fd1, buffer, result);
    if (result < 0) { printf("[ERROR] Write destination data failed. (%d)\n", result); return -6; }
 
    // Increment the counter.
@@ -150,11 +150,11 @@
   while (total < size) { printf("#");
 
    // Read the source data.
-   result = read(fd0, buffer, sizeof(buffer)); printf("READ: %d\n", result);
+   result = read(fd0, buffer, sizeof(buffer));
    if (result < 0) { printf("[ERROR] Read source data failed. (%d)\n", result); return -5; }
 
    // Write the destination data.
-   result = ps2netfs_request_write(fd1, buffer, result); printf("WRITE: %d\n", result);
+   result = ps2netfs_request_write(fd1, buffer, result);
    if (result < 0) { printf("[ERROR] Write destination data failed. (%d)\n", result); return -6; }
 
    // Increment the counter.
@@ -219,13 +219,13 @@
   for(loop0=0;loop0<devcount;loop0++) {
 
    // Output the device description.
-   if (!strcmp(temp, "rom"))   { printf("  rom    - Onboard rom device.\n");              } else
+   if (!strcmp(temp, "rom"))   { printf("  rom    - Onboard rom bios chip.\n");           } else
    if (!strcmp(temp, "cdrom")) { printf("  cdrom  - Standard cd/dvd device. (cdrom:)\n"); } else
    if (!strcmp(temp, "host"))  { printf("  host   - Host file system. (host:)\n");        } else
    if (!strcmp(temp, "mc"))    { printf("  mc     - Memory card driver. (mc0: mc1:)\n");  } else
-   if (!strcmp(temp, "hdd"))   { printf("  hdd    - Internal HDD unit.\n");               } else
-   if (!strcmp(temp, "pfs"))   { printf("  pfs    - Playstation File System.\n");         } else
-   if (!strcmp(temp, "dev9x")) { printf("  dev9x  - Blah blah blah.\n");                  } else { printf("  %s\n", temp); }
+   if (!strcmp(temp, "hdd"))   { printf("  hdd    - Internal HDD unit. (hdd0:)\n");       } else
+   if (!strcmp(temp, "pfs"))   { printf("  pfs    - Playstation File System. (pfs0:)\n"); } else
+   if (!strcmp(temp, "dev9x")) { printf("  dev9x  - Expansion port device driver.\n");    } else { printf("  %s\n", temp); }
 
    // Increment temp.
    temp += strlen(temp) + 1;
