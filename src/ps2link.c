@@ -63,7 +63,7 @@
    }
 
    // Output log text if received.
-   while (network_recvfrom(&sock_log, buffer, sizeof(buffer)) > 1) {
+   while (network_recvfrom(&sock_log, buffer, sizeof(buffer)) > 0) {
 
     // Print out the log text.
     printf("[LOG] %s", buffer);

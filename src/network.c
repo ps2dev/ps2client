@@ -80,17 +80,13 @@
 
  }
 
- int network_recvfrom(int *sock, void *data, int size) { int result = 0;
-  struct sockaddr_in sockaddr; int length;
+ int network_recvfrom(int *sock, void *data, int size) {
 
   // Clear the packet.
   memset(data, 0, size);
 
   // Receive some network data.
-  result = recvfrom(*sock, data, size, 0, (struct sockaddr *)&sockaddr, (socklen_t *)&length);
-
-  // End function.
-  return result;
+  return recvfrom(*sock, data, size, 0, NULL, NULL);
 
  }
 
