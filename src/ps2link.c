@@ -163,21 +163,21 @@
 
  }
 
- int ps2link_command_execiop(char *hostname, int timeout, char *pathname) {
+ int ps2link_command_execiop(char *hostname, int timeout, int argc, char *argv) {
   struct { int number; short length; int argc; char argv[256]; } __attribute__((packed)) command;
 
 #ifndef __QUIET__
 
   // Tell the user what we're doing.
-  printf("[***] Sending execiop(\"%s\") command...\n", pathname);
+  printf("[***] Sending execiop(%d, \"%s\") command...\n", argc, argv);
 
 #endif
 
   // Build the command packet.
   command.number = htonl(0xBABE0202);
   command.length = htons(sizeof(command));
-  command.argc   = htonl(1);
-  if (pathname) { strncpy(command.argv, pathname, 256); }
+  command.argc   = htonl(argc);
+  if (argv) { memcpy(command.argv, argv, 256); }
 
   // Connect to the host.
   ps2link_connect(hostname);
@@ -196,21 +196,21 @@
 
  }
 
- int ps2link_command_execee(char *hostname, int timeout, char *pathname) {
+ int ps2link_command_execee(char *hostname, int timeout, int argc, char *argv) {
   struct { int number; short length; int argc; char argv[256]; } __attribute__((packed)) command;
 
 #ifndef __QUIET__
 
   // Tell the user what we're doing.
-  printf("[***] Sending execee(\"%s\") command...\n", pathname);
+  printf("[***] Sending execee(%d, \"%s\") command...\n", argc, argv);
 
 #endif
 
   // Build the command packet.
   command.number = htonl(0xBABE0203);
   command.length = htons(sizeof(command));
-  command.argc   = htonl(1);
-  if (pathname) { strncpy(command.argv, pathname, 256); }
+  command.argc   = htonl(argc);
+  if (argv) { memcpy(command.argv, argv, 256); }
 
   // Connect to the host.
   ps2link_connect(hostname);

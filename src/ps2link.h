@@ -27,9 +27,9 @@
 
  int ps2link_command_reset(char *hostname);
 
- int ps2link_command_execiop(char *hostname, int timeout, char *pathname);
+ int ps2link_command_execiop(char *hostname, int timeout, int argc, char *argv);
 
- int ps2link_command_execee(char *hostname, int timeout, char *pathname);
+ int ps2link_command_execee(char *hostname, int timeout, int argc, char *argv);
 
  int ps2link_command_poweroff(char *hostname);
 

@@ -61,8 +61,8 @@
 
     command.number = htonl(0xBABE0202);
     command.length = htons(sizeof(command));
-    command.argc   = htonl(1);
-    if (pathname) { strncpy(command.argv, argv, 256); }
+    command.argc   = htonl(argc);
+    if (argv) { memcpy(command.argv, argv, 256); }
 
   -----------------------------
    0xBABE0203 (execee command)
@@ -78,8 +78,8 @@
 
     command.number = htonl(0xBABE0203);
     command.length = htons(sizeof(command));
-    command.argc   = htonl(1);
-    if (pathname) { strncpy(command.argv, pathname, 256); }
+    command.argc   = htonl(argc);
+    if (argv) { memcpy(command.argv, argv, 256); }
 
   -------------------------------
    0xBABE0204 (poweroff command)
@@ -113,7 +113,7 @@
     command.length = htons(sizeof(command));
     command.offset = htonl(offset);
     command.size   = htonl(size);
-    if (argv) { strncpy(command.pathname, pathname, 256); }
+    if (pathname) { strncpy(command.pathname, pathname, 256); }
 
   ------------------------------
    0xBABE0208 (startvu command)

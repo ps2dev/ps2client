@@ -59,8 +59,8 @@
   Commands for ps2link:
 
    reset
-   execiop <filename>
-   execee <filename>
+   execiop <filename> [arguments]
+   execee <filename> [arguments]
    poweroff
    dumpmem <filename> <offset> <size>
    startvu <vu>

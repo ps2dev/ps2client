@@ -7,7 +7,7 @@
  #include "ps2netfs.h"
  #include "ps2client.h"
 
- char hostname[256], command[256];
+ char hostname[256], command[256], argvalues[256]; int argcount = 0;
 
  char arg0[256], arg1[256], arg2[256], arg3[256];
 
@@ -17,7 +17,10 @@
  // PS2CLIENT MAIN FUNCTIONS //
  //////////////////////////////
 
- int main(int argc, char *argv[], char *env[]) { int loop0, count = 1; setbuf(stdout, NULL);
+ int main(int argc, char *argv[], char *env[]) { int loop0, count = 1; char *temp = argvalues;
+
+  // Turn off stdout buffering.
+  setbuf(stdout, NULL);
 
   // First, we parse the optional arguments.
   for(loop0=0;loop0<argc;loop0++) {
@@ -41,8 +44,24 @@
 
   }
 
-  // Next, the command and its arguments.
+  // Next, determine the command.
   if (argc > count) { strncpy(command, argv[count++], sizeof(command)); } else { sprintf(command, "NULL"); }
+
+  // Get the arguments for execee/execiop.
+  if (argc > count) {
+
+   // Clear the argvalues for use.
+   memset(argvalues, 0, sizeof(argvalues));
+
+   // Copy over each argument.
+   for(loop0=count;loop0<argc;loop0++) { strcpy(temp, argv[loop0]); temp += strlen(argv[loop0]) + 1; }
+
+   // Set the argcount.
+   argcount = argc - count;
+
+  }
+
+  // Get the arguments for the other commands.
   if (argc > count) { strncpy(arg0, argv[count++], sizeof(arg0)); } else { sprintf(arg0, "NULL"); }
   if (argc > count) { strncpy(arg1, argv[count++], sizeof(arg1)); } else { sprintf(arg1, "NULL"); }
   if (argc > count) { strncpy(arg2, argv[count++], sizeof(arg2)); } else { sprintf(arg2, "NULL"); }
@@ -58,8 +77,8 @@
 
   // Peform any ps2link commands.
   if (strcmp(command, "reset")    == 0) { return ps2link_command_reset     (hostname); }
-  if (strcmp(command, "execiop")  == 0) { return ps2link_command_execiop   (hostname, timeout, arg0); }
-  if (strcmp(command, "execee")   == 0) { return ps2link_command_execee    (hostname, timeout, arg0); }
+  if (strcmp(command, "execiop")  == 0) { return ps2link_command_execiop   (hostname, timeout, argcount, argvalues); }
+  if (strcmp(command, "execee")   == 0) { return ps2link_command_execee    (hostname, timeout, argcount, argvalues); }
   if (strcmp(command, "poweroff") == 0) { return ps2link_command_poweroff  (hostname); }
   if (strcmp(command, "dumpmem")  == 0) { return ps2link_command_dumpmem   (hostname, timeout, arg0, atoi(arg1), atoi(arg2)); }
   if (strcmp(command, "startvu")  == 0) { return ps2link_command_startvu   (hostname, atoi(arg0)); }
@@ -106,8 +125,8 @@
   // Output the ps2link commands.
   printf(" Commands for ps2link:\n\n");
   printf("  reset\n");
-  printf("  execiop <filename>\n");
-  printf("  execee <filename>\n");
+  printf("  execiop <filename> [arguments]\n");
+  printf("  execee <filename> [arguments]\n");
   printf("  poweroff\n");
   printf("  dumpmem <filename> <offset> <size>\n");
   printf("  startvu <vu>\n");
