@@ -5,9 +5,11 @@
  // PS2LINK FUNCTIONS //
  ///////////////////////
 
- int ps2link_mainloop(char *hostname);
+ int ps2link_connect(char *hostname);
 
- int ps2link_listenloop(void);
+ int ps2link_disconnect(void);
+
+ int ps2link_mainloop(void);
 
  int ps2link_fixflags(int flags);
 

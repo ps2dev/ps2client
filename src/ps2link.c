@@ -19,12 +19,33 @@
  // PS2LINK FUNCTIONS //
  ///////////////////////
 
- int ps2link_mainloop(char *hostname) {
-  struct { int number; short length; char data[65544]; } __attribute__((packed)) request;
+ int ps2link_connect(char *hostname) {
 
   // Open the connections.
   request_sock = network_connect(hostname, 0x4711, SOCKET_TCP);
   textlog_sock = network_listen(0x4712, SOCKET_UDP);
+
+  // Give them some time to connect.
+  usleep(1);
+
+  // End function.
+  return 0;
+
+ }
+
+ int ps2link_disconnect(void) {
+
+  // Close the connections.
+  network_close(request_sock);
+  network_close(textlog_sock);
+
+  // End function.
+  return 0;
+
+ }
+
+ int ps2link_mainloop(void) {
+  struct { int number; short length; char data[65544]; } __attribute__((packed)) request;
 
   // Main loop.
   while (1) {
@@ -48,34 +69,6 @@
    while (network_recvfrom(textlog_sock, buffer, sizeof(buffer)) > 0) { fprintf(stdout, buffer); }
 
   }
-
-  // Close the connections.
-  network_close(request_sock);
-  network_close(textlog_sock);
-
-  // End function.
-  return 0;
-
- }
-
- int ps2link_listenloop(void) {
-
-  // Open the connection.
-  textlog_sock = network_listen(0x4712, SOCKET_UDP);
-
-  // Main loop.
-  while(1) {
-
-   // Wait until something happens.
-   network_wait(100000);
-
-   // Read and display any textlog information.
-   while (network_recvfrom(textlog_sock, buffer, sizeof(buffer)) > 0) { fprintf(stdout, buffer); }
-
-  }
-
-  // Close the connection.
-  network_close(textlog_sock);
 
   // End function.
   return 0;
