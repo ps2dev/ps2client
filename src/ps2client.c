@@ -3,9 +3,11 @@
  #include <stdlib.h>
  #include <string.h>
  #include <unistd.h>
- #include "ps2link.h"
 
- char hostname[1024] = { "192.168.1.10" };
+ #include "ps2link.h"
+ #include "utility.h"
+
+ char hostname[1024] = { "192.168.0.10" };
 
  int timeout = -1;
 
@@ -26,30 +28,54 @@
 
   }
 
+  // Check the number of arguments.
+  if (argc < 2) { print_usage(); return -1; }
+
   // Parse the argument list for optional arguments.
   for (loop0=1; argv[loop0]; loop0++) {
 
-   // A hostname has been specified...
-   if (strncmp(argv[loop0], "-h", 2) == 0) { loop0++; strncpy(hostname, argv[loop0], sizeof(hostname)); }
+   // If an optional hostname has been specified...
+   if (strncmp(argv[loop0], "-h", 2) == 0) { loop0++;
 
-   // A timeout has been specified...
-   else if (strncmp(argv[loop0], "-t", 2) == 0) { loop0++; timeout = atoi(argv[loop0]); }
+    // Check to make sure the hostname value was actually supplied.
+    if (argc == loop0) { printf("Error: No hostname was supplied the '-h' option.\n"); print_usage(); return -1; }
 
-   // The end of the options has been reached.
+    // Set the hostname to the supplied value.
+    strncpy(hostname, argv[loop0], sizeof(hostname));
+
+   }
+
+   // Else, if an optional timeout has been specified...
+   else if (strncmp(argv[loop0], "-t", 2) == 0) { loop0++;
+
+    // Check to make sure a value was actually supplied.
+    if (argc == loop0) { printf("Error: No timeout was supplied the '-t' option.\n"); print_usage(); return -1; }
+
+    // Set the timeout to the supplied value.
+    timeout = atoi(argv[loop0]);
+
+   }
+
+   // Else, the end of the options has been reached...
    else { break; }
 
   }
 
-  // Fix the argument counters.
+  // Increment the argument counters past any optional arguments.
   loop0++; argc -= loop0; argv += loop0;
 
+  // Check to make sure a command was actually supplied.
+  if (argc < 0) { printf("Error: No command was supplied.\n"); print_usage(); return -1; }
+
 #ifdef _WIN32
+
   // Startup network, under windows.
-  if (network_startup() < 0) { printf("[ERROR] Could not start up winsock.\n"); return 1; }
+  if (network_startup() < 0) { printf("Error: Could not start up winsock.\n"); return 1; }
+
 #endif
 
   // Connect to the ps2link server.
-  if (ps2link_connect(hostname) < 0) { printf("[ERROR] Could not connect to ps2link. (%s)\n", hostname); return -1; }
+  if (ps2link_connect(hostname) < 0) { printf("Error: Could not connect to ps2link. (%s)\n", hostname); return -1; }
 
   // Send the command to the ps2link server.
   if (strcmp(argv[-1], "reset")    == 0) { ps2link_command_reset(); timeout = 0;                            } else
@@ -68,7 +94,7 @@
   if (strcmp(argv[-1], "listen")   == 0) {                                                                  }
 
   // An unknown command was requested.
-  else { printf("[ERROR] Unknown command requested. (%s)\n", argv[-1]); return -1; }
+  else { printf("Error: Unknown command requested. (%s)\n", argv[-1]); print_usage(); return -1; }
 
   // Enter the main loop.
   ps2link_mainloop(timeout);

@@ -29,19 +29,19 @@
  int ps2link_connect(char *hostname) {
 
   // Connect to the console port.
-  console_socket = network_listen(0x4712, SOCK_DGRAM); if (console_socket < 0) { return -1; }
+  console_socket = network_listen(0x4712, SOCK_DGRAM);
 
   // Create the console thread.
-  pthread_create(&console_thread_id, NULL, ps2link_thread_console, (void *)&console_thread_id);
+  if (console_socket > 0) { pthread_create(&console_thread_id, NULL, ps2link_thread_console, (void *)&console_thread_id); }
 
   // Connect to the request port.
-  request_socket = network_connect(hostname, 0x4711, SOCK_STREAM); if (request_socket < 0) { return -1; }
+  request_socket = network_connect(hostname, 0x4711, SOCK_STREAM);
 
   // Create the request thread.
-  pthread_create(&request_thread_id, NULL, ps2link_thread_request, (void *)&request_thread_id);
+  if (request_socket > 0) { pthread_create(&request_thread_id, NULL, ps2link_thread_request, (void *)&request_thread_id); }
 
   // Connect to the command port.
-  command_socket = network_connect(hostname, 0x4712, SOCK_DGRAM); if (command_socket < 0) { return -1; }
+  command_socket = network_connect(hostname, 0x4712, SOCK_DGRAM);
 
   // End function.
   return 0;
@@ -57,7 +57,7 @@
   if (timeout < 0) { for (;;) { sleep(600); } }
 
   // Increment the timeout counter until timeout is reached.
-  while (ps2link_counter++ < timeout) { sleep(1); fprintf(stderr, "(%d)", ps2link_counter); }
+  while (ps2link_counter++ < timeout) { sleep(1); };
 
   // End function.
   return 0;
@@ -476,6 +476,10 @@
  void *ps2link_thread_console(void *thread_id) {
   char buffer[1024];
 
+  // If the socket isn't open, this thread isn't needed.
+  if (console_socket < 0) { pthread_exit(thread_id); }
+
+  // Loop forever...
   for (;;) {
 
    // Wait for network activity.
@@ -500,6 +504,10 @@
  void *ps2link_thread_request(void *thread_id) {
   struct { unsigned int number; unsigned short length; char buffer[512]; } PACKED packet;
 
+  // If the socket isn't open, this thread isn't needed.
+  if (request_socket < 0) { pthread_exit(thread_id); }
+
+  // Loop forever...  
   for (;;) {
 
    // Wait for network activity.

@@ -77,3 +77,29 @@
   return 0;
 
  }
+
+ int print_usage(void) {
+
+  // Print out the usage string.
+  printf("\n");
+  printf(" Usage: ps2client [-h hostname] [-t timeout] <command> [arguments]\n\n");
+  printf(" Available commands:\n\n");
+  printf("   reset\n");
+  printf("   execiop <filename> [arguments]\n");
+  printf("   execee <filename> [arguments]\n");
+  printf("   poweroff\n");
+  printf("   scrdump\n");
+  printf("   netdump\n");
+  printf("   dumpmem <offset> <size> <filename>\n");
+  printf("   startvu <vu>\n");
+  printf("   stopvu <vu>\n");
+  printf("   dumpreg <type> <filename>\n");
+  printf("   gsexec <size> <filename>\n");
+  printf("   writemem <offset> <size> <filename>\n");
+  printf("   iopexcep\n");
+  printf("   listen\n\n");
+
+  // End function.
+  return 0;
+
+ }
