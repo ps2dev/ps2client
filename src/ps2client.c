@@ -24,7 +24,7 @@
   printf("  %s <hostname> startvu <0/1>\n", progname);
   printf("  %s <hostname> stopvu <0/1>\n", progname);
   printf("  %s <hostname> dumpreg <filename> <type> [timeout]\n", progname);
-  printf("  %s <hostname> gsexec <filename> [timeout]\n", progname);
+  printf("  %s <hostname> gsexec <filename> <size> [timeout]\n", progname);
   printf("  %s <hostname> listen\n\n", progname);
 
   // Output the ps2netfs commands.
@@ -47,7 +47,7 @@
 
  }
 
- int main(int argc, char *argv[]) {
+ int main(int argc, char *argv[]) { setbuf(stdout, NULL);
 
 #ifdef __CHATTY__
 

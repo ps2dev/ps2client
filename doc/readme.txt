@@ -74,7 +74,7 @@
 
    ps2client <hostname> dumpreg <filename> <type> [timeout]
 
-   ps2client <hostname> gsexec <filename> [timeout]
+   ps2client <hostname> gsexec <filename> <size> [timeout]
 
    ps2client <hostname> listen
 
