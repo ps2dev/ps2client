@@ -612,7 +612,7 @@
   // Build the dread response.
   response.number = htonl(0xBABE0182);
   response.length = htons(sizeof(response));
-  response.result = htonl((int)direptr = readdir((DIR *)ntohl(request.dd)));
+  response.result = htonl((int)(direptr = readdir((DIR *)ntohl(request.dd))));
 
   // If an entry was returned, add the entry information.
   if (direptr != 0) {
