@@ -11,9 +11,9 @@
 
  int ps2link_shut(void);
 
- int ps2link_flags(int flags);
+ int ps2link_fixflags(int flags);
 
- int ps2link_slash(char *pathname);
+ int ps2link_fixpathname(char *pathname);
 
  ///////////////////////////////
  // PS2LINK COMMAND FUNCTIONS //
@@ -40,5 +40,11 @@
  int ps2link_req_write(void *request);
 
  int ps2link_req_lseek(void *request);
+
+ int ps2link_req_dopen(void *request);
+
+ int ps2link_req_dclose(void *request);
+
+ int ps2link_req_dread(void *request);
 
 #endif

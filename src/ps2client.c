@@ -7,7 +7,7 @@
  #include "ps2link.h"
  #include "network.h"
 
- #define MESSAGE_START	"[***] ps2client v1.0.5 by Dan Peori (peori@oopo.net)\n"
+ #define MESSAGE_START	"[***] ps2client - Your friendly, neighbourhood ps2link client.\n"
  #define MESSAGE_USAGE	"[***] Usage: %s <hostname> <command> [argument]\n", argv[0]
 
  char hostname[1024], command[1024], filename[1024];
