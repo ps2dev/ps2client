@@ -7,11 +7,11 @@
   THE INTRODUCTION
  ------------------
 
-  This program, ps2client, is a command line tool used for interacting with
-  a ps2 system running either ps2link or ps2netfs. It will allow you to send
-  various commands as well as respond to requests for data. This program was
-  written and tested under Linux, Cygwin and Mac OS X but should compile in
-  any reasonably unixlike environment.
+  This program, ps2client, is a command line tool used for interacting with a
+  ps2 system running ps2link. It will allow you to send various commands as
+  well as respond to requests for data. This program was written and tested
+  under Linux, Cygwin and Mac OS X but should compile in any reasonably unixlike
+  environment.
 
   If you have any requests, questions or sugestions please feel free to contact
   me at peori@oopo.net. Also, don't be afraid to check out the latest development
@@ -29,11 +29,9 @@
 
    PREFIX=/dir	- Install directory, defaults to: $PS2DEV/bin
 
-   DEBUG=YES	- Enable all debug text output.
-
   These options can be used as follows:
 
-   make clean; make DEBUG=NO PREFIX=$PS2DEV/bin install
+   make clean; make PREFIX=$PS2DEV/bin install
 
  -----------------
   PS2CLIENT USAGE
@@ -52,9 +50,9 @@
 
    [-t timeout]
 
-    An idle timeout period that ps2client will wait before exiting. This is
-    useful to allow a script to continue after calling ps2client to send a
-    command to the ps2.
+    An idle timeout period in seconds that ps2client will wait before exiting.
+    This is useful to allow a script to continue after calling ps2client to send
+    a command to ps2link.
 
  ------------------
   PS2LINK COMMANDS
@@ -62,7 +60,7 @@
 
   reset
 
-   - Send a reset request to the ps2.
+   - Send a reset request to ps2link.
 
   execiop <filename> [arguments]
 
@@ -74,11 +72,19 @@
 
   poweroff
 
-   - Send a poweroff request to the ps2.
+   - Send a poweroff request to ps2link.
 
-  dumpmem <filename> <offset> <size>
+  scrdump
 
-   - Dump the contents of memory at a given offset into a file.
+   - Tell ps2link to dump exceptions to the screen.
+
+  netdump
+
+   - Tell ps2link to dump execetions to the network console.
+
+  dumpmem <offset> <size> <filename>
+
+   - Dump the contents of memory into a file.
 
   startvu <vu>
 
@@ -88,69 +94,25 @@
 
    - Tell the specified vector unit to stop operation.
 
-  dumpreg <filename> <type>
+  dumpreg <type> <filename>
 
    - Dump the registers of a given type into a file.
 
-  gsexec <filename>
+  gsexec <size> <filename>
 
    - Tell ps2link to load and send a file to the GS.
 
+  writemem <offset> <size> <filename>
+
+   - Write the contents of a file into memory.
+
+  iopexcep
+
+   - I really don't know! OH NOES!!
+
   listen
 
-   - Listen for text messages from the ps2.
-
- -------------------
-  PS2NETFS COMMANDS
- -------------------
-
-  copyfrom <source> <destination>
-
-   - Copy a file from the ps2. (download)
-
-  copyto <source> <destination>
-
-   - Copy a file to the ps2. (upload)
-
-  delete <filename>
-
-   - Delete a file on the ps2.
-
-  devlist
-
-   - Get a device listing from the ps2.
-
-  dir <directory>
-
-   - Get a directory listing from the ps2.
-
-  format <device>
-
-   - Format a device on the ps2.
-
-  mkdir <directory>
-
-   - Make a directory on the ps2.
-
-  mount <device> <fsname>
-
-   - Mount a filesystem as a device on the ps2.
-
-  rename <source> <destination>
-
-   - Rename a file on the ps2.
-
-  rmdir <directory>
-
-   - Remove a directory on the ps2.
-
-  sync <device>
-
-   - Sync a device on the ps2.
-
-  umount <device>
-
-   - Unmount a device on the ps2.
+   - Listen to the ps2link network console.
 
  ------------------
   MORE INFORMATION

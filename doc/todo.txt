@@ -1,0 +1,4 @@
+
+ - dumpmem may be giving bad data
+ - iopexcep needs to be implemented (what is it?)
+ - readdir request/response need to be implemented

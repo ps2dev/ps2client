@@ -1,22 +1,18 @@
 
- GCC = gcc -Wall
- INC = -I/usr/include -I/usr/local/include
- LIB = 
+  GCC = gcc -O3
+  INC = -I/usr/include -I/usr/local/include
+  LIB = -lpthread
 
- ifeq "$(DEBUG)" "YES"
-  GCC += -D__DEBUG__ -g
- endif
+  ifeq "x$(PREFIX)" "x"
+   PREFIX = $(PS2DEV)
+  endif
 
- ifeq "x$(PREFIX)" "x"
-  PREFIX = $(PS2DEV)
- endif
+  all: bin/ps2client
 
- all: bin/ps2client
-
- clean:
+  clean:
 	rm -f obj/*.o bin/ps2client*
 
- install: bin/ps2client
+  install: bin/ps2client
 	mkdir -p $(PREFIX)/bin
 	cp bin/ps2client* $(PREFIX)/bin
 
@@ -24,26 +20,30 @@
  ## PS2CLIENT LIBS ##
  ####################
 
- HFILES += src/network.h src/ps2link.h src/ps2netfs.h
- CFILES += src/network.c src/ps2link.c src/ps2netfs.c
- OFILES += obj/network.o obj/ps2link.o obj/ps2netfs.o
-
- obj/network.o: src/network.h src/network.c
+  OFILES += obj/network.o
+  obj/network.o: src/network.c src/network.h
 	@mkdir -p obj
 	$(GCC) $(INC) -c src/network.c -o obj/network.o
 
- obj/ps2link.o: src/ps2link.h src/ps2link.c
+  OFILES += obj/ps2client.o
+  obj/ps2client.o: src/ps2client.c
+	@mkdir -p obj
+	$(GCC) $(INC) -c src/ps2client.c -o obj/ps2client.o
+
+  OFILES += obj/ps2link.o
+  obj/ps2link.o: src/ps2link.c src/ps2link.h
 	@mkdir -p obj
 	$(GCC) $(INC) -c src/ps2link.c -o obj/ps2link.o
 
- obj/ps2netfs.o: src/ps2netfs.h src/ps2netfs.c
+  OFILES += obj/utility.o
+  obj/utility.o: src/utility.c src/utility.h
 	@mkdir -p obj
-	$(GCC) $(INC) -c src/ps2netfs.c -o obj/ps2netfs.o
+	$(GCC) $(INC) -c src/utility.c -o obj/utility.o
 
  #######################
  ## PS2CLIENT PROGRAM ##
  #######################
 
- bin/ps2client: $(HFILES) $(CFILES) $(OFILES)
+  bin/ps2client: $(OFILES)
 	@mkdir -p bin
-	$(GCC) $(INC) $(LIB) $(OFILES) src/ps2client.c -o bin/ps2client
+	$(GCC) $(INC) $(LIB) $(OFILES) -o bin/ps2client

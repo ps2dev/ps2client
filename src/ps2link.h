@@ -11,64 +11,114 @@
 
  int ps2link_disconnect(void);
 
- int ps2link_fixflags(int flags);
-
- int ps2link_fixpathname(char *pathname);
-
  ///////////////////////////////
  // PS2LINK COMMAND FUNCTIONS //
  ///////////////////////////////
 
- int ps2link_send_command(char *hostname, void *buffer, int size);
+ #define PS2LINK_COMMAND_RESET		0xBABE0201
+ #define PS2LINK_COMMAND_EXECIOP	0xBABE0202
+ #define PS2LINK_COMMAND_EXECEE		0xBABE0203
+ #define PS2LINK_COMMAND_POWEROFF	0xBABE0204
+ #define PS2LINK_COMMAND_SCRDUMP	0xBABE0205
+ #define PS2LINK_COMMAND_NETDUMP	0xBABE0206
+ #define PS2LINK_COMMAND_DUMPMEM	0xBABE0207
+ #define PS2LINK_COMMAND_STARTVU	0xBABE0208
+ #define PS2LINK_COMMAND_STOPVU		0xBABE0209
+ #define PS2LINK_COMMAND_DUMPREG	0xBABE020A
+ #define PS2LINK_COMMAND_GSEXEC		0xBABE020B
+ #define PS2LINK_COMMAND_WRITEMEM	0xBABE020C
+ #define PS2LINK_COMMAND_IOPEXCEP	0xBABE020D
 
- int ps2link_command_reset(char *hostname);
+ int ps2link_command_reset(void);
 
- int ps2link_command_execiop(char *hostname, int timeout, int argc, char *argv);
+ int ps2link_command_execiop(int argc, char **argv);
 
- int ps2link_command_execee(char *hostname, int timeout, int argc, char *argv);
+ int ps2link_command_execee(int argc, char **argv);
 
- int ps2link_command_poweroff(char *hostname);
+ int ps2link_command_poweroff(void);
 
- int ps2link_command_dumpmem(char *hostname, int timeout, char *pathname, int offset, int size);
+ int ps2link_command_scrdump(void);
 
- int ps2link_command_startvu(char *hostname, int vu);
+ int ps2link_command_netdump(void);
 
- int ps2link_command_stopvu(char *hostname, int vu);
+ int ps2link_command_dumpmem(unsigned int offset, unsigned int size, char *pathname);
 
- int ps2link_command_dumpreg(char *hostname, int timeout, char *pathname, int type);
+ int ps2link_command_startvu(int vu);
 
- int ps2link_command_gsexec(char *hostname, int timeout, char *pathname);
+ int ps2link_command_stopvu(int vu);
 
- int ps2link_command_listen(char *hostname, int timeout);
+ int ps2link_command_dumpreg(int type, char *pathname);
+
+ int ps2link_command_gsexec(unsigned short size, char *pathname);
+
+ int ps2link_command_writemem(unsigned int offset, unsigned int size, char *pathname);
+
+ int ps2link_command_iopexcep(void);
 
  ///////////////////////////////
  // PS2LINK REQUEST FUNCTIONS //
  ///////////////////////////////
 
- int ps2link_recv_request(void *buffer, int size);
+ #define PS2LINK_REQUEST_OPEN		0xBABE0111
+ #define PS2LINK_REQUEST_CLOSE		0xBABE0121
+ #define PS2LINK_REQUEST_READ		0xBABE0131
+ #define PS2LINK_REQUEST_WRITE		0xBABE0141
+ #define PS2LINK_REQUEST_LSEEK		0xBABE0151
+ #define PS2LINK_REQUEST_OPENDIR	0xBABE0161
+ #define PS2LINK_REQUEST_CLOSEDIR	0xBABE0171
+ #define PS2LINK_REQUEST_READDIR	0xBABE0181
 
- int ps2link_send_response(void *buffer, int size);
+ int ps2link_request_open(void *packet);
 
- int ps2link_request_open(void);
+ int ps2link_request_close(void *packet);
 
- int ps2link_request_close(void);
+ int ps2link_request_read(void *packet);
 
- int ps2link_request_read(void);
+ int ps2link_request_write(void *packet);
 
- int ps2link_request_write(void);
+ int ps2link_request_lseek(void *packet);
 
- int ps2link_request_lseek(void);
+ int ps2link_request_opendir(void *packet);
 
- int ps2link_request_dopen(void);
+ int ps2link_request_closedir(void *packet);
 
- int ps2link_request_dclose(void);
+ int ps2link_request_readdir(void *packet);
 
- int ps2link_request_dread(void);
+ ////////////////////////////////
+ // PS2LINK RESPONSE FUNCTIONS //
+ ////////////////////////////////
 
- ///////////////////////////////
- // PS2LINK TEXTLOG FUNCTIONS //
- ///////////////////////////////
+ #define PS2LINK_RESPONSE_OPEN		0xBABE0112
+ #define PS2LINK_RESPONSE_CLOSE		0xBABE0122
+ #define PS2LINK_RESPONSE_READ		0xBABE0132
+ #define PS2LINK_RESPONSE_WRITE		0xBABE0142
+ #define PS2LINK_RESPONSE_LSEEK		0xBABE0152
+ #define PS2LINK_RESPONSE_OPENDIR	0xBABE0162
+ #define PS2LINK_RESPONSE_CLOSEDIR	0xBABE0172
+ #define PS2LINK_RESPONSE_READDIR	0xBABE0182
 
- int ps2link_recv_textlog(void *buffer, int size);
+ int ps2link_response_open(int result);
+
+ int ps2link_response_close(int result);
+
+ int ps2link_response_read(int result, int size);
+
+ int ps2link_response_write(int result);
+
+ int ps2link_response_lseek(int result);
+
+ int ps2link_response_opendir(int result);
+
+ int ps2link_response_closedir(int result);
+
+ int ps2link_response_readdir(int result, unsigned int size, char *name);
+
+ //////////////////////////////
+ // PS2LINK THREAD FUNCTIONS //
+ //////////////////////////////
+
+ void *ps2link_thread_console(void *thread_id);
+
+ void *ps2link_thread_request(void *thread_id);
 
 #endif
