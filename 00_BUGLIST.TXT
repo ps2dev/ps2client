@@ -1,4 +1,6 @@
 
- - ps2link.c: execiop doesn't seem to work
+ - ps2link.c: Command execiop doesn't seem to work.
+ - ps2netfs.c: Everything seems to be... broken!
  - No support yet for arguments to execee/execiop.
- - Some LOG messages are printed late.
+ - Some LOG messages are printed late. (test this)
+ - ps2netfs-protocol.txt: This is unfinished.

@@ -1,4 +1,5 @@
 
+ #include <time.h>
  #include <stdio.h>
  #include <fcntl.h>
  #include <stdlib.h>
@@ -6,90 +7,75 @@
  #include <unistd.h>
  #include <dirent.h>
  #include <sys/stat.h>
- #include <sys/poll.h>
- #include <sys/types.h>
- #include <sys/socket.h>
  #include <netinet/in.h>
- #include <time.h>
-
- #include "types.h"
  #include "network.h"
  #include "ps2link.h"
 
- int sock_cmd, sock_req, sock_log, sock_tmp;
+ char buffer[65536];
 
- u08 buffer[65536];
+ int command_sock, request_sock, textlog_sock;
 
- ////////////////////////////
- // PS2LINK MAIN FUNCTIONS //
- ////////////////////////////
+ ///////////////////////
+ // PS2LINK FUNCTIONS //
+ ///////////////////////
 
- int ps2link_open(char *hostname) {
+ int ps2link_mainloop(char *hostname) {
+  struct { int number; short length; char data[65544]; } __attribute__((packed)) request;
 
-  // Open a command packet socket.
-  network_open(&sock_cmd, hostname, 0x4712, 1); if (sock_cmd == 0) { return -1; }
+  // Open the connections.
+  request_sock = network_connect(hostname, 0x4711, SOCKET_TCP);
+  textlog_sock = network_listen(0x4712, SOCKET_UDP);
 
-  // Open a request packet socket.
-  network_open(&sock_req, hostname, 0x4711, 0); if (sock_req == 0) { return -1; }
-
-  // Open a command packet socket.
-  network_serv(&sock_log, 0x4712, 1); if (sock_log == 0) { return -1; }
-
-  // End function.
-  return 0;
-
- }
-
- int ps2link_loop(void) { struct pollfd ufsd[2];
-  struct { u32 cmd; u16 len; u08 data[65544]; } __attribute__((packed)) request;
-
-  // Preparing the pool's arguments.
-  ufsd[0].fd = sock_req; ufsd[1].fd = sock_log;
-  ufsd[0].events = ufsd[1].events = POLLIN;
-
-  // Main request parsing and log reading loop.
-  while(1) {
+  // Main loop.
+  while (1) {
 
    // Wait until something happens.
-   poll(ufsd, 2, -1);
+   network_wait(100000);
 
-   // Read in the next request packet.
-   if (network_recv(&sock_req, &request, sizeof(request)) > 0) {
-
-    // Perform the request, if it is a valid command.    
-    if (ntohl(request.cmd) == 0xBABE0111) { ps2link_req_open  ((void *)&request); } else
-    if (ntohl(request.cmd) == 0xBABE0121) { ps2link_req_close ((void *)&request); } else
-    if (ntohl(request.cmd) == 0xBABE0131) { ps2link_req_read  ((void *)&request); } else
-    if (ntohl(request.cmd) == 0xBABE0141) { ps2link_req_write ((void *)&request); } else
-    if (ntohl(request.cmd) == 0xBABE0151) { ps2link_req_lseek ((void *)&request); } else
-    if (ntohl(request.cmd) == 0xBABE0161) { ps2link_req_dopen ((void *)&request); } else
-    if (ntohl(request.cmd) == 0xBABE0171) { ps2link_req_dclose((void *)&request); } else
-    if (ntohl(request.cmd) == 0xBABE0181) { ps2link_req_dread ((void *)&request); }
-
+   // Read and perform any requests as needed.
+   if (network_recv(request_sock, &request, sizeof(request)) > 0) {
+    if (ntohl(request.number) == 0xBABE0111) { ps2link_request_open   ((void *)&request); } else
+    if (ntohl(request.number) == 0xBABE0121) { ps2link_request_close  ((void *)&request); } else
+    if (ntohl(request.number) == 0xBABE0131) { ps2link_request_read   ((void *)&request); } else
+    if (ntohl(request.number) == 0xBABE0141) { ps2link_request_write  ((void *)&request); } else
+    if (ntohl(request.number) == 0xBABE0151) { ps2link_request_lseek  ((void *)&request); } else
+    if (ntohl(request.number) == 0xBABE0161) { ps2link_request_dopen  ((void *)&request); } else
+    if (ntohl(request.number) == 0xBABE0171) { ps2link_request_dclose ((void *)&request); } else
+    if (ntohl(request.number) == 0xBABE0181) { ps2link_request_dread  ((void *)&request); }
    }
 
-   // Output log text if received.
-   while (network_recvfrom(&sock_log, buffer, sizeof(buffer)) > 0) {
-
-    // Print out the log text.
-    printf("[LOG] %s", buffer);
-
-   }
+   // Read and display any textlog information.
+   while (network_recvfrom(textlog_sock, buffer, sizeof(buffer)) > 0) { printf(buffer); }
 
   }
 
+  // Close the connections.
+  network_close(request_sock);
+  network_close(textlog_sock);
+
   // End function.
   return 0;
 
  }
 
- int ps2link_shut(void) {
+ int ps2link_listenloop(void) {
 
-  // Close the command packet socket.
-  network_shut(&sock_cmd);
+  // Open the connection.
+  textlog_sock = network_listen(0x4712, SOCKET_UDP);
 
-  // Close the receive packet socket.
-  network_shut(&sock_req);
+  // Main loop.
+  while(1) {
+
+   // Wait until something happens.
+   network_wait(100000);
+
+   // Read and display any textlog information.
+   while (network_recvfrom(textlog_sock, buffer, sizeof(buffer)) > 0) { printf(buffer); }
+
+  }
+
+  // Close the connection.
+  network_close(textlog_sock);
 
   // End function.
   return 0;
@@ -142,71 +128,194 @@
  // PS2LINK COMMAND FUNCTIONS //
  ///////////////////////////////
 
- int ps2link_cmd_reset(void) {
-  struct { u32 cmd; u16 len; } __attribute__((packed)) packet;
+ int ps2link_send_command(char *hostname, void *packet, int size) {
 
-  // Tell the user what we're doing.
-  printf("[***] Sending reset command...\n");
+  // Open the connection.
+  command_sock = network_connect(hostname, 0x4712, SOCKET_UDP);
 
-  // Build the reset command packet.
-  packet.cmd = htonl(0xBABE0201);
-  packet.len = htons(sizeof(packet));
+  // Send the command packet.
+  network_send(command_sock, packet, size);
 
-  // Send the reset command packet.
-  return network_send(&sock_cmd, &packet, sizeof(packet));
+  // Close the connection.
+  network_close(command_sock);
 
- }
-
- int ps2link_cmd_poweroff(void) {
-  struct { u32 cmd; u16 len; } __attribute__((packed)) packet;
-
-  // Tell the user what we're doing.
-  printf("[***] Sending poweroff command...\n");
-
-  // Build the poweroff command packet.
-  packet.cmd = htonl(0xBABE0204);
-  packet.len = htons(sizeof(packet));
-
-  // Send the poweroff command packet.
-  return network_send(&sock_cmd, &packet, sizeof(packet));
+  // End function.
+  return 0;
 
  }
 
- int ps2link_cmd_execiop(char *pathname) {
-  struct { u32 cmd; u16 len; int argc; char argv[256]; } __attribute__((packed)) packet;
+ int ps2link_command_reset(char *hostname) {
+  struct { int number; short length; } __attribute__((packed)) command;
 
   // Tell the user what we're doing.
-  printf("[***] Sending execiop command...\n");
+  printf("[***] Sending reset() command...\n");
 
-  // Build the execiop command packet.
-  packet.cmd = htonl(0xBABE0202);
-  packet.len = htons(sizeof(packet));
-  packet.argc = htonl(1); sprintf(packet.argv, "%s", pathname);
+  // Build the command packet.
+  command.number = htonl(0xBABE0201);
+  command.length = htons(sizeof(command));
 
-  // Send the execiop command packet.
-  network_send(&sock_cmd, &packet, sizeof(packet));
+  // Send the command packet.
+  ps2link_send_command(hostname, &command, sizeof(command));
 
-  // Start the request parsing loop.
-  return ps2link_loop();
+  // End function.
+  return 0;
 
  }
 
- int ps2link_cmd_execee(char *pathname) {
-  struct { u32 cmd; u16 len; int argc; char argv[256]; } __attribute__((packed)) packet;
+ int ps2link_command_execiop(char *hostname, char *pathname) {
+  struct { int number; short length; int argc; char argv[256]; } __attribute__((packed)) command;
 
   // Tell the user what we're doing.
-  printf("[***] Sending execee command...\n");
+  printf("[***] Sending execiop(\"%s\") command...\n", pathname);
 
-  // Build the execee command packet.
-  packet.cmd = htonl(0xBABE0203);
-  packet.len = htons(sizeof(packet));
-  packet.argc = htonl(1); sprintf(packet.argv, "%s", pathname);
+  // Build the command packet.
+  command.number = htonl(0xBABE0202);
+  command.length = htons(sizeof(command));
+  command.argc   = htonl(1);
+  if (pathname) { strncpy(command.argv, pathname, 256); }
 
-  // Send the execee command packet.
-  network_send(&sock_cmd, &packet, sizeof(packet));
+  // Send the command packet.
+  ps2link_send_command(hostname, &command, sizeof(command));
 
-  // Start the request parsing loop.
-  return ps2link_loop();
+  // End function.
+  return 0;
+
+ }
+
+ int ps2link_command_execee(char *hostname, char *pathname) {
+  struct { int number; short length; int argc; char argv[256]; } __attribute__((packed)) command;
+
+  // Tell the user what we're doing.
+  printf("[***] Sending execee(\"%s\") command...\n", pathname);
+
+  // Build the command packet.
+  command.number = htonl(0xBABE0203);
+  command.length = htons(sizeof(command));
+  command.argc   = htonl(1);
+  if (pathname) { strncpy(command.argv, pathname, 256); }
+
+  // Send the command packet.
+  ps2link_send_command(hostname, &command, sizeof(command));
+
+  // End function.
+  return 0;
+
+ }
+
+ int ps2link_command_poweroff(char *hostname) {
+  struct { int number; short length; } __attribute__((packed)) command;
+
+  // Tell the user what we're doing.
+  printf("[***] Sending poweroff() command...\n");
+
+  // Build the command packet.
+  command.number = htonl(0xBABE0204);
+  command.length = htons(sizeof(command));
+
+  // Send the command packet.
+  ps2link_send_command(hostname, &command, sizeof(command));
+
+  // End function.
+  return 0;
+
+ }
+
+ int ps2link_command_dumpmem(char *hostname, char *pathname, int offset, int size) {
+  struct { int number; short length; int offset, size; char pathname[256]; } __attribute__((packed)) command;
+
+  // Tell the user what we're doing.
+  printf("[***] Sending dumpmem(\"%s\", %d, %d) command...\n", pathname, offset, size);
+
+  // Build the command packet.
+  command.number = htonl(0xBABE0207);
+  command.length = htons(sizeof(command));
+  command.offset = offset;
+  command.size   = htonl(size);
+  if (pathname) { strncpy(command.pathname, pathname, 256); }
+
+  // Send the command packet.
+  ps2link_send_command(hostname, &command, sizeof(command));
+
+  // End function.
+  return 0;
+
+ }
+
+ int ps2link_command_startvu(char *hostname, int vu) {
+  struct { int number; short length; int vu; } __attribute__((packed)) command;
+
+  // Tell the user what we're doing.
+  printf("[***] Sending startvu(%d) command...\n", vu);
+
+  // Build the command packet.
+  command.number = htonl(0xBABE0208);
+  command.length = htons(sizeof(command));
+  command.vu     = htonl(vu);
+
+  // Send the command packet.
+  ps2link_send_command(hostname, &command, sizeof(command));
+
+  // End function.
+  return 0;
+
+ }
+
+ int ps2link_command_stopvu(char *hostname, int vu) {
+  struct { int number; short length; int vu; } __attribute__((packed)) command;
+
+  // Tell the user what we're doing.
+  printf("[***] Sending stopvu(%d) command...\n", vu);
+
+  // Build the command packet.
+  command.number = htonl(0xBABE0209);
+  command.length = htons(sizeof(command));
+  command.vu     = htonl(vu);
+
+  // Send the command packet.
+  ps2link_send_command(hostname, &command, sizeof(command));
+
+  // End function.
+  return 0;
+
+ }
+
+ int ps2link_command_dumpreg(char *hostname, char *pathname, int type) {
+  struct { int number; short length; int type; char pathname[256]; } command;
+
+  // Tell the user what we're doing.
+  printf("[***] Sending dumpreg(\"%s\", %d) command...\n", pathname, type);
+
+  // Build the command packet.
+  command.number = htonl(0xBABE020A);
+  command.length = htons(sizeof(command));
+  command.type   = htonl(type);
+  if (pathname) { strncpy(command.pathname, pathname, 256); }
+
+  // Send the command packet.
+  ps2link_send_command(hostname, &command, sizeof(command));
+
+  // End function.
+  return 0;
+
+ }
+
+ int ps2link_command_gsexec(char *hostname, char *pathname, int size) {
+  struct { int number; short length; int size; char pathname[256]; } command;
+
+  // Tell the user what we're doing.
+  printf("[***] Sending gsexec(\"%s\", %d) command...\n", pathname, size);
+
+  // Build the command packet.
+  command.number = htonl(0xBABE020B);
+  command.length = htons(sizeof(command));
+  command.size   = htonl(size);
+  if (pathname) { strncpy(command.pathname, pathname, 256); }
+
+  // Send the command packet.
+  ps2link_send_command(hostname, &command, sizeof(command));
+
+  // End function.
+  return 0;
 
  }
 
@@ -214,229 +323,272 @@
  // PS2LINK REQUEST FUNCTIONS //
  ///////////////////////////////
 
- int ps2link_req_open(void *request) {
-  struct { u32 cmd; u16 len; int ret; } __attribute__((packed)) packet;
-  struct { u32 cmd; u16 len; int flags; char path[256]; } __attribute__((packed)) *temp = request;
+ int ps2link_request_open(void *packet) {
+  struct { int number; short length; int flags; char pathname[256]; } __attribute__((packed)) *request = packet;
+  struct { int number; short length; int result; } __attribute__((packed)) response;
 
-  // Fix the pathname.
-  ps2link_fixpathname(temp->path);
+  // Fix the requested pathname.
+  ps2link_fixpathname(request->pathname);
 
   // Build the response packet.
-  packet.cmd = htonl(0xBABE0112);
-  packet.len = htons(sizeof(packet));
-  packet.ret = htonl(open(temp->path, ps2link_fixflags(ntohl(temp->flags)), 0644));
+  response.number = htonl(0xBABE0112);
+  response.length = htons(sizeof(response));
+  response.result = htonl(open(request->pathname, ps2link_fixflags(ntohl(request->flags)), 0644));
 
   // Send the response packet.
-  network_send(&sock_req, &packet, sizeof(packet));
+  network_send(request_sock, &response, sizeof(response));
+
+#ifdef __DEBUG__
 
   // Tell the user about the request and its result.
-  printf("[***] open(\"host0:%s\", %d) = %d\n", temp->path, ntohl(temp->flags), ntohl(packet.ret));
+  printf("[***] open(\"host0:%s\", %d) = %d\n", request->pathname, ps2link_fixflags(ntohl(request->flags)), ntohl(response.result));
+
+#endif
 
   // End function.
   return 0;
 
  }
 
- int ps2link_req_close(void *request) {
-  struct { u32 cmd; u16 len; int ret; } __attribute__((packed)) packet;
-  struct { u32 cmd; u16 len; int fd; } __attribute__((packed)) *temp = request;
+ int ps2link_request_close(void *packet) {
+  struct { int number; short length; int fd; } __attribute__((packed)) *request = packet;
+  struct { int number; short length; int result; } __attribute__((packed)) response;
 
   // Build the response packet.
-  packet.cmd = htonl(0xBABE0122);
-  packet.len = htons(sizeof(packet));
-  packet.ret = htonl(close(ntohl(temp->fd)));
+  response.number = htonl(0xBABE0122);
+  response.length = htons(sizeof(response));
+  response.result = htonl(close(ntohl(request->fd)));
 
   // Send the response packet.
-  network_send(&sock_req, &packet, sizeof(packet));
+  network_send(request_sock, &response, sizeof(response));
+
+#ifdef __DEBUG__
 
   // Tell the user about the request and its result.
-  printf("[***] close(%d) = %d\n", ntohl(temp->fd), ntohl(packet.ret));
+  printf("[***] close(%d) = %d\n", ntohl(request->fd), ntohl(response.result));
+
+#endif
 
   // End function.
   return 0;
 
  }
 
- int ps2link_req_read(void *request) {
-  struct { u32 cmd; u16 len; int ret; int nbytes; } __attribute__((packed)) packet;
-  struct { u32 cmd; u16 len; int fd; int nbytes; } __attribute__((packed)) *temp = request;
+ int ps2link_request_read(void *packet) {
+  struct { int number; short length; int fd, size; } __attribute__((packed)) *request = packet;
+  struct { int number; short length; int result, size; } __attribute__((packed)) response;
 
   // Build the response packet.
-  packet.cmd = htonl(0xBABE0132);
-  packet.len = htons(sizeof(packet));
-  packet.ret = htonl(read(ntohl(temp->fd), buffer, ntohl(temp->nbytes)));
-  packet.nbytes = packet.ret;
+  response.number = htonl(0xBABE0132);
+  response.length = htons(sizeof(response));
+  response.result = htonl(read(ntohl(request->fd), buffer, ntohl(request->size)));
+  response.size   = response.result;
 
-  // Send the response packet.
-  network_send(&sock_req, &packet, sizeof(packet));
+  // Send the response packet and read data.
+  network_send(request_sock, &response, sizeof(response));
+  network_send(request_sock, buffer, ntohl(response.result));
 
-  // Send the requested read data.
-  network_send(&sock_req, buffer, ntohl(packet.ret));
+#ifdef __DEBUG__
 
   // Tell the user about the request and its result.
-  printf("[***] read(%d, buffer, %d) = %d\n", ntohl(temp->fd), ntohl(temp->nbytes), ntohl(packet.ret));
+  printf("[***] read(%d, buffer, %d) = %d\n", ntohl(request->fd), ntohl(request->size), ntohl(response.result));
+
+#endif
 
   // End function.
   return 0;
 
  }
 
- int ps2link_req_write(void *request) {
-  struct { u32 cmd; u16 len; int ret; } __attribute__((packed)) packet;
-  struct { u32 cmd; u16 len; int fd; int nbytes; u08 data[65536]; } __attribute__((packed)) *temp = request;
+ int ps2link_request_write(void *packet) {
+  struct { int number; short length; int fd, size; char data[65536]; } __attribute__((packed)) *request = packet;
+  struct { int number; short length; int result; } __attribute__((packed)) response;
 
   // Build the response packet.
-  packet.cmd = htonl(0xBABE0142);
-  packet.len = htons(sizeof(packet));
-  packet.ret = htonl(write(ntohl(temp->fd), temp->data, ntohl(temp->nbytes)));
+  response.number = htonl(0xBABE0142);
+  response.length = htons(sizeof(response));
+  response.result = htonl(write(ntohl(request->fd), request->data, ntohl(request->size)));
 
   // Send the response packet.
-  network_send(&sock_req, &packet, sizeof(packet));
+  network_send(request_sock, &response, sizeof(response));
+
+#ifdef __DEBUG__
 
   // Tell the user about the request and its result.
-  printf("[***] write(%d, buffer, %d) = %d\n", ntohl(temp->fd), ntohl(temp->nbytes), ntohl(packet.ret));
+  printf("[***] write(%d, buffer, %d) = %d\n", ntohl(request->fd), ntohl(request->size), ntohl(response.result));
+
+#endif
 
   // End function.
   return 0;
 
  }
 
- int ps2link_req_lseek(void *request) {
-  struct { u32 cmd; u16 len; int ret; } __attribute__((packed)) packet;
-  struct { u32 cmd; u16 len; int fd; int offset; int whence; } __attribute__((packed)) *temp = request;
+ int ps2link_request_lseek(void *packet) {
+  struct { int number; short length; int fd, offset, whence; } __attribute__((packed)) *request = packet;
+  struct { int number; short length; int result; } __attribute__((packed)) response;
 
   // Build the response packet.
-  packet.cmd = htonl(0xBABE0152);
-  packet.len = htons(sizeof(packet));
-  packet.ret = htonl(lseek(ntohl(temp->fd), ntohl(temp->offset), ntohl(temp->whence)));
+  response.number = htonl(0xBABE0152);
+  response.length = htons(sizeof(response));
+  response.result = htonl(lseek(ntohl(request->fd), ntohl(request->offset), ntohl(request->whence)));
 
   // Send the response packet.
-  network_send(&sock_req, &packet, sizeof(packet));
+  network_send(request_sock, &response, sizeof(response));
+
+#ifdef __DEBUG__
 
   // Tell the user about the request and its result.
-  printf("[***] lseek(%d, %d, %d) = %d\n", ntohl(temp->fd), ntohl(temp->offset), ntohl(temp->whence), ntohl(packet.ret));
+  printf("[***] lseek(%d, %d, %d) = %d\n", ntohl(request->fd), ntohl(request->offset), ntohl(request->whence), ntohl(response.result));
+
+#endif
 
   // End function.
   return 0;
 
  }
 
- int ps2link_req_dopen(void *request) {
-  struct { u32 cmd; u16 len; int ret; } __attribute__((packed)) packet;
-  struct { u32 cmd; u16 len; int flags; char pathname[256]; } __attribute__((packed)) *temp = request;
+ int ps2link_request_dopen(void *packet) {
+  struct { int number; short length; int flags; char pathname[256]; } __attribute__((packed)) *request = packet;
+  struct { int number; short length; int dd; } __attribute__((packed)) response;
 
-  // Fix the pathname.
-  ps2link_fixpathname(temp->pathname);
+  // Fix the requested pathname.
+  ps2link_fixpathname(request->pathname);
 
   // Build the response packet.
-  packet.cmd = htonl(0xBABE0162);
-  packet.len = htons(sizeof(packet));
-  packet.ret = htonl((int)opendir(temp->pathname));
+  response.number = htonl(0xBABE0162);
+  response.length = htons(sizeof(response));
+  response.dd     = htonl((int)opendir(request->pathname));
 
   // Send the response packet.
-  network_send(&sock_req, &packet, sizeof(packet));
+  network_send(request_sock, &response, sizeof(response));
+
+#ifdef __DEBUG__
 
   // Tell the user about the request and its result.
-  printf("[***] dopen(\"host0:%s\") = %d\n", temp->pathname, ntohl(packet.ret));
+  printf("[***] dopen(\"host0:%s\") = %d\n", request->pathname, ntohl(response.dd));
+
+#endif
 
   // End function.
   return 0;
 
  }
 
- int ps2link_req_dread(void *request) { struct dirent *direptr; struct stat stats; struct tm loctime;
-  struct { u32 cmd; u16 len; int ret; u32 mode, attr, size; u08 ctime[8], atime[8], mtime[8]; u32 hisize; u08 name[256]; } __attribute__((packed)) packet;
-  struct { u32 cmd; u16 len; int fd; } __attribute__((packed)) *temp = request;
+ int ps2link_request_dread(void *packet) {
+  struct { int number; short length; int dd; } __attribute__((packed)) *request = packet;
+  struct { int number; short length; int result, mode, attr, size; char ctime[8], atime[8], mtime[8]; int hisize; char name[256]; } __attribute__((packed)) response;
+  struct dirent *direptr; struct stat stats; struct tm loctime;
 
   // Build the response packet.
-  packet.cmd = htonl(0xBABE0182);
-  packet.len = htons(sizeof(packet));
-  packet.ret = htonl((int)direptr = readdir((DIR *)ntohl(temp->fd)));
+  response.number = htonl(0xBABE0182);
+  response.length = htons(sizeof(response));
+  response.result = htonl((int)direptr = readdir((DIR *)ntohl(request->dd)));
 
-  // If an entry was returned, add the entry information to the response packet.
+  // If an entry was returned, add the entry information.
   if (direptr != 0) {
 
    // Fetch the stats for the entry.
    stat(direptr->d_name, &stats);
 
    // Convert and add the mode.
-   packet.mode = (stats.st_mode & 0x07);
-   if (S_ISDIR(stats.st_mode)) { packet.mode |= 0x20; }
-   if (S_ISLNK(stats.st_mode)) { packet.mode |= 0x08; }
-   if (S_ISREG(stats.st_mode)) { packet.mode |= 0x10; }
-   packet.mode = htonl(packet.mode);
+   response.mode = (stats.st_mode & 0x07);
+   if (S_ISDIR(stats.st_mode)) { response.mode |= 0x20; }
+   if (S_ISLNK(stats.st_mode)) { response.mode |= 0x08; }
+   if (S_ISREG(stats.st_mode)) { response.mode |= 0x10; }
+   response.mode = htonl(response.mode);
 
    // Add the attributes.
-   packet.attr = htonl(0);
+   response.attr = htonl(0);
 
    // Add the size.
-   packet.size = htonl(stats.st_size);
+   response.size = htonl(stats.st_size);
 
    // Convert and add the creation time.
    if (localtime_r(&(stats.st_ctime), &loctime)) {
-     packet.ctime[6] = (u08)loctime.tm_year;
-     packet.ctime[5] = (u08)loctime.tm_mon + 1;
-     packet.ctime[4] = (u08)loctime.tm_mday;
-     packet.ctime[3] = (u08)loctime.tm_hour;
-     packet.ctime[2] = (u08)loctime.tm_min;
-     packet.ctime[1] = (u08)loctime.tm_sec;
+     response.ctime[6] = (char)loctime.tm_year;
+     response.ctime[5] = (char)loctime.tm_mon + 1;
+     response.ctime[4] = (char)loctime.tm_mday;
+     response.ctime[3] = (char)loctime.tm_hour;
+     response.ctime[2] = (char)loctime.tm_min;
+     response.ctime[1] = (char)loctime.tm_sec;
    }
 
    // Convert and add the access time.
    if (localtime_r(&(stats.st_atime), &loctime)) {
-     packet.atime[6] = (u08)loctime.tm_year;
-     packet.atime[5] = (u08)loctime.tm_mon + 1;
-     packet.atime[4] = (u08)loctime.tm_mday;
-     packet.atime[3] = (u08)loctime.tm_hour;
-     packet.atime[2] = (u08)loctime.tm_min;
-     packet.atime[1] = (u08)loctime.tm_sec;
+     response.atime[6] = (char)loctime.tm_year;
+     response.atime[5] = (char)loctime.tm_mon + 1;
+     response.atime[4] = (char)loctime.tm_mday;
+     response.atime[3] = (char)loctime.tm_hour;
+     response.atime[2] = (char)loctime.tm_min;
+     response.atime[1] = (char)loctime.tm_sec;
    }
 
    // Convert and add the modification time.
    if (localtime_r(&(stats.st_mtime), &loctime)) {
-     packet.mtime[6] = (u08)loctime.tm_year;
-     packet.mtime[5] = (u08)loctime.tm_mon + 1;
-     packet.mtime[4] = (u08)loctime.tm_mday;
-     packet.mtime[3] = (u08)loctime.tm_hour;
-     packet.mtime[2] = (u08)loctime.tm_min;
-     packet.mtime[1] = (u08)loctime.tm_sec;
+     response.mtime[6] = (char)loctime.tm_year;
+     response.mtime[5] = (char)loctime.tm_mon + 1;
+     response.mtime[4] = (char)loctime.tm_mday;
+     response.mtime[3] = (char)loctime.tm_hour;
+     response.mtime[2] = (char)loctime.tm_min;
+     response.mtime[1] = (char)loctime.tm_sec;
    }
 
    // Add the hsize. (what is this?)
-   packet.hisize = htonl(0);
+   response.hisize = htonl(0);
 
    // Add the name.
-   strncpy(packet.name, direptr->d_name, 256);
+   strncpy(response.name, direptr->d_name, 256);
 
   }
 
   // Send the response packet.
-  network_send(&sock_req, &packet, sizeof(packet));
+  network_send(request_sock, &response, sizeof(response));
+
+#ifdef __DEBUG__
 
   // Tell the user about the request and its result.
-  printf("[***] dread(%d) = %d\n", ntohl(temp->fd), ntohl(packet.ret));
+  printf("[***] dread(%d) = %d\n", ntohl(request->dd), ntohl(response.result));
+
+#endif
 
   // End function.
   return 0;
 
  }
 
- int ps2link_req_dclose(void *request) {
-  struct { u32 cmd; u16 len; int ret; } __attribute__((packed)) packet;
-  struct { u32 cmd; u16 len; int fd; } __attribute__((packed)) *temp = request;
+ int ps2link_request_dclose(void *packet) {
+  struct { int number; short length; int dd; } __attribute__((packed)) *request = packet;
+  struct { int number; short length; int result; } __attribute__((packed)) response;
 
   // Build the response packet.
-  packet.cmd = htonl(0xBABE0172);
-  packet.len = htons(sizeof(packet));
-  packet.ret = htonl(closedir((DIR *)ntohl(temp->fd)));
+  response.number = htonl(0xBABE0172);
+  response.length = htons(sizeof(response));
+  response.result = htonl(closedir((DIR *)ntohl(request->dd)));
 
   // Send the response packet.
-  network_send(&sock_req, &packet, sizeof(packet));
+  network_send(request_sock, &response, sizeof(response));
+
+#ifdef __DEBUG__
 
   // Tell the user about the request and its result.
-  printf("[***] dclose(%d) = %d\n", ntohl(temp->fd), ntohl(packet.ret));
+  printf("[***] dclose(%d) = %d\n", ntohl(request->dd), ntohl(response.result));
+
+#endif
 
   // End function.
   return 0;
 
  }
+
+ ///////////////////////////////
+ // PS2LINK TEXTLOG FUNCTIONS //
+ ///////////////////////////////
+
+ int ps2link_read_textlog(void *packet, int size) {
+
+  // Read the textlog packet.
+  return network_recvfrom(textlog_sock, packet, size);
+
+ }
+

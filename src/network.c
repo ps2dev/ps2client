@@ -1,98 +1,124 @@
 
  #include <stdio.h>
+ #include <stdlib.h>
+ #include <string.h>
  #include <netdb.h>
  #include <fcntl.h>
- #include <string.h>
  #include <unistd.h>
- #include <sys/types.h>
- #include <netinet/in.h>
+ #include <sys/poll.h>
  #include <sys/socket.h>
-
- #include "types.h"
+ #include <netinet/in.h>
  #include "network.h"
- #include "ps2link.h"
 
- #ifndef MSG_DONTWAIT
- #define MSG_DONTWAIT	0x40
- #endif
+ int sock[10] = { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+
+ struct pollfd ufsd[10] = {
+  { -1, 0, 0 }, { -1, 0, 0 }, { -1, 0, 0 }, { -1, 0, 0 }, { -1, 0, 0 }, 
+  { -1, 0, 0 }, { -1, 0, 0 }, { -1, 0, 0 }, { -1, 0, 0 }, { -1, 0, 0 }
+ };
 
  ///////////////////////
  // NETWORK FUNCTIONS //
  ///////////////////////
 
- int network_open(int *sock, char *addr, int port, int type) {
+ int network_connect(char *hostname, int port, int type) { int loop0, nd = -1;
   struct sockaddr_in sockaddr; struct hostent *hostent;
 
-  // Create a network socket of the type requested.
-  if (type == 0x00) { *sock = socket(AF_INET, SOCK_STREAM, 0); } else
-  if (type == 0x01) { *sock = socket(AF_INET, SOCK_DGRAM,  0); } else { return -1; }
+  // Find an available network descriptor, aborting it none is found.
+  for(loop0=0;loop0<10;loop0++) { if (sock[loop0] <= 0) { nd = loop0; } }
+  if (nd == -1) { return -1; }
 
-  // Get the host information.
-  hostent = gethostbyname(addr);
-
-  // Fill the socket address structure.
+  // Set the host information.
   sockaddr.sin_family = AF_INET;
-  sockaddr.sin_addr = *(struct in_addr *)hostent->h_addr;
-  sockaddr.sin_port = htons(port);
+  sockaddr.sin_port   = htons(port);
+  hostent = gethostbyname(hostname);
+  sockaddr.sin_addr   = *(struct in_addr *)hostent->h_addr;
 
-  // Open the network connection.
-  return connect(*sock, (struct sockaddr *)&sockaddr, sizeof(struct sockaddr));
+  // Create and connect the socket.
+  if (type == SOCKET_TCP) { sock[nd] = socket(AF_INET, SOCK_STREAM, 0); }
+  if (type == SOCKET_UDP) { sock[nd] = socket(AF_INET, SOCK_DGRAM,  0); }
+  connect(sock[nd], (struct sockaddr *)&sockaddr, sizeof(struct sockaddr));
+
+  // Set up the socket polling.
+  ufsd[nd].fd = sock[nd]; ufsd[nd].events = POLLIN;
+
+  // End function.
+  return nd;
 
  }
 
- int network_serv(int *sock, int port, int type) {
+ int network_listen(int port, int type) { int loop0, nd = -1;
   struct sockaddr_in sockaddr;
 
-  // Create a network socket of the type requested.
-  if (type == 0x00) { *sock = socket(AF_INET, SOCK_STREAM, 0); } else
-  if (type == 0x01) { *sock = socket(AF_INET, SOCK_DGRAM,  0); } else { return -1; }
+  // Find an available network descriptor, aborting if none is found.
+  for(loop0=0;loop0<10;loop0++) { if (sock[loop0] <= 0) { nd = loop0; } }
+  if (nd == -1) { return -1; }
 
-  // Turn off socket blocking.
-  fcntl(*sock, F_SETFL, O_NONBLOCK);
-
-  // Fill in the socket address structure.
+  // Set the sockaddr information.
   sockaddr.sin_family = AF_INET;
+  sockaddr.sin_port   = htons(port);
   sockaddr.sin_addr.s_addr = htonl(INADDR_ANY);
-  sockaddr.sin_port = htons(port);
 
-  // Bind to the network address.
-  bind(*sock, (struct sockaddr *)&sockaddr, sizeof(struct sockaddr));
+  // Create and bind the socket, setting it to listen.
+  if (type == SOCKET_TCP) { sock[nd] = socket(AF_INET, SOCK_STREAM, 0); }
+  if (type == SOCKET_UDP) { sock[nd] = socket(AF_INET, SOCK_DGRAM,  0); }
+  bind(sock[nd], (struct sockaddr *)&sockaddr, sizeof(struct sockaddr));
+  listen(sock[nd], 10); fcntl(sock[nd], F_SETFL, O_NONBLOCK);
 
-  // Start listening for data.
-  return listen(*sock, 10);
+  // Set up the socket polling.
+  ufsd[nd].fd = sock[nd]; ufsd[nd].events = POLLIN;
 
- }
-
- int network_send(int *sock, void *data, int size) {
-
-  // Send the network data.
-  return send(*sock, data, size, 0);
+  // End function.
+  return nd;
 
  }
 
- int network_recv(int *sock, void *data, int size) {
+ int network_send(int nd, void *buffer, int size) {
 
-  // Clear the packet.
-  memset(data, 0, size);
-
-  // Receive some network data.
-  return recv(*sock, data, size, MSG_DONTWAIT);
+  // Send data to the network.
+  return send(sock[nd], buffer, size, 0);
 
  }
 
- int network_recvfrom(int *sock, void *data, int size) {
+ int network_wait(int timeout) {
 
-  // Clear the packet.
-  memset(data, 0, size);
+  // Wait for data to become available.
+  poll(ufsd, 10, timeout);
 
-  // Receive some network data.
-  return recvfrom(*sock, data, size, 0, NULL, NULL);
+  // End function.
+  return 0;
 
  }
 
- int network_shut(int *sock) {
+ int network_recv(int nd, void *buffer, int size) {
 
-  // Close the network socket.
-  return close(*sock);
+  // Clear the buffer.
+  memset(buffer, 0, size);
+
+  // Receive some data from the network.
+  return recv(sock[nd], buffer, size, 0);
+
+ }
+
+ int network_recvfrom(int nd, void *buffer, int size) {
+
+  // Clear the buffer.
+  memset(buffer, 0, size);
+
+  // Receive data from the network.
+  return recvfrom(sock[nd], buffer, size, 0, NULL, NULL);
+
+ }
+
+ int network_close(int nd) { int result = 0;
+
+  // Close the socket.
+  result = close(sock[nd]);
+
+  // Clear the descriptor.
+  sock[nd] = -1; ufsd[nd].fd = -1;
+
+  // End function.
+  return result;
 
  }

@@ -35,9 +35,9 @@
  PS2CLIENT USAGE
  ---------------
 
-  Basic usage:
+  Usage:
 
-   ps2client <address> <command> [argument]
+   ps2client <address> <command> [arguments]
 
    <address> is the actual address of the PS2. This can be either an ip
    or even a hostname. You get to choose, but choose carefully...
@@ -49,15 +49,31 @@
    either execiop or execee to be executed. Don't worry, it is quite 
    humane - those executed can't feel the pain. Honest.
 
-  Basic examples:
+  Commands (ps2link):
 
    ps2client 192.168.100.10 reset
 
+   ps2client 192.168.100.10 execiop <filename>
+
+   ps2client 192.168.100.10 execee <filename>
+
    ps2client 192.168.100.10 poweroff
 
-   ps2client 192.168.100.10 execiop cdrom0:/program.irx
+   ps2client 192.168.100.10 dumpmem <filename> <offset> <size>
 
-   ps2client 192.168.100.10 execee host:/programs/hello.elf
+   ps2client 192.168.100.10 startvu <0/1>
+
+   ps2client 192.168.100.10 stopvu <0/1>
+
+   ps2client 192.168.100.10 dumpreg <filename> <type>
+
+   ps2client 192.168.100.10 gsexec <filename>
+
+   ps2client 192.168.100.10 listen
+
+  Commands (ps2netfs):
+
+   ps2client 192.168.100.10 ps2devlist
 
  ----------------
  MORE INFORMATION
