@@ -257,7 +257,7 @@
   // Build the dumpmem command.
   command.number = htonl(0xBABE0207);
   command.length = htons(sizeof(command));
-  command.offset = offset;
+  command.offset = htonl(offset);
   command.size   = htonl(size);
   if (pathname) { strncpy(command.pathname, pathname, 256); }
 
