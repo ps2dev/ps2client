@@ -3,7 +3,6 @@
  #include <stdlib.h>
  #include <string.h>
  #include <netdb.h>
- #include <fcntl.h>
  #include <unistd.h>
  #include <sys/time.h>
  #include <sys/socket.h>
@@ -18,62 +17,77 @@
  // NETWORK FUNCTIONS //
  ///////////////////////
 
- int network_connect(char *hostname, int port, int type) { int loop0, nd = -1;
-  struct sockaddr_in sockaddr; struct hostent *hostent;
+ int network_connect(char *hostname, int port, int type) { int result = 0;
+  struct sockaddr_in sockaddr; int loop0, nd = -1;
 
-  // Find an available network descriptor, aborting it none is found.
+  // Allocate the network descriptor.
   for(loop0=0;loop0<10;loop0++) { if (sock[loop0] <= 0) { nd = loop0; } }
-  if (nd == -1) { return -1; }
+  if (nd < 0) { printf("[ERROR] Unable to allocate network descriptor. (%d)\n", nd); return -1; }
 
-  // Set the host information.
+  // Set the sockaddr information.
   sockaddr.sin_family = AF_INET;
-  sockaddr.sin_port   = htons(port);
-  hostent = gethostbyname(hostname);
-  sockaddr.sin_addr   = *(struct in_addr *)hostent->h_addr;
+  sockaddr.sin_port = htons(port);
+  sockaddr.sin_addr = *(struct in_addr *)gethostbyname(hostname)->h_addr;
 
-  // Create and connect the socket.
+  // Create the socket.
   if (type == SOCKET_TCP) { sock[nd] = socket(AF_INET, SOCK_STREAM, 0); }
   if (type == SOCKET_UDP) { sock[nd] = socket(AF_INET, SOCK_DGRAM,  0); }
+  if (sock[nd] < 0) { printf("[ERROR] Create socket failed. (%d)\n", result); return -2; }
 
-  // Connect the socket to the remote host.
-  connect(sock[nd], (struct sockaddr *)&sockaddr, sizeof(struct sockaddr));
+  // Connect the socket.
+  result = connect(sock[nd], (struct sockaddr *)&sockaddr, sizeof(struct sockaddr));
+  if (result < 0) { printf("[ERROR] Connect socket failed. (%d)\n", result); return -3; }
 
   // End function.
   return nd;
 
  }
 
- int network_listen(int port, int type) { int loop0, nd = -1;
-  struct sockaddr_in sockaddr;
+ int network_listen(int port, int type) { int result = 0;
+  struct sockaddr_in sockaddr; int loop0, nd = -1;
 
-  // Find an available network descriptor, aborting if none is found.
+  // Find an available network descriptor.
   for(loop0=0;loop0<10;loop0++) { if (sock[loop0] <= 0) { nd = loop0; } }
-  if (nd == -1) { return -1; }
+  if (nd < 0) { printf("[ERROR] Unable to allocate network descriptor. (%d)\n", nd); return -1; }
 
   // Set the sockaddr information.
   sockaddr.sin_family = AF_INET;
-  sockaddr.sin_port   = htons(port);
+  sockaddr.sin_port = htons(port);
   sockaddr.sin_addr.s_addr = htonl(INADDR_ANY);
 
   // Create the socket.
   if (type == SOCKET_TCP) { sock[nd] = socket(AF_INET, SOCK_STREAM, 0); }
   if (type == SOCKET_UDP) { sock[nd] = socket(AF_INET, SOCK_DGRAM,  0); }
+  if (sock[nd] < 0) { printf("[ERROR] Create socket failed. (%d)\n", result); return -2; }
 
-  // Bind to the socket.
-  bind(sock[nd], (struct sockaddr *)&sockaddr, sizeof(struct sockaddr));
-
-  // Listen for data on the socket.
-  listen(sock[nd], 10);
+  // Bind the socket.
+  result = bind(sock[nd], (struct sockaddr *)&sockaddr, sizeof(struct sockaddr));
+  if (result < 0) { printf("[ERROR] Bind socket failed. (%d)\n", result); return -3; }
 
   // End function.
   return nd;
 
  }
 
- int network_send(int nd, void *buffer, int size) {
+ int network_send(int nd, void *buffer, int size) { int result = 0;
 
-  // Send data to the network.
-  return send(sock[nd], buffer, size, 0);
+  // Send the data.
+  result = send(sock[nd], buffer, size, 0);
+  if (result < 0) { printf("[ERROR] Send data failed. (%d)\n", result); return -1; }
+
+  // End function.
+  return result;
+
+ }
+
+ int network_sendall(int nd, void *buffer, int size) { int result = 0;
+
+  // Send all the data.
+  result = send(sock[nd], buffer, size, MSG_WAITALL);
+  if (result < 0) { printf("[ERROR] Send all data failed. (%d)\n", result); return -1; }
+
+  // End function.
+  return result;
 
  }
 
@@ -100,29 +114,71 @@
 
  }
 
- int network_recv(int nd, void *buffer, int size) {
+ int network_recv(int nd, void *buffer, int size) { int result = 0;
 
   // Clear the buffer.
   memset(buffer, 0, size);
 
-  // Receive some data from the network.
-  if (FD_ISSET(sock[nd], &rfds)) { return recv(sock[nd], buffer, size, 0); }
+  // Check to see if data is available.
+  if (!FD_ISSET(sock[nd], &rfds)) { return 0; }
+
+  // Read the data.
+  result = recv(sock[nd], buffer, size, 0);
+  if (result < 0) { printf("[ERROR] Read data failure. (%d)\n", result); return -1; }
 
   // End function.
-  return 0;
+  return result;
 
  }
 
- int network_recvfrom(int nd, void *buffer, int size) {
+ int network_recvall(int nd, void *buffer, int size) { int result = 0;
 
   // Clear the buffer.
   memset(buffer, 0, size);
 
-  // Receive data from the network.
-  if (FD_ISSET(sock[nd], &rfds)) { return recvfrom(sock[nd], buffer, size, 0, NULL, NULL); }
+  // Check to see if data is available.
+  if (!FD_ISSET(sock[nd], &rfds)) { return 0; }
+
+  // Read all the data.
+  result = recv(sock[nd], buffer, size, MSG_WAITALL);
+  if (result < 0) { printf("[ERROR] Read all data failure. (%d)\n", result); return -1; }
 
   // End function.
-  return 0;
+  return result;
+
+ }
+
+ int network_recvfrom(int nd, void *buffer, int size) { int result = 0;
+
+  // Clear the buffer.
+  memset(buffer, 0, size);
+
+  // Check to see if data is available.
+  if (!FD_ISSET(sock[nd], &rfds)) { return 0; }
+
+  // Read the data.
+  result = recvfrom(sock[nd], buffer, size, 0, NULL, NULL);
+  if (result < 0) { printf("[ERROR] Read data failure. (%d)\n", result); return -1; }
+
+  // End function.
+  return result;
+
+ }
+
+ int network_recvallfrom(int nd, void *buffer, int size) { int result = 0;
+
+  // Clear the buffer.
+  memset(buffer, 0, size);
+
+  // Check to see if data is available.
+  if (!FD_ISSET(sock[nd], &rfds)) { return 0; }
+
+  // Read all the data.
+  result = recvfrom(sock[nd], buffer, size, MSG_WAITALL, NULL, NULL);
+  if (result < 0) { printf("[ERROR] Read all data failure. (%d)\n", result); return -1; }
+
+  // End function.
+  return result;
 
  }
 
@@ -130,6 +186,7 @@
 
   // Close the socket.
   result = close(sock[nd]);
+  if (result < 0) { printf("[ERROR] Close socket failed. (%d)\n", result); return -1; }
 
   // Clear the descriptor.
   sock[nd] = -1;

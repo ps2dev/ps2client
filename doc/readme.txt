@@ -29,13 +29,11 @@
 
    PREFIX=/dir	- Install directory, defaults to: $PS2DEV/bin
 
-   QUIET=YES	- Disable non-essential text output.
-
    DEBUG=YES	- Enable all debug text output.
 
   A building example:
 
-   make clean; make DEBUG=NO QUIET=YES install
+   make clean; make DEBUG=NO install
 
  ---------------
  PS2CLIENT USAGE

@@ -67,39 +67,31 @@
   if (argc > count) { strncpy(arg2, argv[count++], sizeof(arg2)); } else { sprintf(arg2, "NULL"); }
   if (argc > count) { strncpy(arg3, argv[count++], sizeof(arg3)); } else { sprintf(arg3, "NULL"); }
 
-#ifndef __QUIET__
-
-  // Output the startup message.
-  printf("[***] %s - Your friendly, neighbourhood ps2 client.\n", argv[0]);
-  printf("[***] Using ps2 located at: %s\n", hostname);
-
-#endif
-
   // Peform any ps2link commands.
-  if (strcmp(command, "reset")    == 0) { return ps2link_command_reset     (hostname); }
-  if (strcmp(command, "execiop")  == 0) { return ps2link_command_execiop   (hostname, timeout, argcount, argvalues); }
-  if (strcmp(command, "execee")   == 0) { return ps2link_command_execee    (hostname, timeout, argcount, argvalues); }
-  if (strcmp(command, "poweroff") == 0) { return ps2link_command_poweroff  (hostname); }
-  if (strcmp(command, "dumpmem")  == 0) { return ps2link_command_dumpmem   (hostname, timeout, arg0, atoi(arg1), atoi(arg2)); }
-  if (strcmp(command, "startvu")  == 0) { return ps2link_command_startvu   (hostname, atoi(arg0)); }
-  if (strcmp(command, "stopvu")   == 0) { return ps2link_command_stopvu    (hostname, atoi(arg0)); }
-  if (strcmp(command, "dumpreg")  == 0) { return ps2link_command_dumpreg   (hostname, timeout, arg0, atoi(arg1)); }
-  if (strcmp(command, "gsexec")   == 0) { return ps2link_command_gsexec    (hostname, timeout, arg0); }
-  if (strcmp(command, "listen")   == 0) { return ps2link_command_listen    (hostname, timeout); }
+  if (strcmp(command, "reset")    == 0) { return ps2link_command_reset(hostname); }
+  if (strcmp(command, "execiop")  == 0) { return ps2link_command_execiop(hostname, timeout, argcount, argvalues); }
+  if (strcmp(command, "execee")   == 0) { return ps2link_command_execee(hostname, timeout, argcount, argvalues); }
+  if (strcmp(command, "poweroff") == 0) { return ps2link_command_poweroff(hostname); }
+  if (strcmp(command, "dumpmem")  == 0) { return ps2link_command_dumpmem(hostname, timeout, arg0, atoi(arg1), atoi(arg2)); }
+  if (strcmp(command, "startvu")  == 0) { return ps2link_command_startvu(hostname, atoi(arg0)); }
+  if (strcmp(command, "stopvu")   == 0) { return ps2link_command_stopvu(hostname, atoi(arg0)); }
+  if (strcmp(command, "dumpreg")  == 0) { return ps2link_command_dumpreg(hostname, timeout, arg0, atoi(arg1)); }
+  if (strcmp(command, "gsexec")   == 0) { return ps2link_command_gsexec(hostname, timeout, arg0); }
+  if (strcmp(command, "listen")   == 0) { return ps2link_command_listen(hostname, timeout); }
 
   // Perform any ps2netfs commands.
-  if (strcmp(command, "copyfrom") == 0) { return ps2netfs_command_copyfrom (hostname, arg0, arg1); }
-  if (strcmp(command, "copyto")   == 0) { return ps2netfs_command_copyto   (hostname, arg0, arg1); }
-  if (strcmp(command, "delete")   == 0) { return ps2netfs_command_delete   (hostname, arg0);       }
-  if (strcmp(command, "devlist")  == 0) { return ps2netfs_command_devlist  (hostname);             }
-  if (strcmp(command, "dir")      == 0) { return ps2netfs_command_dir      (hostname, arg0);       }
-  if (strcmp(command, "format")   == 0) { return ps2netfs_command_format   (hostname, arg0);       }
-  if (strcmp(command, "mkdir")    == 0) { return ps2netfs_command_mkdir    (hostname, arg0);       }
-  if (strcmp(command, "mount")    == 0) { return ps2netfs_command_mount    (hostname, arg0, arg1); }
-  if (strcmp(command, "rename")   == 0) { return ps2netfs_command_rename   (hostname, arg0, arg1); }
-  if (strcmp(command, "rmdir")    == 0) { return ps2netfs_command_rmdir    (hostname, arg0);       }
-  if (strcmp(command, "sync")     == 0) { return ps2netfs_command_sync     (hostname, arg0);       }
-  if (strcmp(command, "umount")   == 0) { return ps2netfs_command_umount   (hostname, arg0);       }
+  if (strcmp(command, "copyfrom") == 0) { return ps2netfs_command_copyfrom(hostname, arg0, arg1); }
+  if (strcmp(command, "copyto")   == 0) { return ps2netfs_command_copyto(hostname, arg0, arg1); }
+  if (strcmp(command, "delete")   == 0) { return ps2netfs_command_delete(hostname, arg0); }
+  if (strcmp(command, "devlist")  == 0) { return ps2netfs_command_devlist(hostname); }
+  if (strcmp(command, "dir")      == 0) { return ps2netfs_command_dir(hostname, arg0); }
+  if (strcmp(command, "format")   == 0) { return ps2netfs_command_format(hostname, arg0); }
+  if (strcmp(command, "mkdir")    == 0) { return ps2netfs_command_mkdir(hostname, arg0); }
+  if (strcmp(command, "mount")    == 0) { return ps2netfs_command_mount(hostname, arg0, arg1); }
+  if (strcmp(command, "rename")   == 0) { return ps2netfs_command_rename(hostname, arg0, arg1); }
+  if (strcmp(command, "rmdir")    == 0) { return ps2netfs_command_rmdir(hostname, arg0); }
+  if (strcmp(command, "sync")     == 0) { return ps2netfs_command_sync(hostname, arg0); }
+  if (strcmp(command, "umount")   == 0) { return ps2netfs_command_umount(hostname, arg0); }
 
   // Command not found.
   ps2client_printusage(argv[0]);
@@ -117,6 +109,7 @@
 
   // Output the startup message.
   printf("[***] %s - Your friendly, neighbourhood ps2 client.\n", program);
+  printf("[***] Using ps2 hostname: %s\n", hostname);
 
   // Output the usage instructions.
   printf("\n Basic usage:\n\n");

@@ -16,38 +16,49 @@
 
  int ps2netfs_connect(char *hostname) {
 
-  // Open the connection.
+  // Connect to request.
   request_sock = network_connect(hostname, 0x4713, SOCKET_TCP);
-
-  // Check the result.
-  if (request_sock < 0) { return -1; }
+  if (request_sock < 0) { printf("[ERROR] Connect to request failed. (%d)\n", request_sock); return -1; }
 
   // End function.
   return 0;
 
  }
 
- int ps2netfs_send(void *buffer, int size) {
+ int ps2netfs_send(void *buffer, int size) { int result = 0;
 
-  // Send some data.
-  return network_send(request_sock, buffer, size);
+  // Send the data.
+  result = network_send(request_sock, buffer, size);
+  if (result < 0) { printf("[ERROR] Send data failed. (%d)\n", result); return -1; }
+
+  // End function.
+  return 0;
 
  }
 
- int ps2netfs_recv(void *buffer, int size) {
+ int ps2netfs_recv(void *buffer, int size) { int result = 0;
 
-  // Wait for data.
-  network_wait(100000);
+  // Wait for the data.
+  result = network_wait(10);
+  if (result < 1) { printf("[ERROR] Wait for data failed. (%d)\n", result); return -1; }
 
   // Receive the data.
-  return network_recv(request_sock, buffer, size);
+  result = network_recvall(request_sock, buffer, size);
+  if (result < 0) { printf("[ERROR] Receive data failed. (%d)\n", result); return -2; }
+
+  // End function.
+  return 0;
 
  }
 
- int ps2netfs_disconnect(void) {
+ int ps2netfs_disconnect(void) { int result = 0;
 
-  // Close the connection.
-  return network_disconnect(request_sock);
+  // Disconnect from request.
+  result = network_disconnect(request_sock);
+  if (result < 0) { printf("[ERROR] Disconnect from request failed. (%d)\n", result); return -1; }
+
+  // End function.
+  return 0;
 
  }
 
@@ -55,112 +66,116 @@
  // PS2NETFS COMMAND FUNCTIONS //
  ////////////////////////////////
 
- int ps2netfs_command_copyfrom(char *hostname, char *source, char *destination) {
-  int fd0, fd1, size, total; char buffer[65536];
+ int ps2netfs_command_copyfrom(char *hostname, char *source, char *destination) { int result = 0;
+  int fd0, fd1, size, total = 0; char buffer[28000];
 
-#ifndef __QUIET__
+  // Connect to ps2netfs.
+  result = ps2netfs_connect(hostname);
+  if (result < 0) { printf("[ERROR] Connect to ps2netfs failed. (%d)\n", result); return -1; }
 
-  // Tell the user about the command.
-  printf("[***] Copying a file to remote...\n");
+  // Open the source file.
+  fd0 = ps2netfs_request_open(source, OPEN_READ);
+  if (fd0 < 0) { printf("[ERROR] Open source file failed. (%d)\n", fd0); return -2; }
 
-#endif
+  // Get the source file size.
+  size = ps2netfs_request_lseek(fd0, 0, LSEEK_END); ps2netfs_request_lseek(fd0, 0, LSEEK_SET);
+  if (size < 0) { printf("[ERROR] Get source file size failed. (%d)\n", size); return -3; }
 
-  // Open the connection.
-  ps2netfs_connect(hostname);
-
-  // Open the local file.
-  fd0 = open(destination, O_RDWR | O_CREAT, 0644);
-
-  // Open the remote file.
-  fd1 = ps2netfs_request_open(source, OPEN_READ);
-
-  // Get the file size.
-  size = ps2netfs_request_lseek(fd1, 0, LSEEK_END); ps2netfs_request_lseek(fd1, 0, LSEEK_SET); total = size;
+  // Open the destination file.
+  fd1 = open(destination, O_RDWR | O_CREAT, 0644);
+  if (fd0 < 1) { printf("[ERROR] Open destination file failed. (%d)\n", fd1); return -4; }
 
   // Output the display header.
   printf("\n [%s --> %s]\n\n  Progress: ", source, destination);
 
   // Repeat until the copy is finished.
-  while (size > 0) { printf("#");
+  while (total < size) { printf("#");
 
-   // Read in the data.
-   ps2netfs_request_read(fd1, buffer, sizeof(buffer));
+   // Read the source data.
+   result = ps2netfs_request_read(fd0, buffer, sizeof(buffer)); // printf("READ: %d\n", result);
+   if (result < 0) { printf("[ERROR] Read source data failed. (%d)\n", result); return -5; }
 
-   // Write out the data.
-   if (size < sizeof(buffer)) { write(fd0, buffer, size); } else { write(fd0, buffer, sizeof(buffer)); }
+   // Write the destination data.
+   result = write(fd1, buffer, result); // printf("WRITE: %d\n", result);
+   if (result < 0) { printf("[ERROR] Write destination data failed. (%d)\n", result); return -6; }
 
-   // Decrement the size left to copy.
-   size -= sizeof(buffer);
+   // Increment the counter.
+   total += result;
 
   }
 
   // Output the display footer.
   printf("\n\n [%d Bytes Copied]\n\n", total);
 
-  // Close the local file.
-  close(fd0);
+  // Close the source file.
+  result = ps2netfs_request_close(fd0);
+  if (result < 0) { printf("[ERROR] Close source file failed. (%d)\n", result); return -7; }
 
-  // Close the remote file.
-  ps2netfs_request_close(fd1);
+  // Close the destination file.
+  result = close(fd1);
+  if (result < 0) { printf("[ERROR] Close destination file failed. (%d)\n", result); return -8; }
 
-  // Close the connection.
-  ps2netfs_disconnect();
+  // Disconnect from ps2netfs.
+  result = ps2netfs_disconnect();
+  if (result < 0) { printf("[ERROR] Disconnect from ps2netfs failed. (%d)\n", result); return -9; }
 
   // End function.
   return 0;
 
  }
 
- int ps2netfs_command_copyto(char *hostname, char *source, char *destination) {
-  int fd0, fd1, size, total; char buffer[65536];
+ int ps2netfs_command_copyto(char *hostname, char *source, char *destination) { int result = 0;
+  int fd0, fd1, size, total = 0; char buffer[28000];
 
-#ifndef __QUIET__
+  // Connect to ps2netfs.
+  result = ps2netfs_connect(hostname);
+  if (result < 0) { printf("[ERROR] Connect to ps2netfs failed. (%d)\n", result); return -1; }
 
-  // Tell the user about the command.
-  printf("[***] Copying a file from remote...\n");
-
-#endif
-
-  // Open the connection.
-  ps2netfs_connect(hostname);
-
-  // Open the local file.
+  // Open the source file.
   fd0 = open(source, O_RDONLY);
+  if (fd0 < 0) { printf("[ERROR] Open source file failed. (%d)\n", fd0); return -2; }
 
-  // Open the remote file.
+  // Get the source file size.
+  size = lseek(fd0, 0, SEEK_END); lseek(fd0, 0, SEEK_SET);
+  if (size < 0) { printf("[ERROR] Get source file size failed. (%d)\n", size); return -3; }
+
+  // Open the destination file.
   fd1 = ps2netfs_request_open(destination, OPEN_WRITE | OPEN_CREATE);
-
-  // Get the file size.
-  size = lseek(fd0, 0, SEEK_END); lseek(fd0, 0, SEEK_SET); total = size;
+  if (fd0 < 1) { printf("[ERROR] Open destination file failed. (%d)\n", fd1); return -4; }
 
   // Output the display header.
   printf("\n [%s --> %s]\n\n  Progress: ", source, destination);
 
-  // Repeat until the copy is done.
-  while (size > 0) { printf("#");
+  // Repeat until the copy is finished.
+  while (total < size) { printf("#");
 
-   // Read in the data.
-   read(fd0, buffer, sizeof(buffer));
+   // Read the source data.
+   result = read(fd0, buffer, sizeof(buffer)); printf("READ: %d\n", result);
+   if (result < 0) { printf("[ERROR] Read source data failed. (%d)\n", result); return -5; }
 
-   // Write out the data.
-   if (size < sizeof(buffer)) { ps2netfs_request_write(fd1, buffer, size); } else { ps2netfs_request_write(fd1, buffer, sizeof(buffer)); }
+   // Write the destination data.
+   result = ps2netfs_request_write(fd1, buffer, result); printf("WRITE: %d\n", result);
+   if (result < 0) { printf("[ERROR] Write destination data failed. (%d)\n", result); return -6; }
 
-   // Decrement the size left to copy.
-   size -= sizeof(buffer);
+   // Increment the counter.
+   total += result;
 
   }
 
   // Output the display footer.
   printf("\n\n [%d Bytes Copied]\n\n", total);
 
-  // Close the local file.
-  close(fd0);
+  // Close the source file.
+  result = close(fd0);
+  if (result < 0) { printf("[ERROR] Close source file failed. (%d)\n", result); return -7; }
 
-  // Close the remote file.
-  ps2netfs_request_close(fd1);
+  // Close the destination file.
+  result = ps2netfs_request_close(fd1);
+  if (result < 0) { printf("[ERROR] Close destination file failed. (%d)\n", result); return -8; }
 
-  // Close the connection.
-  ps2netfs_disconnect();
+  // Disconnect from ps2netfs.
+  result = ps2netfs_disconnect();
+  if (result < 0) { printf("[ERROR] Disconnect from ps2netfs failed. (%d)\n", result); return -9; }
 
   // End function.
   return 0;
@@ -169,49 +184,33 @@
 
  int ps2netfs_command_delete(char *hostname, char *pathname) { int result = 0;
 
-#ifndef __QUIET__
+  // Connect to ps2netfs.
+  result = ps2netfs_connect(hostname);
+  if (result < 0) { printf("[ERROR] Connect to ps2netfs failed. (%d)\n", result); return -1; }
 
-  // Tell the user about the command.
-  printf("[***] Deleting old file (%s)... ", pathname);
-
-#endif
-
-  // Open the connection.
-  ps2netfs_connect(hostname);
-
-  // Mount the device.
+  // Delete the file.
   result = ps2netfs_request_delete(pathname, 0);
+  if (result < 0) { printf("[ERROR] Delete file failed. (%d)\n", result); return -2; }
 
-  // Close the connection.
-  ps2netfs_disconnect();
-
-#ifndef __QUIET__
-
-  // Output the result.
-  if (result < 0) { printf("Error!\n"); } else { printf("Done!\n"); }
-
-#endif
+  // Disconnect from ps2netfs.
+  result = ps2netfs_disconnect();
+  if (result < 0) { printf("[ERROR] Disconnect from ps2netfs failed. (%d)\n", result); return -3; }
 
   // End function.
   return 0;
 
  }
 
- int ps2netfs_command_devlist(char *hostname) {
+ int ps2netfs_command_devlist(char *hostname) { int result = 0;
   int loop0, devcount; char devlist[256], *temp = devlist;
 
-#ifndef __QUIET__
-
-  // Tell the user about the command.
-  printf("[***] Requesting a device listing...\n");
-
-#endif
-
-  // Open the connection.
-  ps2netfs_connect(hostname);
+  // Connect to ps2netfs.
+  result = ps2netfs_connect(hostname);
+  if (result < 0) { printf("[ERROR] Connect to ps2netfs failed. (%d)\n", result); return -1; }
 
   // Get the device listing.
   devcount = ps2netfs_request_devlist("", 0, devlist);
+  if (devcount < 0) { printf("[ERROR] Get device listing failed. (%d)\n", result); return -2; }
 
   // Output the display header.
   printf("\n [Active Devices]\n\n");
@@ -220,13 +219,13 @@
   for(loop0=0;loop0<devcount;loop0++) {
 
    // Output the device description.
-   if (!strcmp(temp, "rom"))   { printf("  rom    - Onboard rom device.\n");			} else
-   if (!strcmp(temp, "cdrom")) { printf("  cdrom  - Standard cd/dvd device. (cdrom:)\n");	} else
-   if (!strcmp(temp, "host"))  { printf("  host   - Host file system. (host:)\n");		} else
-   if (!strcmp(temp, "mc"))    { printf("  mc     - Memory card driver. (mc0: mc1:)\n");	} else
-   if (!strcmp(temp, "hdd"))   { printf("  hdd    - Internal HDD unit.\n");			} else
-   if (!strcmp(temp, "pfs"))   { printf("  pfs    - Playstation File System.\n");		} else
-   if (!strcmp(temp, "dev9x")) { printf("  dev9x  - Blah blah blah.\n");			} else { printf("  %s\n", temp); }
+   if (!strcmp(temp, "rom"))   { printf("  rom    - Onboard rom device.\n");              } else
+   if (!strcmp(temp, "cdrom")) { printf("  cdrom  - Standard cd/dvd device. (cdrom:)\n"); } else
+   if (!strcmp(temp, "host"))  { printf("  host   - Host file system. (host:)\n");        } else
+   if (!strcmp(temp, "mc"))    { printf("  mc     - Memory card driver. (mc0: mc1:)\n");  } else
+   if (!strcmp(temp, "hdd"))   { printf("  hdd    - Internal HDD unit.\n");               } else
+   if (!strcmp(temp, "pfs"))   { printf("  pfs    - Playstation File System.\n");         } else
+   if (!strcmp(temp, "dev9x")) { printf("  dev9x  - Blah blah blah.\n");                  } else { printf("  %s\n", temp); }
 
    // Increment temp.
    temp += strlen(temp) + 1;
@@ -236,29 +235,25 @@
   // Output the display footer.
   printf("\n [%d Devices Found]\n\n", devcount);
 
-  // Close the connection.
-  ps2netfs_disconnect();
+  // Disconnect from ps2netfs.
+  result = ps2netfs_disconnect();
+  if (result < 0) { printf("[ERROR] Disconnect from ps2netfs failed. (%d)\n", result); return -3; }
 
   // End function.
   return 0;
 
  }
 
- int ps2netfs_command_dir(char *hostname, char *pathname) {
+ int ps2netfs_command_dir(char *hostname, char *pathname) { int result = 0;
   int dd, files = 0, size = 0; DIRENT dirent;
 
-#ifndef __QUIET__
-
-  // Tell the user about the command.
-  printf("[***] Requesting a directory listing...\n");
-
-#endif
-
-  // Open the connection.
-  ps2netfs_connect(hostname);
+  // Connect to ps2netfs.
+  result = ps2netfs_connect(hostname);
+  if (result < 0) { printf("[ERROR] Connect to ps2netfs failed. (%d)\n", result); return -1; }
 
   // Open the directory.
   dd = ps2netfs_request_dopen(pathname, 0);
+  if (dd < 0) { printf("[ERROR] Open directory failed. (%d)\n", dd); return -2; }
 
   // Output the display header.
   printf("\n [Contents of %s]\n\n", pathname);
@@ -301,46 +296,33 @@
   printf("\n [%d Files - %d Bytes]\n\n", files, size);
 
   // Close the directory.
-  ps2netfs_request_dclose(dd);
+  result = ps2netfs_request_dclose(dd);
+  if (result < 0) { printf("[ERROR] Close directory failed. (%d)\n", result); return -3; }
 
-  // Close the connection.
-  ps2netfs_disconnect();
+  // Disconnect from ps2netfs.
+  result = ps2netfs_disconnect();
+  if (result < 0) { printf("[ERROR] Disconnect from ps2netfs failed. (%d)\n", result); return -4; }
 
   // End function.
   return 0;
 
  }
 
- // UNDEFINED - FINISH ME
- int ps2netfs_command_format(char *hostname, char *device) { return -1; }
+ int ps2netfs_command_format(char *hostname, char *device) { printf("[ERROR] Not finished!\n"); return -1; }
 
  int ps2netfs_command_mkdir(char *hostname, char *pathname) { int result = 0;
 
-#ifndef __QUIET__
-
-  // Tell the user about the command.
-  printf("[***] Creating new directory (%s)... ", pathname);
-
-#endif
-
-  // Open the connection.
-  ps2netfs_connect(hostname);
+  // Connect to ps2netfs.
+  result = ps2netfs_connect(hostname);
+  if (result < 0) { printf("[ERROR] Connect to ps2netfs failed. (%d)\n", result); return -1; }
 
   // Make the directory.
   result = ps2netfs_request_mkdir(pathname, 0);
+  if (result < 0) { printf("[ERROR] Make directory failed. (%d)\n", result); return -2; }
 
-  // Close the connection.
-  ps2netfs_disconnect();
-
-#ifndef __QUIET__
-
-  // Output the result.
-  if (result < 0) { printf("Error!\n"); } else { printf("Done!\n"); }
-
-  // Display the new directory.
-  if (result >= 0) { usleep(1); ps2netfs_command_dir(hostname, pathname); }
-
-#endif
+  // Disconnect from ps2netfs.
+  result = ps2netfs_disconnect();
+  if (result < 0) { printf("[ERROR] Disconnect from ps2netfs failed. (%d)\n", result); return -3; }
 
   // End function.
   return 0;
@@ -349,64 +331,38 @@
 
  int ps2netfs_command_mount(char *hostname, char *device, char *fsname) { int result = 0;
 
-#ifndef __QUIET__
-
-  // Tell the user about the command.
-  printf("[***] Mounting device (%s) as (%s)... ", device, fsname);
-
-#endif
-
-  // Open the connection.
-  ps2netfs_connect(hostname);
+  // Connect to ps2netfs.
+  result = ps2netfs_connect(hostname);
+  if (result < 0) { printf("[ERROR] Connect to ps2netfs failed. (%d)\n", result); return -1; }
 
   // Mount the device.
   result = ps2netfs_request_mount(device, fsname, MOUNT_READWRITE, "", 0);
+  if (result < 0) { printf("[ERROR] Mount device failed. (%d)\n", result); return -2; }
 
-  // Close the connection.
-  ps2netfs_disconnect();
-
-#ifndef __QUIET__
-
-  // Output the result.
-  if (result < 0) { printf("Error!\n"); } else { printf("Done!\n"); }
-
-  // Display the new device.
-  if (result >= 0) { char temp[256]; sprintf(temp, "%s/", device); usleep(1); ps2netfs_command_dir(hostname, temp); }
-
-#endif
+  // Disconnect from ps2netfs.
+  result = ps2netfs_disconnect();
+  if (result < 0) { printf("[ERROR] Disconnect from ps2netfs failed. (%d)\n", result); return -3; }
 
   // End function.
   return 0;
 
  }
 
- // UNDEFINED - FINISH ME
- int ps2netfs_command_rename(char *hostname, char *source, char *destination) { return -1; }
+ int ps2netfs_command_rename(char *hostname, char *source, char *destination) { printf("[ERROR] Not finished!\n"); return -1; }
 
  int ps2netfs_command_rmdir(char *hostname, char *pathname) { int result = 0;
 
-#ifndef __QUIET__
+  // Connect to ps2netfs.
+  result = ps2netfs_connect(hostname);
+  if (result < 0) { printf("[ERROR] Connect to ps2netfs failed. (%d)\n", result); return -1; }
 
-  // Tell the user about the command.
-  printf("[***] Removing old directory (%s)... ", pathname);
-
-#endif
-
-  // Open the connection.
-  ps2netfs_connect(hostname);
-
-  // Make the directory.
+  // Remove the directory.
   result = ps2netfs_request_rmdir(pathname, 0);
+  if (result < 0) { printf("[ERROR] Remove directory failed. (%d)\n", result); return -2; }
 
-  // Close the connection.
-  ps2netfs_disconnect();
-
-#ifndef __QUIET__
-
-  // Output the result.
-  if (result < 0) { printf("Error!\n"); } else { printf("Done!\n"); }
-
-#endif
+  // Disconnect from ps2netfs.
+  result = ps2netfs_disconnect();
+  if (result < 0) { printf("[ERROR] Disconnect from ps2netfs failed. (%d)\n", result); return -3; }
 
   // End function.
   return 0;
@@ -415,28 +371,17 @@
 
  int ps2netfs_command_sync(char *hostname, char *device) { int result = 0;
 
-#ifndef __QUIET__
+  // Connect to ps2netfs.
+  result = ps2netfs_connect(hostname);
+  if (result < 0) { printf("[ERROR] Connect to ps2netfs failed. (%d)\n", result); return -1; }
 
-  // Tell the user about the command.
-  printf("[***] Requesting a sync for device (%s)... ", device);
-
-#endif
-
-  // Open the connection.
-  ps2netfs_connect(hostname);
-
-  // Make the directory.
+  // Sync the device.
   result = ps2netfs_request_sync(device, 0);
+  if (result < 0) { printf("[ERROR] Sync device failed. (%d)\n", result); return -2; }
 
-  // Close the connection.
-  ps2netfs_disconnect();
-
-#ifndef __QUIET__
-
-  // Output the result.
-  if (result < 0) { printf("Error!\n"); } else { printf("Done!\n"); }
-
-#endif
+  // Disconnect from ps2netfs.
+  result = ps2netfs_disconnect();
+  if (result < 0) { printf("[ERROR] Disconnect from ps2netfs failed. (%d)\n", result); return -3; }
 
   // End function.
   return 0;
@@ -445,28 +390,17 @@
 
  int ps2netfs_command_umount(char *hostname, char *device) { int result = 0;
 
-#ifndef __QUIET__
+  // Connect to ps2netfs.
+  result = ps2netfs_connect(hostname);
+  if (result < 0) { printf("[ERROR] Connect to ps2netfs failed. (%d)\n", result); return -1; }
 
-  // Tell the user about the command.
-  printf("[***] Umounting device (%s)... ", device);
-
-#endif
-
-  // Open the connection.
-  ps2netfs_connect(hostname);
-
-  // Mount the device.
+  // Umount the device.
   result = ps2netfs_request_umount(device, 0);
+  if (result < 0) { printf("[ERROR] Umount device failed. (%d)\n", result); return -2; }
 
-  // Close the connection.
-  ps2netfs_disconnect();
-
-#ifndef __QUIET__
-
-  // Output the result.
-  if (result < 0) { printf("Error!\n"); } else { printf("Done!\n"); }
-
-#endif
+  // Disconnect from ps2netfs.
+  result = ps2netfs_disconnect();
+  if (result < 0) { printf("[ERROR] Disconnect from ps2netfs failed. (%d)\n", result); return -3; }
 
   // End function.
   return 0;
@@ -477,19 +411,23 @@
  // PS2NETFS REQUEST FUNCTIONS //
  ////////////////////////////////
 
- int ps2netfs_request_open(char *pathname, int flags) {
+ int ps2netfs_request_open(char *pathname, int flags) { int result = 0;
   struct { int number; short length; int flags; char pathname[256]; } __attribute__((packed)) request;
   struct { int number; short length; int result; } __attribute__((packed)) response;
 
-  // Build the request packet.
+  // Build the open request.
   request.number = htonl(0xBEEF8011);
   request.length = htons(sizeof(request));
   request.flags  = htonl(flags);
   if (pathname) { strcpy(request.pathname, pathname); }
 
-  // Send the request and receive the response.
-  ps2netfs_send(&request, sizeof(request));
-  ps2netfs_recv(&response, sizeof(response));
+  // Send the open request.
+  result = ps2netfs_send(&request, sizeof(request));
+  if (result < 0) { printf("[ERROR] Send open request failed. (%d)\n", result); return -1; }
+
+  // Receive the open response.
+  result = ps2netfs_recv(&response, sizeof(response));
+  if (result < 0) { printf("[ERROR] Receive open response failed. (%d)\n", result); return -2; }
 
 #ifdef __DEBUG__
 
@@ -503,18 +441,22 @@
 
  }
 
- int ps2netfs_request_close(int fd) {
+ int ps2netfs_request_close(int fd) { int result = 0;
   struct { int number; short length; int fd; } __attribute__((packed)) request;
   struct { int number; short length; int result; } __attribute__((packed)) response;
 
-  // Build the request packet.
+  // Build the close request.
   request.number = htonl(0xBEEF8021);
   request.length = htons(sizeof(request));
   request.fd     = htonl(fd);
 
-  // Send the request and receive the response.
-  ps2netfs_send(&request, sizeof(request));
-  ps2netfs_recv(&response, sizeof(response));
+  // Send the open request.
+  result = ps2netfs_send(&request, sizeof(request));
+  if (result < 0) { printf("[ERROR] Send close request failed. (%d)\n", result); return -1; }
+
+  // Receive the open response.
+  result = ps2netfs_recv(&response, sizeof(response));
+  if (result < 0) { printf("[ERROR] Receive close response failed. (%d)\n", result); return -2; }
 
 #ifdef __DEBUG__
 
@@ -528,19 +470,29 @@
 
  }
 
- int ps2netfs_request_read(int fd, void *buffer, int size) {
+ int ps2netfs_request_read(int fd, void *buffer, int size) { int result = 0;
   struct { int number; short length; int fd, size; } __attribute__((packed))  request;
   struct { int number; short length; int result, size; } __attribute__((packed)) response;
 
-  // Build the request packet.
+  // Build the read request.
   request.number = htonl(0xBEEF8031);
   request.length = htons(sizeof(request));
   request.fd     = htonl(fd);
   request.size   = htonl(size);
 
-  // Send the request and receive the response.
-  ps2netfs_send(&request, sizeof(request));
-  ps2netfs_recv(&response, sizeof(response)); ps2netfs_recv(buffer, size);
+  // Send the read request.
+  result = ps2netfs_send(&request, sizeof(request));
+  if (result < 0) { printf("[ERROR] Send read request failed. (%d)\n", result); return -1; }
+
+// sleep(2);
+
+  // Receive the read response.
+  result = ps2netfs_recv(&response, sizeof(response));
+  if (result < 0) { printf("[ERROR] Receive read response failed. (%d)\n", result); return -2; }
+
+  // Receive the read response data.
+  result = ps2netfs_recv(buffer, ntohl(response.result));
+  if (result < 0) { printf("[ERROR] Receive read response data failed. (%d)\n", result); return -3; }
 
 #ifdef __DEBUG__
 
@@ -554,19 +506,27 @@
 
  }
 
- int ps2netfs_request_write(int fd, void *buffer, int size) {
+ int ps2netfs_request_write(int fd, void *buffer, int size) { int result = 0;
   struct { int number; short length; int fd, size; } __attribute__((packed)) request;
   struct { int number; short length; int result; } __attribute__((packed)) response;
 
-  // Build the request packet.
+  // Build the write request.
   request.number = htonl(0xBEEF8041);
   request.length = htons(sizeof(request));
   request.fd     = htonl(fd);
   request.size   = htonl(size);
 
-  // Send the request and receive the response.
-  ps2netfs_send(&request, sizeof(request)); ps2netfs_send(buffer, size);
-  ps2netfs_recv(&response, sizeof(response));
+  // Send the write request.
+  result = ps2netfs_send(&request, sizeof(request));
+  if (result < 0) { printf("[ERROR] Send write request failed. (%d)\n", result); return -1; }
+
+  // Send the write data.
+  result = ps2netfs_send(buffer, size);
+  if (result < 0) { printf("[ERROR] Send write request data failed. (%d)\n", result); return -2; }
+
+  // Receive the write response.
+  result = ps2netfs_recv(&response, sizeof(response));
+  if (result < 0) { printf("[ERROR] Receive write response failed. (%d)\n", result); return -3; }
 
 #ifdef __DEBUG__
 
@@ -580,20 +540,24 @@
 
  }
 
- int ps2netfs_request_lseek(int fd, int offset, int whence) {
+ int ps2netfs_request_lseek(int fd, int offset, int whence) { int result = 0;
   struct { int number; short length; int fd, offset, whence; } __attribute__((packed)) request;
   struct { int number; short length; int result; } __attribute__((packed)) response;
 
-  // Build the request packet.
+  // Build the lseek request.
   request.number = htonl(0xBEEF8051);
   request.length = htons(sizeof(request));
   request.fd     = htonl(fd);
   request.offset = htonl(offset);
   request.whence = htonl(whence);
 
-  // Send the request and receive the response.
-  ps2netfs_send(&request, sizeof(request));
-  ps2netfs_recv(&response, sizeof(response));
+  // Send the lseek request.
+  result = ps2netfs_send(&request, sizeof(request));
+  if (result < 0) { printf("[ERROR] Send lseek request failed. (%d)\n", result); return -1; }
+
+  // Receive the lseek response.
+  result = ps2netfs_recv(&response, sizeof(response));
+  if (result < 0) { printf("[ERROR] Receive lseek response failed. (%d)\n", result); return -2; }
 
 #ifdef __DEBUG__
 
@@ -607,19 +571,23 @@
 
  }
 
- int ps2netfs_request_delete(char *pathname, int flags) {
+ int ps2netfs_request_delete(char *pathname, int flags) { int result = 0;
   struct { int number; short length; int flags; char pathname[256]; } __attribute__((packed)) request;
   struct { int number; short length; int result; } __attribute__((packed)) response;
 
-  // Build the request packet.
+  // Build the delete request.
   request.number = htonl(0xBEEF8071);
   request.length = htons(sizeof(request));
   request.flags  = htonl(flags);
   if (pathname) { strncpy(request.pathname, pathname, 256); }
 
-  // Send the request and receive the response.
-  ps2netfs_send(&request, sizeof(request));
-  ps2netfs_recv(&response, sizeof(response));
+  // Send the delete request.
+  result = ps2netfs_send(&request, sizeof(request));
+  if (result < 0) { printf("[ERROR] Send delete request failed. (%d)\n", result); return -1; }
+
+  // Receive the delete response.
+  result = ps2netfs_recv(&response, sizeof(response));
+  if (result < 0) { printf("[ERROR] Receive delete response failed. (%d)\n", result); return -2; }
 
 #ifdef __DEBUG__
 
@@ -633,19 +601,23 @@
 
  }
 
- int ps2netfs_request_mkdir(char *pathname, int flags) {
+ int ps2netfs_request_mkdir(char *pathname, int flags) { int result = 0;
   struct { int number; short length; int flags; char pathname[256]; } __attribute__((packed)) request;
   struct { int number; short length; int result; } __attribute__((packed)) response;
 
-  // Build the request packet.
+  // Build the mkdir request.
   request.number = htonl(0xBEEF8081);
   request.length = htons(sizeof(request));
   request.flags  = htonl(flags);
   if (pathname) { strncpy(request.pathname, pathname, 256); }
 
-  // Send the request and receive the response.
-  ps2netfs_send(&request, sizeof(request));
-  ps2netfs_recv(&response, sizeof(response));
+  // Send the mkdir request.
+  result = ps2netfs_send(&request, sizeof(request));
+  if (result < 0) { printf("[ERROR] Send mkdir request failed. (%d)\n", result); return -1; }
+
+  // Receive the mkdir response.
+  result = ps2netfs_recv(&response, sizeof(response));
+  if (result < 0) { printf("[ERROR] Receive mkdir response failed. (%d)\n", result); return -2; }
 
 #ifdef __DEBUG__
 
@@ -660,19 +632,23 @@
  }
 
 
- int ps2netfs_request_rmdir(char *pathname, int flags) {
+ int ps2netfs_request_rmdir(char *pathname, int flags) { int result = 0;
   struct { int number; short length; int flags; char pathname[256]; } __attribute__((packed)) request;
   struct { int number; short length; int result; } __attribute__((packed)) response;
 
-  // Build the request packet.
+  // Build the rmdir request.
   request.number = htonl(0xBEEF8091);
   request.length = htons(sizeof(request));
   request.flags  = htonl(flags);
   if (pathname) { strncpy(request.pathname, pathname, 256); }
 
-  // Send the request and receive the response.
-  ps2netfs_send(&request, sizeof(request));
-  ps2netfs_recv(&response, sizeof(response));
+  // Send the rmdir request.
+  result = ps2netfs_send(&request, sizeof(request));
+  if (result < 0) { printf("[ERROR] Send rmdir request failed. (%d)\n", result); return -1; }
+
+  // Receive the rmdir response.
+  result = ps2netfs_recv(&response, sizeof(response));
+  if (result < 0) { printf("[ERROR] Receive rmdir response failed. (%d)\n", result); return -2; }
 
 #ifdef __DEBUG__
 
@@ -686,19 +662,23 @@
 
  }
 
- int ps2netfs_request_dopen(char *pathname, int flags) {
+ int ps2netfs_request_dopen(char *pathname, int flags) { int result = 0;
   struct { int number; short length; int flags; char pathname[256]; } __attribute__((packed)) request;
   struct { int number; short length; int result; } __attribute__((packed)) response;
 
-  // Build the request packet.
+  // Build the dopen request.
   request.number = htonl(0xBEEF80A1);
   request.length = htons(sizeof(request));
   request.flags  = htonl(flags);
   if (pathname) { strncpy(request.pathname, pathname, 256); }
 
-  // Send the request and receive the response.
-  ps2netfs_send(&request, sizeof(request));
-  ps2netfs_recv(&response, sizeof(response));
+  // Send the dopen request.
+  result = ps2netfs_send(&request, sizeof(request));
+  if (result < 0) { printf("[ERROR] Send dopen request failed. (%d)\n", result); return -1; }
+
+  // Receive the dopen response.
+  result = ps2netfs_recv(&response, sizeof(response));
+  if (result < 0) { printf("[ERROR] Receive dopen response failed. (%d)\n", result); return -2; }
 
 #ifdef __DEBUG__
 
@@ -712,18 +692,22 @@
 
  }
 
- int ps2netfs_request_dclose(int dd) {
+ int ps2netfs_request_dclose(int dd) { int result = 0;
   struct { int number; short length; int dd; } __attribute__((packed)) request;
   struct { int number; short length; int result; } __attribute__((packed)) response;
 
-  // Build the request packet.
+  // Build the dclose request.
   request.number = htonl(0xBEEF80B1);
   request.length = htons(sizeof(request));
   request.dd     = htonl(dd);
 
-  // Send the request and receive the response.
-  ps2netfs_send(&request, sizeof(request));
-  ps2netfs_recv(&response, sizeof(response));
+  // Send the dclose request.
+  result = ps2netfs_send(&request, sizeof(request));
+  if (result < 0) { printf("[ERROR] Send dclose request failed. (%d)\n", result); return -1; }
+
+  // Receive the dclose response.
+  result = ps2netfs_recv(&response, sizeof(response));
+  if (result < 0) { printf("[ERROR] Receive dclose response failed. (%d)\n", result); return -2; }
 
 #ifdef __DEBUG__
 
@@ -737,18 +721,22 @@
 
  }
 
- int ps2netfs_request_dread(int dd, DIRENT *dirent) {
+ int ps2netfs_request_dread(int dd, DIRENT *dirent) { int result = 0;
   struct { int number; short length; int dd; } __attribute__((packed)) request;
   struct { int number; short length; int result; DIRENT dirent; } __attribute__((packed)) response;
 
-  // Build the request packet.
+  // Build the dread request.
   request.number = htonl(0xBEEF80C1);
   request.length = htons(sizeof(request));
   request.dd     = htonl(dd);
 
-  // Send the request and receive the response.
-  ps2netfs_send(&request, sizeof(request));
-  ps2netfs_recv(&response, sizeof(response));
+  // Send the dread request.
+  result = ps2netfs_send(&request, sizeof(request));
+  if (result < 0) { printf("[ERROR] Send dread request failed. (%d)\n", result); return -1; }
+
+  // Receive the dread response.
+  result = ps2netfs_recv(&response, sizeof(response));
+  if (result < 0) { printf("[ERROR] Receive dread response failed. (%d)\n", result); return -2; }
 
   // Copy over the directory entry.
   memcpy(dirent, &response.dirent, sizeof(DIRENT));
@@ -765,25 +753,27 @@
 
  }
 
- // UNDEFINED - FINISH ME
- int ps2netfs_request_format(char *device, int flags) { return -1; }
+ int ps2netfs_request_format(char *device, int flags) { printf("[ERROR] Unfinished!\n"); return -1; }
 
- // UNDEFINED - FINISH ME
- int ps2netfs_request_rename(char *source, char *destination) { return -1; }
+ int ps2netfs_request_rename(char *source, char *destination) { printf("[ERROR] Unfinished!\n"); return -1; }
 
- int ps2netfs_request_sync(char *device, int flags) {
+ int ps2netfs_request_sync(char *device, int flags) { int result = 0;
   struct { int number; short length; int flags; char device[256]; } __attribute__((packed)) request;
   struct { int number; short length; int result; } __attribute__((packed)) response;
 
-  // Build the request packet.
+  // Build the sync request.
   request.number = htonl(0xBEEF8131);
   request.length = htons(sizeof(request));
   request.flags  = htonl(flags);
   if (device) { strncpy(request.device, device, 256); }
 
-  // Send the request and receive the response.
-  ps2netfs_send(&request, sizeof(request));
-  ps2netfs_recv(&response, sizeof(response));
+  // Send the sync request.
+  result = ps2netfs_send(&request, sizeof(request));
+  if (result < 0) { printf("[ERROR] Send sync request failed. (%d)\n", result); return -1; }
+
+  // Receive the sync response.
+  result = ps2netfs_recv(&response, sizeof(response));
+  if (result < 0) { printf("[ERROR] Receive sync response failed. (%d)\n", result); return -2; }
 
 #ifdef __DEBUG__
 
@@ -797,22 +787,26 @@
 
  }
 
- int ps2netfs_request_mount(char *device, char *fsname, int flags, char *argv, int argc) {
+ int ps2netfs_request_mount(char *device, char *fsname, int flags, char *argv, int argc) { int result = 0;
   struct { int number; short length; char device[256], fsname[256]; int flags; char argv[256]; int argc; } __attribute__((packed)) request;
   struct { int number; short length; int result; } __attribute__((packed)) response;
 
-  // Build the request packet.
+  // Build the mount request.
   request.number = htonl(0xBEEF8141);
   request.length = htons(sizeof(request));
   request.flags  = htonl(flags);
   request.argc   = htonl(argc);
   if (device) { strncpy(request.device, device, 256); }
   if (fsname) { strncpy(request.fsname, fsname, 256); }
-  if (argv) { strncpy(request.argv, argv, 256); }
+  if (argv)   { strncpy(request.argv, argv, 256); }
 
-  // Send the request and receive the response.
-  ps2netfs_send(&request, sizeof(request));
-  ps2netfs_recv(&response, sizeof(response));
+  // Send the mount request.
+  result = ps2netfs_send(&request, sizeof(request));
+  if (result < 0) { printf("[ERROR] Send mount request failed. (%d)\n", result); return -1; }
+
+  // Receive the mount response.
+  result = ps2netfs_recv(&response, sizeof(response));
+  if (result < 0) { printf("[ERROR] Receive mount response failed. (%d)\n", result); return -2; }
 
 #ifdef __DEBUG__
 
@@ -826,18 +820,22 @@
 
  }
 
- int ps2netfs_request_umount(char *device, int flags) {
+ int ps2netfs_request_umount(char *device, int flags) { int result = 0;
   struct { int number; short length; int flags; char device[256]; } __attribute__((packed)) request;
   struct { int number; short length; int result; } __attribute__((packed)) response;
 
-  // Build the request packet.
+  // Build the umount request.
   request.number = htonl(0xBEEF8151);
   request.length = htons(sizeof(request));
   if (device) { strncpy(request.device, device, 256); }
 
-  // Send the request and receive the response.
-  ps2netfs_send(&request, sizeof(request));
-  ps2netfs_recv(&response, sizeof(response));
+  // Send the umount request.
+  result = ps2netfs_send(&request, sizeof(request));
+  if (result < 0) { printf("[ERROR] Send umount request failed. (%d)\n", result); return -1; }
+
+  // Receive the umount response.
+  result = ps2netfs_recv(&response, sizeof(response));
+  if (result < 0) { printf("[ERROR] Receive umount response failed. (%d)\n", result); return -2; }
 
 #ifdef __DEBUG__
 
@@ -851,19 +849,23 @@
 
  }
 
- int ps2netfs_request_devlist(char *pathname, int flags, char *devlist) {
+ int ps2netfs_request_devlist(char *pathname, int flags, char *devlist) { int result = 0;
   struct { int number; short length; int flags; char pathname[256]; } __attribute__((packed)) request;
   struct { int number; short length; int result; int count; char devlist[256]; } __attribute__((packed)) response;
 
-  // Build the request packet.
+  // Build the devlist request.
   request.number = htonl(0xBEEF8F21);
   request.length = htons(sizeof(request));
   request.flags  = htonl(flags);
   if (pathname) { strncpy(request.pathname, pathname, 256); }
 
-  // Send the request and receive the response.
-  ps2netfs_send(&request, sizeof(request));
-  ps2netfs_recv(&response, sizeof(response));
+  // Send the devlist request.
+  result = ps2netfs_send(&request, sizeof(request));
+  if (result < 0) { printf("[ERROR] Send devlist request failed. (%d)\n", result); return -1; }
+
+  // Receive the devlist response.
+  result = ps2netfs_recv(&response, sizeof(response));
+  if (result < 0) { printf("[ERROR] Receive devlist response failed. (%d)\n", result); return -2; }
 
   // Copy over the device list.
   memcpy(devlist, response.devlist, 256);

@@ -31,7 +31,7 @@
 
  int ps2netfs_recv(void *buffer, int size);
 
- int ps2netfs_close(void);
+ int ps2netfs_disconnect(void);
 
  ////////////////////////////////
  // PS2NETFS COMMAND FUNCTIONS //
@@ -75,8 +75,6 @@
 
  int ps2netfs_request_lseek(int fd, int offset, int whence);
 
- int ps2netfs_request_ioctl(void); // UNKNOWN
-
  int ps2netfs_request_delete(char *pathname, int flags);
 
  int ps2netfs_request_mkdir(char *pathname, int flags);
@@ -89,35 +87,15 @@
 
  int ps2netfs_request_dread(int dd, DIRENT *dirent);
 
- int ps2netfs_request_getstat(void); // UNKNOWN
-
- int ps2netfs_request_chstat(void); // UNKNOWN
-
  int ps2netfs_request_format(char *device, int flags);
 
  int ps2netfs_request_rename(char *source, char *destination);
-
- int ps2netfs_request_chdir(void); // UNKNOWN
 
  int ps2netfs_request_sync(char *pathname, int flags);
 
  int ps2netfs_request_mount(char *device, char *fsname, int flags, char *argv, int argc);
 
  int ps2netfs_request_umount(char *device, int flags);
-
- int ps2netfs_request_lseek64(void); // UNKNOWN
-
- int ps2netfs_request_devctl(void); // UNKNOWN
-
- int ps2netfs_request_symlink(void); // UNKNOWN
-
- int ps2netfs_request_readlink(void); // UNKNOWN
-
- int ps2netfs_request_ioctl2(void); // UNKNOWN
-
- int ps2netfs_request_info(void); // UNKNOWN
-
- int ps2netfs_request_fstype(void); // UNKNOWN
 
  int ps2netfs_request_devlist(char *pathname, int flags, char *devlist);
 

@@ -1,19 +1,15 @@
 #ifndef __PS2LINK_H__
 #define __PS2LINK_H__
 
- ////////////////////////////
- // PS2LINK MAIN FUNCTIONS //
- ////////////////////////////
+ ///////////////////////
+ // PS2LINK FUNCTIONS //
+ ///////////////////////
 
  int ps2link_connect(char *hostname);
 
  int ps2link_mainloop(int timeout);
 
  int ps2link_disconnect(void);
-
- ///////////////////////////////
- // PS2LINK TOOLBOX FUNCTIONS //
- ///////////////////////////////
 
  int ps2link_fixflags(int flags);
 
@@ -23,7 +19,7 @@
  // PS2LINK COMMAND FUNCTIONS //
  ///////////////////////////////
 
- int ps2link_send_command(char *hostname, void *packet, int size);
+ int ps2link_send_command(char *hostname, void *command, int size);
 
  int ps2link_command_reset(char *hostname);
 
