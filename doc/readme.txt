@@ -29,15 +29,13 @@
 
    PREFIX=/dir	- Install directory, defaults to: $PS2DEV/bin
 
-   CYGWIN=YES	- Compile for Cygwin usage.
-
    QUIET=YES	- Disable non-essential text output.
 
    DEBUG=YES	- Enable all debug text output.
 
   A building example:
 
-   make clean; make CYGWIN=YES QUIET=YES install
+   make clean; make DEBUG=NO QUIET=YES install
 
  ---------------
  PS2CLIENT USAGE
@@ -50,8 +48,8 @@
    The hostname is the actual address, or ip of the PS2. If none is
    specified, ps2client will check for a hostname in $PS2HOSTNAME.
 
-   Timeout is the length of inactivity (in ms) that ps2client will wait
-   before exiting. If none is specified, -1 (never exit) is assumed.
+   Timeout is the length of inactivity (in seconds) that ps2client will
+   wait before exiting. If none is specified, -1 (never exit) is assumed.
 
    <command> is what you would like the ps2 to do. Some valid commands
    are reset, poweroff, execiop and execee. See below for a full listing.

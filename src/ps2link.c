@@ -15,8 +15,6 @@
 
  int command_sock, request_sock, textlog_sock;
 
- int quit = 0;
-
  ////////////////////////////
  // PS2LINK MAIN FUNCTIONS //
  ////////////////////////////
@@ -28,7 +26,7 @@
   textlog_sock = network_listen(0x4712, SOCKET_UDP);
 
   // Give them some time to connect.
-  usleep(1);
+  usleep(5000);
 
   // End function.
   return 0;
@@ -42,12 +40,12 @@
   while (1) {
 
    // Wait until something happens.
-   if (network_wait(timeout) == 0) { if (quit == 1) { return -1; } };
+   if (network_wait(timeout) <= 0) { return -1; };
 
    // Read and perform any requests as needed.
    if (network_recv(request_sock, &request, sizeof(request)) > 0) {
     if (ntohl(request.number) == 0xBABE0111) { ps2link_request_open   ((void *)&request); } else
-    if (ntohl(request.number) == 0xBABE0121) { ps2link_request_close  ((void *)&request); quit = 1; } else
+    if (ntohl(request.number) == 0xBABE0121) { ps2link_request_close  ((void *)&request); } else
     if (ntohl(request.number) == 0xBABE0131) { ps2link_request_read   ((void *)&request); } else
     if (ntohl(request.number) == 0xBABE0141) { ps2link_request_write  ((void *)&request); } else
     if (ntohl(request.number) == 0xBABE0151) { ps2link_request_lseek  ((void *)&request); } else
@@ -57,7 +55,7 @@
    }
 
    // Read and display any textlog information.
-   while (network_recvfrom(textlog_sock, buffer, sizeof(buffer)) > 0) { fprintf(stdout, buffer); }
+   if (network_recvfrom(textlog_sock, buffer, sizeof(buffer)) > 0) { fprintf(stdout, buffer); }
 
   }
 

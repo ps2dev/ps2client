@@ -3,10 +3,6 @@
  INC = -I/usr/include -I/usr/local/include
  LIB = 
 
- ifeq "$(CYGWIN)" "YES"
-  GCC += -D__CYGWIN__
- endif
-
  ifeq "$(QUIET)" "YES"
   GCC += -D__QUIET__
  endif
