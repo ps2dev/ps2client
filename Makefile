@@ -8,8 +8,8 @@
  all: bin/ps2client
 
  clean:
-	rm -f obj/*.o
-	rm -f bin/*
+	rm -Rf obj/
+	rm -Rf bin/
 
  install: bin/ps2client
 	mkdir -p $(PREFIX)/bin
@@ -24,9 +24,11 @@
  OFILES = obj/ps2link.o obj/network.o
 
  obj/ps2link.o: src/ps2link.h src/ps2link.c
+	@mkdir -p obj
 	$(GCC) $(INC) -c src/ps2link.c -o obj/ps2link.o
 
  obj/network.o: src/network.h src/network.c
+	@mkdir -p obj
 	$(GCC) $(INC) -c src/network.c -o obj/network.o
 
  #######################
@@ -34,4 +36,6 @@
  #######################
 
  bin/ps2client: $(HFILES) $(CFILES) $(OFILES)
+	@mkdir -p obj
+	@mkdir -p bin
 	$(GCC) $(INC) $(LIB) $(OFILES) src/ps2client.c -o bin/ps2client
