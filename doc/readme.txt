@@ -76,29 +76,29 @@
 
   Commands for ps2netfs:
 
-   ps2client <hostname> ps2copyfrom <source> <destination>
+   ps2client <hostname> copyfrom <source> <destination>
 
-   ps2client <hostname> ps2copyto <source> <destination>
+   ps2client <hostname> copyto <source> <destination>
 
-   ps2client <hostname> ps2delete <filename>
+   ps2client <hostname> delete <filename>
 
-   ps2client <hostname> ps2devlist
+   ps2client <hostname> devlist
 
-   ps2client <hostname> ps2dir <directory>
+   ps2client <hostname> dir <directory>
 
-   ps2client <hostname> ps2format <device>
+   ps2client <hostname> format <device>
 
-   ps2client <hostname> ps2mkdir <directory>
+   ps2client <hostname> mkdir <directory>
 
-   ps2client <hostname> ps2mount <device> <fsname>
+   ps2client <hostname> mount <device> <fsname>
 
-   ps2client <hostname> ps2rename <source> <destination>
+   ps2client <hostname> rename <source> <destination>
 
-   ps2client <hostname> ps2rmdir <directory>
+   ps2client <hostname> rmdir <directory>
 
-   ps2client <hostname> ps2sync <device>
+   ps2client <hostname> sync <device>
 
-   ps2client <hostname> ps2umount <device>
+   ps2client <hostname> umount <device>
 
  ----------------
  MORE INFORMATION

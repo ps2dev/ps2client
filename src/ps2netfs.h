@@ -37,29 +37,29 @@
  // PS2NETFS COMMAND FUNCTIONS //
  ////////////////////////////////
 
- int ps2netfs_command_ps2copyfrom(char *hostname, char *source, char *destination);
+ int ps2netfs_command_copyfrom(char *hostname, char *source, char *destination);
 
- int ps2netfs_command_ps2copyto(char *hostname, char *source, char *destination);
+ int ps2netfs_command_copyto(char *hostname, char *source, char *destination);
 
- int ps2netfs_command_ps2delete(char *hostname, char *pathname);
+ int ps2netfs_command_delete(char *hostname, char *pathname);
 
- int ps2netfs_command_ps2devlist(char *hostname);
+ int ps2netfs_command_devlist(char *hostname);
 
- int ps2netfs_command_ps2dir(char *hostname, char *pathname);
+ int ps2netfs_command_dir(char *hostname, char *pathname);
 
- int ps2netfs_command_ps2format(char *hostname, char *device);
+ int ps2netfs_command_format(char *hostname, char *device);
 
- int ps2netfs_command_ps2mkdir(char *hostname, char *pathname);
+ int ps2netfs_command_mkdir(char *hostname, char *pathname);
 
- int ps2netfs_command_ps2mount(char *hostname, char *device, char *fsname);
+ int ps2netfs_command_mount(char *hostname, char *device, char *fsname);
 
- int ps2netfs_command_ps2rename(char *hostname, char *source, char *destination);
+ int ps2netfs_command_rename(char *hostname, char *source, char *destination);
 
- int ps2netfs_command_ps2rmdir(char *hostname, char *pathname);
+ int ps2netfs_command_rmdir(char *hostname, char *pathname);
 
- int ps2netfs_command_ps2sync(char *hostname, char *device);
+ int ps2netfs_command_sync(char *hostname, char *device);
 
- int ps2netfs_command_ps2umount(char *hostname, char *device);
+ int ps2netfs_command_umount(char *hostname, char *device);
 
  ////////////////////////////////
  // PS2NETFS REQUEST FUNCTIONS //

@@ -63,7 +63,7 @@
   if (type == SOCKET_TCP) { sock[nd] = socket(AF_INET, SOCK_STREAM, 0); }
   if (type == SOCKET_UDP) { sock[nd] = socket(AF_INET, SOCK_DGRAM,  0); }
   bind(sock[nd], (struct sockaddr *)&sockaddr, sizeof(struct sockaddr));
-  listen(sock[nd], 10); fcntl(sock[nd], F_SETFL, O_NONBLOCK);
+  listen(sock[nd], 10);
 
   // Set up the socket polling.
   ufsd[nd].fd = sock[nd]; ufsd[nd].events = POLLIN;
@@ -96,7 +96,7 @@
   memset(buffer, 0, size);
 
   // Receive some data from the network.
-  return recv(sock[nd], buffer, size, 0);
+  return recv(sock[nd], buffer, size, MSG_DONTWAIT);
 
  }
 
@@ -106,7 +106,7 @@
   memset(buffer, 0, size);
 
   // Receive data from the network.
-  return recvfrom(sock[nd], buffer, size, 0, NULL, NULL);
+  return recvfrom(sock[nd], buffer, size, MSG_DONTWAIT, NULL, NULL);
 
  }
 

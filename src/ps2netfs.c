@@ -55,7 +55,7 @@
  // PS2NETFS COMMAND FUNCTIONS //
  ////////////////////////////////
 
- int ps2netfs_command_ps2copyfrom(char *hostname, char *source, char *destination) {
+ int ps2netfs_command_copyfrom(char *hostname, char *source, char *destination) {
   int fd0, fd1, size, total; char buffer[65536];
 
 #ifdef __CHATTY__
@@ -111,7 +111,7 @@
 
  }
 
- int ps2netfs_command_ps2copyto(char *hostname, char *source, char *destination) {
+ int ps2netfs_command_copyto(char *hostname, char *source, char *destination) {
   int fd0, fd1, size, total; char buffer[65536];
 
 #ifdef __CHATTY__
@@ -167,7 +167,7 @@
 
  }
 
- int ps2netfs_command_ps2delete(char *hostname, char *pathname) { int result = 0;
+ int ps2netfs_command_delete(char *hostname, char *pathname) { int result = 0;
 
 #ifdef __CHATTY__
 
@@ -197,7 +197,7 @@
 
  }
 
- int ps2netfs_command_ps2devlist(char *hostname) {
+ int ps2netfs_command_devlist(char *hostname) {
   int loop0, devcount; char devlist[256], *temp = devlist;
 
 #ifdef __CHATTY__
@@ -242,7 +242,7 @@
 
  }
 
- int ps2netfs_command_ps2dir(char *hostname, char *pathname) {
+ int ps2netfs_command_dir(char *hostname, char *pathname) {
   int dd, files = 0, size = 0; DIRENT dirent;
 
 #ifdef __CHATTY__
@@ -310,9 +310,9 @@
  }
 
  // UNDEFINED - FINISH ME
- int ps2netfs_command_ps2format(char *hostname, char *device) { return -1; }
+ int ps2netfs_command_format(char *hostname, char *device) { return -1; }
 
- int ps2netfs_command_ps2mkdir(char *hostname, char *pathname) { int result = 0;
+ int ps2netfs_command_mkdir(char *hostname, char *pathname) { int result = 0;
 
 #ifdef __CHATTY__
 
@@ -336,7 +336,7 @@
   if (result < 0) { printf("Error!\n"); } else { printf("Done!\n"); }
 
   // Display the new directory.
-  if (result >= 0) { usleep(1); ps2netfs_command_ps2dir(hostname, pathname); }
+  if (result >= 0) { usleep(1); ps2netfs_command_dir(hostname, pathname); }
 
 #endif
 
@@ -345,7 +345,7 @@
 
  }
 
- int ps2netfs_command_ps2mount(char *hostname, char *device, char *fsname) { int result = 0;
+ int ps2netfs_command_mount(char *hostname, char *device, char *fsname) { int result = 0;
 
 #ifdef __CHATTY__
 
@@ -369,7 +369,7 @@
   if (result < 0) { printf("Error!\n"); } else { printf("Done!\n"); }
 
   // Display the new device.
-  if (result >= 0) { char temp[256]; sprintf(temp, "%s/", device); usleep(1); ps2netfs_command_ps2dir(hostname, temp); }
+  if (result >= 0) { char temp[256]; sprintf(temp, "%s/", device); usleep(1); ps2netfs_command_dir(hostname, temp); }
 
 #endif
 
@@ -379,9 +379,9 @@
  }
 
  // UNDEFINED - FINISH ME
- int ps2netfs_command_ps2rename(char *hostname, char *source, char *destination) { return -1; }
+ int ps2netfs_command_rename(char *hostname, char *source, char *destination) { return -1; }
 
- int ps2netfs_command_ps2rmdir(char *hostname, char *pathname) { int result = 0;
+ int ps2netfs_command_rmdir(char *hostname, char *pathname) { int result = 0;
 
 #ifdef __CHATTY__
 
@@ -411,7 +411,7 @@
 
  }
 
- int ps2netfs_command_ps2sync(char *hostname, char *device) { int result = 0;
+ int ps2netfs_command_sync(char *hostname, char *device) { int result = 0;
 
 #ifdef __CHATTY__
 
@@ -441,7 +441,7 @@
 
  }
 
- int ps2netfs_command_ps2umount(char *hostname, char *device) { int result = 0;
+ int ps2netfs_command_umount(char *hostname, char *device) { int result = 0;
 
 #ifdef __CHATTY__
 

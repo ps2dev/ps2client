@@ -30,18 +30,18 @@
 
   // Output the ps2netfs commands.
   printf(" Commands for ps2netfs:\n\n");
-  printf("  %s <hostname> ps2copyfrom <source> <destination>\n", progname);
-  printf("  %s <hostname> ps2copyto <source> <destination>\n", progname);
-  printf("  %s <hostname> ps2delete <filename>\n", progname);
-  printf("  %s <hostname> ps2devlist\n", progname);
-  printf("  %s <hostname> ps2dir <directory>\n", progname);
-  printf("  %s <hostname> ps2format <device>\n", progname);
-  printf("  %s <hostname> ps2mkdir <directory>\n", progname);
-  printf("  %s <hostname> ps2mount <device> <fsname>\n", progname);
-  printf("  %s <hostname> ps2rename <source> <destination>\n", progname);
-  printf("  %s <hostname> ps2rmdir <directory>\n", progname);
-  printf("  %s <hostname> ps2sync <device>\n", progname);
-  printf("  %s <hostname> ps2umount <device>\n\n", progname);
+  printf("  %s <hostname> copyfrom <source> <destination>\n", progname);
+  printf("  %s <hostname> copyto <source> <destination>\n", progname);
+  printf("  %s <hostname> delete <filename>\n", progname);
+  printf("  %s <hostname> devlist\n", progname);
+  printf("  %s <hostname> dir <directory>\n", progname);
+  printf("  %s <hostname> format <device>\n", progname);
+  printf("  %s <hostname> mkdir <directory>\n", progname);
+  printf("  %s <hostname> mount <device> <fsname>\n", progname);
+  printf("  %s <hostname> rename <source> <destination>\n", progname);
+  printf("  %s <hostname> rmdir <directory>\n", progname);
+  printf("  %s <hostname> sync <device>\n", progname);
+  printf("  %s <hostname> umount <device>\n\n", progname);
 
 #endif
 
@@ -50,7 +50,7 @@
 
  }
 
- int main(int argc, char *argv[]) { setbuf(stdout, NULL);
+ int main(int argc, char *argv[]) {
 
 #ifdef __CHATTY__
 
@@ -79,18 +79,18 @@
   if (!strcmp(command, "gsexec"))      { ps2link_command_gsexec(hostname, arg0, atoi(arg1)); return ps2link_mainloop(hostname); }
 
   // Perform any ps2netfs commands.
-  if (!strcmp(command, "ps2copyfrom")) { return ps2netfs_command_ps2copyfrom(hostname, arg0, arg1); }
-  if (!strcmp(command, "ps2copyto"))   { return ps2netfs_command_ps2copyto(hostname, arg0, arg1); }
-  if (!strcmp(command, "ps2delete"))   { return ps2netfs_command_ps2delete(hostname, arg0); }
-  if (!strcmp(command, "ps2devlist"))  { return ps2netfs_command_ps2devlist(hostname); }
-  if (!strcmp(command, "ps2dir"))      { return ps2netfs_command_ps2dir(hostname, arg0); }
-  if (!strcmp(command, "ps2format"))   { return ps2netfs_command_ps2format(hostname, arg0); }
-  if (!strcmp(command, "ps2mkdir"))    { return ps2netfs_command_ps2mkdir(hostname, arg0); }
-  if (!strcmp(command, "ps2mount"))    { return ps2netfs_command_ps2mount(hostname, arg0, arg1); }
-  if (!strcmp(command, "ps2rename"))   { return ps2netfs_command_ps2rename(hostname, arg0, arg1); }
-  if (!strcmp(command, "ps2rmdir"))    { return ps2netfs_command_ps2rmdir(hostname, arg0); }
-  if (!strcmp(command, "ps2sync"))     { return ps2netfs_command_ps2sync(hostname, arg0); }
-  if (!strcmp(command, "ps2umount"))   { return ps2netfs_command_ps2umount(hostname, arg0); }
+  if (!strcmp(command, "copyfrom")) { return ps2netfs_command_copyfrom(hostname, arg0, arg1); }
+  if (!strcmp(command, "copyto"))   { return ps2netfs_command_copyto(hostname, arg0, arg1); }
+  if (!strcmp(command, "delete"))   { return ps2netfs_command_delete(hostname, arg0); }
+  if (!strcmp(command, "devlist"))  { return ps2netfs_command_devlist(hostname); }
+  if (!strcmp(command, "dir"))      { return ps2netfs_command_dir(hostname, arg0); }
+  if (!strcmp(command, "format"))   { return ps2netfs_command_format(hostname, arg0); }
+  if (!strcmp(command, "mkdir"))    { return ps2netfs_command_mkdir(hostname, arg0); }
+  if (!strcmp(command, "mount"))    { return ps2netfs_command_mount(hostname, arg0, arg1); }
+  if (!strcmp(command, "rename"))   { return ps2netfs_command_rename(hostname, arg0, arg1); }
+  if (!strcmp(command, "rmdir"))    { return ps2netfs_command_rmdir(hostname, arg0); }
+  if (!strcmp(command, "sync"))     { return ps2netfs_command_sync(hostname, arg0); }
+  if (!strcmp(command, "umount"))   { return ps2netfs_command_umount(hostname, arg0); }
 
   // Unknown command.
   ps2client_usage(argv[0]);

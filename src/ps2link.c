@@ -45,7 +45,7 @@
    }
 
    // Read and display any textlog information.
-   while (network_recvfrom(textlog_sock, buffer, sizeof(buffer)) > 0) { printf(buffer); }
+   while (network_recvfrom(textlog_sock, buffer, sizeof(buffer)) > 0) { fprintf(stdout, buffer); }
 
   }
 
@@ -174,6 +174,8 @@
   command.argc   = htonl(1);
   if (pathname) { strncpy(command.argv, pathname, 256); }
 
+  // for(loop0=0;loop0<256;loop0++) { fprintf(stderr, "(%c)", command.argv[loop0]); if ((loop0 & 0x0F) == 0x0F) { fprintf(stderr, "\n"); } }
+
   // Send the command packet.
   ps2link_send_command(hostname, &command, sizeof(command));
 
@@ -192,7 +194,8 @@
   command.number = htonl(0xBABE0203);
   command.length = htons(sizeof(command));
   command.argc   = htonl(1);
-  if (pathname) { strncpy(command.argv, pathname, 256); }
+  sprintf(command.argv, pathname);
+  // if (pathname) { strncpy(command.argv, pathname, 256); }
 
   // Send the command packet.
   ps2link_send_command(hostname, &command, sizeof(command));
