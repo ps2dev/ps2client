@@ -369,7 +369,7 @@
   if (result < 0) { printf("Error!\n"); } else { printf("Done!\n"); }
 
   // Display the new device.
-  if (result >= 0) { usleep(1); ps2netfs_command_ps2dir(hostname, device); }
+  if (result >= 0) { char temp[256]; sprintf(temp, "%s/", pathname); usleep(1); ps2netfs_command_ps2dir(hostname, temp); }
 
 #endif
 
@@ -840,7 +840,7 @@
 #ifdef __DEBUG__
 
   // Tell the user about the request and its result.
-  printf("[***] umount(\"%s\", %d) = %d\n", pathname, flags, ntohl(response.result));
+  printf("[***] umount(\"%s\", %d) = %d\n", device, flags, ntohl(response.result));
 
 #endif
 
