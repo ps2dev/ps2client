@@ -38,13 +38,6 @@
   if (type == SOCKET_TCP) { sock[nd] = socket(AF_INET, SOCK_STREAM, 0); }
   if (type == SOCKET_UDP) { sock[nd] = socket(AF_INET, SOCK_DGRAM,  0); }
 
-#ifdef __CYGWIN__
-
-  // Set the socket to non-blocking.
-  fcntl(sock[nd], F_SETFL, O_NONBLOCK);
-
-#endif
-
   // Connect the socket to the remote host.
   connect(sock[nd], (struct sockaddr *)&sockaddr, sizeof(struct sockaddr));
 

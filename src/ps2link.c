@@ -15,6 +15,8 @@
 
  int command_sock, request_sock, textlog_sock;
 
+ int quit = 0;
+
  ////////////////////////////
  // PS2LINK MAIN FUNCTIONS //
  ////////////////////////////
@@ -40,12 +42,12 @@
   while (1) {
 
    // Wait until something happens.
-   if (network_wait(timeout) == 0) { return -1; };
+   if (network_wait(timeout) == 0) { if (quit == 1) { return -1; } };
 
    // Read and perform any requests as needed.
    if (network_recv(request_sock, &request, sizeof(request)) > 0) {
     if (ntohl(request.number) == 0xBABE0111) { ps2link_request_open   ((void *)&request); } else
-    if (ntohl(request.number) == 0xBABE0121) { ps2link_request_close  ((void *)&request); } else
+    if (ntohl(request.number) == 0xBABE0121) { ps2link_request_close  ((void *)&request); quit = 1; } else
     if (ntohl(request.number) == 0xBABE0131) { ps2link_request_read   ((void *)&request); } else
     if (ntohl(request.number) == 0xBABE0141) { ps2link_request_write  ((void *)&request); } else
     if (ntohl(request.number) == 0xBABE0151) { ps2link_request_lseek  ((void *)&request); } else
