@@ -1,3 +1,7 @@
+ version 1.1.0 - February 9th, 2004
+        - Added dopen/dread/dclose support. (adresd)
+        - Minor bugfixing.
+
  version 1.0.5 - Februrary 4th, 2004
 	- Removed DONTWAIT for cygwin folk. Enjoy!
 
