@@ -37,21 +37,29 @@
  // PS2NETFS COMMAND FUNCTIONS //
  ////////////////////////////////
 
- int ps2netfs_command_ps2dir(char *hostname, char *pathname);
-
- int ps2netfs_command_ps2devlist(char *hostname);
+ int ps2netfs_command_ps2copyfrom(char *hostname, char *source, char *destination);
 
  int ps2netfs_command_ps2copyto(char *hostname, char *source, char *destination);
 
- int ps2netfs_command_ps2copyfrom(char *hostname, char *source, char *destination);
+ int ps2netfs_command_ps2delete(char *hostname, char *pathname);
 
- int ps2netfs_command_ps2mount(char *hostname, char *pathname, char *device);
+ int ps2netfs_command_ps2devlist(char *hostname);
 
- int ps2netfs_command_ps2umount(char *hostname, char *pathname);
+ int ps2netfs_command_ps2dir(char *hostname, char *pathname);
+
+ int ps2netfs_command_ps2format(char *hostname, char *device);
 
  int ps2netfs_command_ps2mkdir(char *hostname, char *pathname);
 
+ int ps2netfs_command_ps2mount(char *hostname, char *pathname, char *device);
+
+ int ps2netfs_command_ps2rename(char *hostname, char *source, char *destination);
+
+ int ps2netfs_command_ps2rmdir(char *hostname, char *pathname);
+
  int ps2netfs_command_ps2sync(char *hostname, char *device);
+
+ int ps2netfs_command_ps2umount(char *hostname, char *device);
 
  ////////////////////////////////
  // PS2NETFS REQUEST FUNCTIONS //
@@ -69,11 +77,11 @@
 
  int ps2netfs_request_ioctl(void); // UNKNOWN
 
- int ps2netfs_request_remove(void); // UNKNOWN
+ int ps2netfs_request_delete(char *pathname, int flags);
 
  int ps2netfs_request_mkdir(char *pathname, int flags);
 
- int ps2netfs_request_rmdir(void); // UNKNOWN
+ int ps2netfs_request_rmdir(char *pathname, int flags);
 
  int ps2netfs_request_dopen(char *pathname, int flags);
 
@@ -85,9 +93,9 @@
 
  int ps2netfs_request_chstat(void); // UNKNOWN
 
- int ps2netfs_request_format(void); // UNKNOWN
+ int ps2netfs_request_format(char *device, int flags);
 
- int ps2netfs_request_rename(void); // UNKNOWN
+ int ps2netfs_request_rename(char *source, char *destination);
 
  int ps2netfs_request_chdir(void); // UNKNOWN
 
@@ -95,7 +103,7 @@
 
  int ps2netfs_request_mount(char *pathname, char *device, int flags, char *argv, int argc);
 
- int ps2netfs_request_umount(char *pathname, int flags);
+ int ps2netfs_request_umount(char *device, int flags);
 
  int ps2netfs_request_lseek64(void); // UNKNOWN
 

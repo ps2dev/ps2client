@@ -1,5 +1,5 @@
 
- GCC = gcc -O3 -Wall ## -D__DEBUG__
+ GCC = gcc -O3 -Wall -D__CHATTY__ ## -D__DEBUG__
  INC = -I/usr/include -I/usr/local/include
  LIB = 
 

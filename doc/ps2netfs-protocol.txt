@@ -111,14 +111,9 @@
   -----------------------------
 
   ------------------------------
-   0xBEEF8071 (remove request)
-   0xBEEF8072 (remove response)
+   0xBEEF8071 (delete request)
+   0xBEEF8072 (delete response)
   ------------------------------
-
-  -----------------------------
-   0xBEEF8081 (mkdir request)
-   0xBEEF8082 (mkdir response)
-  -----------------------------
 
    PACKET STRUCTURES
 
@@ -133,9 +128,38 @@
     if (pathname) { strncpy(request.pathname, pathname, 256); }
 
   -----------------------------
+   0xBEEF8081 (mkdir request)
+   0xBEEF8082 (mkdir response)
+  -----------------------------
+
+   PACKET STRUCTURES
+
+    struct { int number; short length; int flags; char pathname[256]; } request;
+    struct { int number; short length; int result; } response;
+
+   REQUEST PACKET CONTENTS
+
+    request.number = htonl(0xBEEF8081);
+    request.length = htons(sizeof(request));
+    request.flags  = htonl(flags);
+    if (pathname) { strncpy(request.pathname, pathname, 256); }
+
+  -----------------------------
    0xBEEF8091 (rmdir request)
    0xBEEF8092 (rmdir response)
   -----------------------------
+
+   PACKET STRUCTURES
+
+    struct { int number; short length; int flags; char pathname[256]; } request;
+    struct { int number; short length; int result; } response;
+
+   REQUEST PACKET CONTENTS
+
+    request.number = htonl(0xBEEF8091);
+    request.length = htons(sizeof(request));
+    request.flags  = htonl(flags);
+    if (pathname) { strncpy(request.pathname, pathname, 256); }
 
   ------------------------------
    0xBEEF80A1 (dopen request)
@@ -260,14 +284,15 @@
 
    PACKET STRUCTURES
 
-    struct { int number; short length; int flags; char pathname[256]; } request;
+    struct { int number; short length; int flags; char device[256]; } request;
     struct { int number; short length; int result; } response;
 
    REQUEST PACKET CONTENTS
 
     request.number = htonl(0xBEEF8151);
     request.length = htons(sizeof(request));
-    if (pathname) { strncpy(request.pathname, pathname, 256); }
+    request.flags  = htonl(flags);
+    if (device) { strncpy(request.device, device, 256); }
 
   -------------------------------
    0xBEEF8161 (lseek64 request)

@@ -1,11 +1,11 @@
- version 1.2.0 - February 21st, 2004
+ version 1.2.0 - February 24th, 2004
+	- Overhaul/cleanup of ps2link.c and network.c.
 	- Added doc dir with ps2link-protocol.txt.
 	- Added ps2netfs-protocol.txt
-	- Overhaul/cleanup of ps2link.c and other stuff.
-	- Overhaul of network.c.
 	- Added new 'wxVu' commands.
 	- Added new 'listen' mode.
 	- Added ps2netfs commands.
+	- Added usage information.
 
  version 1.1.0 - February 9th, 2004
         - Added dopen/dread/dclose support. (adresd)

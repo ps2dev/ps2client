@@ -31,16 +31,19 @@
 
   Otherwise, it'll default to $PS2DEV as a prefix.
 
+  There are defines in the makefile for general chattiness and debug
+  output. Enable them and recompile if you want more information.
+
  ---------------
  PS2CLIENT USAGE
  ---------------
 
-  Usage:
+  Basic Usage:
 
-   ps2client <address> <command> [arguments]
+   ps2client <hostname> <command> [arguments]
 
-   <address> is the actual address of the PS2. This can be either an ip
-   or even a hostname. You get to choose, but choose carefully...
+   <hostname> is the actual hostname of the PS2. This can be either
+   a hostname or an ip. You get to choose, but choose carefully...
 
    <command> is what you would like the PS2 to do. Valid commands are 
    reset, poweroff, execiop and execee. Examples will follow, relax!
@@ -49,31 +52,53 @@
    either execiop or execee to be executed. Don't worry, it is quite 
    humane - those executed can't feel the pain. Honest.
 
-  Commands (ps2link):
+  Commands for ps2link:
 
-   ps2client 192.168.100.10 reset
+   ps2client <hostname> reset
 
-   ps2client 192.168.100.10 execiop <filename>
+   ps2client <hostname> execiop <filename>
 
-   ps2client 192.168.100.10 execee <filename>
+   ps2client <hostname> execee <filename>
 
-   ps2client 192.168.100.10 poweroff
+   ps2client <hostname> poweroff
 
-   ps2client 192.168.100.10 dumpmem <filename> <offset> <size>
+   ps2client <hostname> dumpmem <filename> <offset> <size>
 
-   ps2client 192.168.100.10 startvu <0/1>
+   ps2client <hostname> startvu <0/1>
 
-   ps2client 192.168.100.10 stopvu <0/1>
+   ps2client <hostname> stopvu <0/1>
 
-   ps2client 192.168.100.10 dumpreg <filename> <type>
+   ps2client <hostname> dumpreg <filename> <type>
 
-   ps2client 192.168.100.10 gsexec <filename>
+   ps2client <hostname> gsexec <filename>
 
-   ps2client 192.168.100.10 listen
+   ps2client <hostname> listen
 
-  Commands (ps2netfs):
+  Commands for ps2netfs:
 
-   ps2client 192.168.100.10 ps2devlist
+   ps2client <hostname> ps2copyfrom <source> <destination>
+
+   ps2client <hostname> ps2copyto <source> <destination>
+
+   ps2client <hostname> ps2delete <filename>
+
+   ps2client <hostname> ps2devlist
+
+   ps2client <hostname> ps2dir <directory>
+
+   ps2client <hostname> ps2format <device>
+
+   ps2client <hostname> ps2mkdir <directory>
+
+   ps2client <hostname> ps2mount <directory> <device>
+
+   ps2client <hostname> ps2rename <source> <destination>
+
+   ps2client <hostname> ps2rmdir <directory>
+
+   ps2client <hostname> ps2sync <device>
+
+   ps2client <hostname> ps2umount <device>
 
  ----------------
  MORE INFORMATION
