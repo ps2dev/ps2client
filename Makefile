@@ -1,7 +1,19 @@
 
- GCC = gcc -Wall -D__CHATTY__ ## -D__DEBUG__
+ GCC = gcc -Wall
  INC = -I/usr/include -I/usr/local/include
  LIB = 
+
+ ifeq "$(CYGWIN)" "YES"
+  GCC += -D__CYGWIN__
+ endif
+
+ ifeq "$(CHATTY)" "YES"
+  GCC += -D__CHATTY__
+ endif
+
+ ifeq "$(DEBUG)" "YES"
+  GCC += -D__DEBUG__
+ endif
 
  PREFIX = $(PS2DEV)
 

@@ -70,7 +70,7 @@
    network_wait(100000);
 
    // Read and display any textlog information.
-   while (network_recvfrom(textlog_sock, buffer, sizeof(buffer)) > 0) { printf(buffer); }
+   while (network_recvfrom(textlog_sock, buffer, sizeof(buffer)) > 0) { fprintf(stdout, buffer); }
 
   }
 
@@ -147,8 +147,12 @@
  int ps2link_command_reset(char *hostname) {
   struct { int number; short length; } __attribute__((packed)) command;
 
+#ifdef __CHATTY__
+
   // Tell the user what we're doing.
   printf("[***] Sending reset() command...\n");
+
+#endif
 
   // Build the command packet.
   command.number = htonl(0xBABE0201);
@@ -165,16 +169,18 @@
  int ps2link_command_execiop(char *hostname, char *pathname) {
   struct { int number; short length; int argc; char argv[256]; } __attribute__((packed)) command;
 
+#ifdef __CHATTY__
+
   // Tell the user what we're doing.
   printf("[***] Sending execiop(\"%s\") command...\n", pathname);
+
+#endif
 
   // Build the command packet.
   command.number = htonl(0xBABE0202);
   command.length = htons(sizeof(command));
   command.argc   = htonl(1);
   if (pathname) { strncpy(command.argv, pathname, 256); }
-
-  // for(loop0=0;loop0<256;loop0++) { fprintf(stderr, "(%c)", command.argv[loop0]); if ((loop0 & 0x0F) == 0x0F) { fprintf(stderr, "\n"); } }
 
   // Send the command packet.
   ps2link_send_command(hostname, &command, sizeof(command));
@@ -187,8 +193,12 @@
  int ps2link_command_execee(char *hostname, char *pathname) {
   struct { int number; short length; int argc; char argv[256]; } __attribute__((packed)) command;
 
+#ifdef __CHATTY__
+
   // Tell the user what we're doing.
   printf("[***] Sending execee(\"%s\") command...\n", pathname);
+
+#endif
 
   // Build the command packet.
   command.number = htonl(0xBABE0203);
@@ -208,8 +218,12 @@
  int ps2link_command_poweroff(char *hostname) {
   struct { int number; short length; } __attribute__((packed)) command;
 
+#ifdef __CHATTY__
+
   // Tell the user what we're doing.
   printf("[***] Sending poweroff() command...\n");
+
+#endif
 
   // Build the command packet.
   command.number = htonl(0xBABE0204);
@@ -226,8 +240,12 @@
  int ps2link_command_dumpmem(char *hostname, char *pathname, int offset, int size) {
   struct { int number; short length; int offset, size; char pathname[256]; } __attribute__((packed)) command;
 
+#ifdef __CHATTY__
+
   // Tell the user what we're doing.
   printf("[***] Sending dumpmem(\"%s\", %d, %d) command...\n", pathname, offset, size);
+
+#endif
 
   // Build the command packet.
   command.number = htonl(0xBABE0207);
@@ -247,8 +265,12 @@
  int ps2link_command_startvu(char *hostname, int vu) {
   struct { int number; short length; int vu; } __attribute__((packed)) command;
 
+#ifdef __CHATTY__
+
   // Tell the user what we're doing.
   printf("[***] Sending startvu(%d) command...\n", vu);
+
+#endif
 
   // Build the command packet.
   command.number = htonl(0xBABE0208);
@@ -266,8 +288,12 @@
  int ps2link_command_stopvu(char *hostname, int vu) {
   struct { int number; short length; int vu; } __attribute__((packed)) command;
 
+#ifdef __CHATTY__
+
   // Tell the user what we're doing.
   printf("[***] Sending stopvu(%d) command...\n", vu);
+
+#endif
 
   // Build the command packet.
   command.number = htonl(0xBABE0209);
@@ -285,8 +311,12 @@
  int ps2link_command_dumpreg(char *hostname, char *pathname, int type) {
   struct { int number; short length; int type; char pathname[256]; } command;
 
+#ifdef __CHATTY__
+
   // Tell the user what we're doing.
   printf("[***] Sending dumpreg(\"%s\", %d) command...\n", pathname, type);
+
+#endif
 
   // Build the command packet.
   command.number = htonl(0xBABE020A);
@@ -305,8 +335,12 @@
  int ps2link_command_gsexec(char *hostname, char *pathname, int size) {
   struct { int number; short length; int size; char pathname[256]; } command;
 
+#ifdef __CHATTY__
+
   // Tell the user what we're doing.
   printf("[***] Sending gsexec(\"%s\", %d) command...\n", pathname, size);
+
+#endif
 
   // Build the command packet.
   command.number = htonl(0xBABE020B);

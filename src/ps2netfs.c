@@ -279,7 +279,7 @@
    if (ntohl(dirent.mode) & 0x0001) { printf("x"); } else { printf("-"); }
 
    // Output the file size.
-   printf(" %10d", ntohl(dirent.size));
+   printf(" %10d", (int)ntohl(dirent.size));
 
    // Output the date.
    printf(" %02d-%02d-%04d", dirent.mtime[5], dirent.mtime[4], (2048 + dirent.mtime[6]));

@@ -27,12 +27,16 @@
 
   If you want to get fancy, you can even do:
 
-   make PREFIX=/some/directory install
+   make install PREFIX=/some/directory
 
-  Otherwise, it'll default to $PS2DEV as a prefix.
+  Otherwise, it'll default to $PS2DEV as a prefix. There also are
+  options for cygwin, as well as general level of output.
 
-  There are defines in the makefile for general chattiness and debug
-  output. Enable them and recompile if you want more information.
+   make install CYGWIN=YES	- Compile for Cygwin usage.
+
+   make install CHATTY=YES	- Enable informational output.
+
+   make install DEBUG=YES	- Enable debug output.
 
  ---------------
  PS2CLIENT USAGE

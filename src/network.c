@@ -37,6 +37,15 @@
   // Create and connect the socket.
   if (type == SOCKET_TCP) { sock[nd] = socket(AF_INET, SOCK_STREAM, 0); }
   if (type == SOCKET_UDP) { sock[nd] = socket(AF_INET, SOCK_DGRAM,  0); }
+
+#ifdef __CYGWIN__
+
+  // Set the socket to non-blocking.
+  fcntl(sock[nd], F_SETFL, O_NONBLOCK);
+
+#endif
+
+  // Connect the socket to the remote host.
   connect(sock[nd], (struct sockaddr *)&sockaddr, sizeof(struct sockaddr));
 
   // Set up the socket polling.
@@ -59,10 +68,21 @@
   sockaddr.sin_port   = htons(port);
   sockaddr.sin_addr.s_addr = htonl(INADDR_ANY);
 
-  // Create and bind the socket, setting it to listen.
+  // Create the socket.
   if (type == SOCKET_TCP) { sock[nd] = socket(AF_INET, SOCK_STREAM, 0); }
   if (type == SOCKET_UDP) { sock[nd] = socket(AF_INET, SOCK_DGRAM,  0); }
+
+#ifdef __CYGWIN__
+
+  // Set the socket to non-blocking.
+  fcntl(sock[nd], F_SETFL, O_NONBLOCK);
+
+#endif
+
+  // Bind to the socket.
   bind(sock[nd], (struct sockaddr *)&sockaddr, sizeof(struct sockaddr));
+
+  // Listen for data on the socket.
   listen(sock[nd], 10);
 
   // Set up the socket polling.
@@ -95,8 +115,17 @@
   // Clear the buffer.
   memset(buffer, 0, size);
 
+#ifdef __CYGWIN__
+
+  // Receive some data from the network.
+  return recv(sock[nd], buffer, size, 0);
+
+#else
+
   // Receive some data from the network.
   return recv(sock[nd], buffer, size, MSG_DONTWAIT);
+
+#endif
 
  }
 
@@ -105,8 +134,17 @@
   // Clear the buffer.
   memset(buffer, 0, size);
 
+#ifdef __CYGWIN__
+
+  // Receive data from the network.
+  return recvfrom(sock[nd], buffer, size, 0, NULL, NULL);
+
+#else
+
   // Receive data from the network.
   return recvfrom(sock[nd], buffer, size, MSG_DONTWAIT, NULL, NULL);
+
+#endif
 
  }
 
