@@ -7,7 +7,9 @@
  #include <time.h>
  #include <sys/stat.h>
  #include <pthread.h>
+#ifndef _WIN32
  #include <netinet/in.h>
+#endif
 
  #include "network.h"
  #include "ps2link.h"
@@ -393,7 +395,9 @@
   // Convert the mode.
   mode = (stats.st_mode & 0x07);
   if (S_ISDIR(stats.st_mode)) { mode |= 0x20; }
+#ifndef _WIN32
   if (S_ISLNK(stats.st_mode)) { mode |= 0x08; }
+#endif
   if (S_ISREG(stats.st_mode)) { mode |= 0x10; }
 
   // Convert the creation time.
@@ -538,7 +542,11 @@
   if (atime) { memcpy(response.atime, atime, 8); }
   if (mtime) { memcpy(response.mtime, mtime, 8); }
   response.hisize = htonl(hisize);
+#ifdef _WIN32
+  if (name) { sprintf(response.name, "%s", name); }
+#else
   if (name) { snprintf(response.name, 256, "%s", name); }
+#endif
 
   // Send the response packet.
   return network_send(request_socket, &response, sizeof(response));

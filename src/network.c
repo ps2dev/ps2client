@@ -117,7 +117,7 @@
 
   // Close the socket.
 #ifdef _WIN32
-  if (closesocket(sock[nd]) < 0) { return -1; }
+  if (closesocket(sock) < 0) { return -1; }
 #else
   if (close(sock) < 0) { return -1; }
 #endif

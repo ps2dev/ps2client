@@ -1,7 +1,11 @@
 #ifndef __NETWORK_H__
 #define __NETWORK_H__
 
+#ifdef _WIN32
+ #include <winsock2.h>
+#else
  #include <sys/socket.h>
+#endif
 
  ///////////////////////
  // NETWORK FUNCTIONS //

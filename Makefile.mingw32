@@ -1,7 +1,7 @@
 
  GCC = i586-mingw32msvc-gcc -Wall
- INC =
- LIB = -lwsock32 -lpthread
+ INC = -I ../pthreads-win32
+ LIB = -lwsock32 -lpthreadGC2 -L ../pthreads-win32
 
  ifeq "x$(PREFIX)" "x"
   PREFIX = $(PS2DEV)
