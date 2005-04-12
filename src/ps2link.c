@@ -49,12 +49,18 @@
   // Connect to the command port.
   command_socket = network_connect(hostname, 0x4712, SOCK_DGRAM);
 
+  // Delay for a moment to let ps2link finish setup.
+  usleep(1);
+
   // End function.
   return 0;
 
  }
 
  int ps2link_mainloop(int timeout) {
+
+  // Disconnect from the command port.
+  if (network_disconnect(command_socket) < 0) { return -1; }
 
   // If no timeout was given, timeout immediately.
   if (timeout == 0) { return 0; }
