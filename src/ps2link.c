@@ -9,6 +9,9 @@
  #include <pthread.h>
 #ifndef _WIN32
  #include <netinet/in.h>
+#else
+ #include <windows.h>
+ #define sleep(x) Sleep(x * 1000)
 #endif
 
  #include "network.h"
@@ -50,7 +53,11 @@
   command_socket = network_connect(hostname, 0x4712, SOCK_DGRAM);
 
   // Delay for a moment to let ps2link finish setup.
+#ifdef _WIN32
+  Sleep(1);
+#else
   usleep(1);
+#endif
 
   // End function.
   return 0;
