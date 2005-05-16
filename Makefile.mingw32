@@ -7,14 +7,14 @@
   PREFIX = $(PS2DEV)
  endif
 
- all: bin/ps2client.exe
+ all: bin/fsclient.exe bin/ps2client.exe
 
  clean:
-	rm -f obj/*.o bin/ps2client*
+	rm -f obj/*.o bin/*client*
 
- ####################
- ## PS2CLIENT LIBS ##
- ####################
+ #################
+ ## CLIENT LIBS ##
+ #################
 
  OFILES += obj/network.o
  obj/network.o: src/network.c src/network.h
@@ -26,20 +26,24 @@
 	@mkdir -p obj
 	$(GCC) $(INC) -c src/ps2link.c -o obj/ps2link.o
 
- OFILES += obj/ps2client.o
- obj/ps2client.o: src/ps2client.c
+ OFILES += obj/ps2netfs.o
+ obj/ps2netfs.o: src/ps2netfs.c
 	@mkdir -p obj
-	$(GCC) $(INC) -c src/ps2client.c -o obj/ps2client.o
+	$(GCC) $(INC) -c src/ps2netfs.c -o obj/ps2netfs.o
 
  OFILES += obj/utility.o
  obj/utility.o: src/utility.c src/utility.h
 	@mkdir -p obj
 	$(GCC) $(INC) -c src/utility.c -o obj/utility.o
 
- #######################
- ## PS2CLIENT PROGRAM ##
- #######################
+ #####################
+ ## CLIENT PROGRAMS ##
+ #####################
 
- bin/ps2client.exe: $(OFILES)
+ bin/fsclient.exe: $(OFILES) src/fsclient.c
 	@mkdir -p bin
-	$(GCC) $(INC) $(OFILES) -o bin/ps2client.exe $(LIB)
+	$(GCC) $(INC) $(OFILES) src/fsclient.c -o bin/ps2client.exe $(LIB)
+
+ bin/ps2client.exe: $(OFILES) src/ps2client.c
+	@mkdir -p bin
+	$(GCC) $(INC) $(OFILES) src/ps2client.c -o bin/ps2client.exe $(LIB)
