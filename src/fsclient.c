@@ -6,6 +6,7 @@
  #include <unistd.h>
  #include "utility.h"
  #include "ps2netfs.h"
+ #include "network.h"
 
  #include "fsclient.h"
 

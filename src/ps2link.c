@@ -129,7 +129,6 @@
 
  int ps2link_command_execee(int argc, char **argv) {
   struct { unsigned int number; unsigned short length; int argc; char argv[256]; } PACKED command;
-  int loop0 = -1; char *temp = command.argv;
 
   // Build the command packet.
   command.number = htonl(PS2LINK_COMMAND_EXECEE);
@@ -326,7 +325,7 @@
 
  int ps2link_request_write(void *packet) {
   struct { unsigned int number; unsigned short length; int fd; int size; } PACKED *request = packet;
-  int result = -1; int size = -1; char buffer[65536];
+  int result = -1; char buffer[65536];
 
   // Read the request data.
   network_receive_all(request_socket, buffer, ntohl(request->size));
@@ -386,7 +385,7 @@
 
  int ps2link_request_readdir(void *packet) {
   struct { unsigned int number; unsigned short length; int dd; } PACKED *request = packet;
-  int result = -1; struct dirent *dirent; struct stat stats; struct tm loctime;
+  struct dirent *dirent; struct stat stats; struct tm loctime;
   unsigned int mode; unsigned char ctime[8]; unsigned char atime[8]; unsigned char mtime[8];
 
   // Perform the request.

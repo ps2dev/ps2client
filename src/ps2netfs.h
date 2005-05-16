@@ -62,45 +62,45 @@
  #define PS2NETFS_COMMAND_FSTYPE	0xBEEF8F11
  #define PS2NETFS_COMMAND_DEVLIST	0xBEEF8F21
 
- int ps2netfs_open(char *pathname, int flags);
-
- int ps2netfs_close(int fd);
-
- int ps2netfs_read(int fd, void *buffer, int size);
-
- int ps2netfs_write(int fd, void *buffer, int size);
-
- int ps2netfs_lseek(int fd, int offset, int whence);
-
+ int ps2netfs_command_open(char *pathname, int flags);
+ 
+ int ps2netfs_command_close(int fd);
+ 
+ int ps2netfs_command_read(int fd, void *buffer, int size);
+ 
+ int ps2netfs_command_write(int fd, void *buffer, int size);
+ 
+ int ps2netfs_command_lseek(int fd, int offset, int whence);
+ 
  // ioctl - unimplemented
 
- int ps2netfs_delete(char *pathname, int flags);
-
- int ps2netfs_mkdir(char *pathname, int flags);
-
- int ps2netfs_rmdir(char *pathname, int flags);
-
- int ps2netfs_dopen(char *pathname, int flags);
-
- int ps2netfs_dclose(int dd);
-
- int ps2netfs_dread(int dd, DIRENT *dirent);
+ int ps2netfs_command_delete(char *pathname, int flags);
+ 
+ int ps2netfs_command_mkdir(char *pathname, int flags);
+ 
+ int ps2netfs_command_rmdir(char *pathname, int flags);
+ 
+ int ps2netfs_command_dopen(char *pathname, int flags);
+ 
+ int ps2netfs_command_dclose(int dd);
+ 
+ int ps2netfs_command_dread(int dd, DIRENT *dirent);
 
  // getstat - unimplemented
 
  // chstat - unimplemented
 
- // format  - unimplemented
+ // format - unimplemented
 
- // rename  - unimplemented
+ // rename - unimplemented
 
  // chdir - unimplemented
 
- int ps2netfs_sync(char *pathname, int flags);
-
- int ps2netfs_mount(char *device, char *fsname, int flags, char *argv, int argc);
-
- int ps2netfs_umount(char *device, int flags);
+ int ps2netfs_command_sync(char *device, int flags);
+ 
+ int ps2netfs_command_mount(char *device, char *fsname, int flags, char *argv, int argc);
+ 
+ int ps2netfs_command_umount(char *device, int flags);
 
  // lseek64 - unimplemented
 
@@ -116,6 +116,6 @@
 
  // fstype - unimplemented
 
- int ps2netfs_devlist(char *pathname, int flags, char *devlist);
-
+ int ps2netfs_command_devlist(char *pathname, int flags, char *devlist);
+ 
 #endif
