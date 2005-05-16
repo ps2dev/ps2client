@@ -54,7 +54,7 @@
 #ifdef _WIN32
   Sleep(1);
 #else
-  usleep(1);
+  sleep(1);
 #endif
 
   // End function.

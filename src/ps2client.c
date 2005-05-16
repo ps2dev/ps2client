@@ -95,7 +95,7 @@
   ps2link_mainloop(timeout);
 
   // Disconnect from the ps2link server.
-  if (ps2link_disconnect() < 0) { printf("Error: Could not disconnect from the ps2link server. (%s)\n", hostname); return -1; }
+  ps2link_disconnect();
 
   // End program.
   return 0;

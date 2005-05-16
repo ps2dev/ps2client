@@ -7,19 +7,18 @@
   THE INTRODUCTION
  ------------------
 
-  This program, ps2client, is a command line tool used for interacting with a
-  ps2 system running ps2link. It will allow you to send various commands as
-  well as respond to requests for data. This program was written and tested
-  under Linux, Cygwin and Mac OS X but should compile in any reasonably unixlike
-  environment.
+  These programs, ps2client & fsclient, are command line tools used for interacting
+  with a ps2 system running ps2link and/or ps2netfs. It will allow you to send various
+  commands as well as respond to requests for data. This program was written and tested
+  under Linux, Cygwin and Mac OS X but should compile on any reasonably unixlike system.
 
-  If you have any requests, questions or sugestions please feel free to contact
-  me at peori@oopo.net. Also, don't be afraid to check out the latest development
-  version of ps2client located at cvs.ps2dev.org.
+  If you have any requests, questions or sugestions please feel free to contact me at
+  peori@oopo.net. Also, don't be afraid to check out the latest development version of
+  ps2client located at cvs.ps2dev.org.
 
- --------------------
-  BUILDING PS2CLIENT
- --------------------
+ ----------------------
+  BUILDING THE CLIENTS
+ ----------------------
 
   Building and installing is very simple:
 
@@ -33,13 +32,15 @@
 
    make clean; make PREFIX=$PS2DEV/bin install
 
- -----------------
-  PS2CLIENT USAGE
- -----------------
+ --------------------
+  BASIC CLIENT USAGE
+ --------------------
 
   Basic usage:
 
    ps2client [-h hostname] [-t timeout] <command> [arguments]
+
+   fsclient [-h hostname] <command> <arguments>
 
    [-h hostname]
 
@@ -50,9 +51,9 @@
 
    [-t timeout]
 
-    An idle timeout period in seconds that ps2client will wait before exiting.
+    An idle timeout period in seconds that the client will wait before exiting.
     This is useful to allow a script to continue after calling ps2client to send
-    a command to ps2link.
+    a command to ps2link or ps2netfs.
 
  ------------------
   PS2LINK COMMANDS
@@ -125,4 +126,4 @@
 
   http://forums.ps2dev.org  - The official ps2dev forums.
 
-  #ps2dev on efnet (IRC)    - Come banter in realtime.
+  #ps2dev on freenode (IRC) - Come banter in realtime.
