@@ -29,8 +29,6 @@
 
  DIR *ps2link_dd[10] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
 
- #define PACKED	__attribute__((packed))
-
  ///////////////////////
  // PS2LINK FUNCTIONS //
  ///////////////////////

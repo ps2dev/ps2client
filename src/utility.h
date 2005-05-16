@@ -1,6 +1,8 @@
 #ifndef __UTILITY_H__
 #define __UTILITY_H__
 
+ #define PACKED __attribute__((packed))
+
  ///////////////////////
  // UTILITY FUNCTIONS //
  ///////////////////////

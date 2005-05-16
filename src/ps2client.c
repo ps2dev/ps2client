@@ -3,17 +3,12 @@
  #include <stdlib.h>
  #include <string.h>
  #include <unistd.h>
-
- #include "ps2link.h"
  #include "utility.h"
+ #include "ps2link.h"
 
- char hostname[1024] = { "192.168.0.10" };
+ char hostname[256] = { "192.168.0.10" };
 
  int timeout = -1;
-
- /////////////////////////
- // PS2CLIENT FUNCTIONS //
- /////////////////////////
 
  int main(int argc, char **argv, char **env) { int loop0 = 0;
 
@@ -75,9 +70,9 @@
 #endif
 
   // Connect to the ps2link server.
-  if (ps2link_connect(hostname) < 0) { printf("Error: Could not connect to ps2link. (%s)\n", hostname); return -1; }
+  if (ps2link_connect(hostname) < 0) { printf("Error: Could not connect to the ps2link server. (%s)\n", hostname); return -1; }
 
-  // Send the command to the ps2link server.
+  // Perform the requested command.
   if (strcmp(argv[-1], "reset")    == 0) { ps2link_command_reset(); timeout = 0;                            } else
   if (strcmp(argv[-1], "execiop")  == 0) { ps2link_command_execiop(argc, argv);                             } else
   if (strcmp(argv[-1], "execee")   == 0) { ps2link_command_execee(argc, argv);                              } else
@@ -91,16 +86,16 @@
   if (strcmp(argv[-1], "gsexec")   == 0) { ps2link_command_gsexec(atoi(argv[0]), argv[1]);                  } else
   if (strcmp(argv[-1], "writemem") == 0) { ps2link_command_writemem(atoi(argv[0]), atoi(argv[1]), argv[2]); } else
   if (strcmp(argv[-1], "iopexcep") == 0) { ps2link_command_iopexcep(); timeout = 0;                         } else
-  if (strcmp(argv[-1], "listen")   == 0) {                                                                  }
+  if (strcmp(argv[-1], "listen")   == 0) {                                                                  } else
 
   // An unknown command was requested.
-  else { printf("Error: Unknown command requested. (%s)\n", argv[-1]); print_usage(); return -1; }
+  { printf("Error: Unknown command requested. (%s)\n", argv[-1]); print_usage(); return -1; }
 
   // Enter the main loop.
   ps2link_mainloop(timeout);
 
   // Disconnect from the ps2link server.
-  ps2link_disconnect();
+  if (ps2link_disconnect() < 0) { printf("Error: Could not disconnect from the ps2link server. (%s)\n", hostname); return -1; }
 
   // End program.
   return 0;

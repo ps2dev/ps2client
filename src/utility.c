@@ -83,7 +83,7 @@
 
  int print_usage(void) {
 
-  // Print out the usage string.
+  // Print out the ps2client usage string.
   printf("\n");
   printf(" Usage: ps2client [-h hostname] [-t timeout] <command> [arguments]\n\n");
   printf(" Available commands:\n\n");
@@ -101,6 +101,20 @@
   printf("   writemem <offset> <size> <filename>\n");
   printf("   iopexcep\n");
   printf("   listen\n\n");
+
+  // Print out the fsclient usage string.
+  printf(" Usage: fsclient [-h hostname] <command> [arguments]\n\n");
+  printf(" Available commands:\n\n");
+  printf("   copyfrom <source> <destination>\n");
+  printf("   copyto <source> <destination>\n");
+  printf("   delete <pathname>\n");
+  printf("   devlist\n");
+  printf("   dir <pathname>\n");
+  printf("   mkdir <pathname>\n");
+  printf("   mount <device> <fsname>\n");
+  printf("   rmdir <pathname>\n");
+  printf("   sync <device>\n");
+  printf("   umount <device>\n\n");
 
   // End function.
   return 0;
