@@ -42,7 +42,7 @@
 
  bin/fsclient.exe: $(OFILES) src/fsclient.c
 	@mkdir -p bin
-	$(GCC) $(INC) $(OFILES) src/fsclient.c -o bin/ps2client.exe $(LIB)
+	$(GCC) $(INC) $(OFILES) src/fsclient.c -o bin/fsclient.exe $(LIB)
 
  bin/ps2client.exe: $(OFILES) src/ps2client.c
 	@mkdir -p bin
