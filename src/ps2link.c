@@ -310,31 +310,83 @@
 
  int ps2link_request_read(void *packet) {
   struct { unsigned int number; unsigned short length; int fd; int size; } PACKED *request = packet;
-  int result = -1, size = -1; char buffer[65536];
+  int result = -1, size = -1; char buffer[65536], *bigbuffer;
 
-  // Perform the request.
-  result = size = read(ntohl(request->fd), buffer, ntohl(request->size));
+  // If a big read is requested...
+  if (ntohl(request->size) > sizeof(buffer)) {
 
-  // Send the response.
-  ps2link_response_read(result, size);
+   // Allocate the bigbuffer.
+   bigbuffer = malloc(ntohl(request->size));
 
-  // Send the response data.
-  return network_send(request_socket, buffer, size);
+   // Perform the request.
+   result = size = read(ntohl(request->fd), bigbuffer, ntohl(request->size));
+
+   // Send the response.
+   ps2link_response_read(result, size);
+
+   // Send the response data.
+   network_send(request_socket, bigbuffer, size);
+
+   // Free the bigbuffer.
+   free(bigbuffer);
+
+  // Else, a normal read is requested...
+  } else {
+
+   // Perform the request.
+   result = size = read(ntohl(request->fd), buffer, ntohl(request->size));
+
+   // Send the response.
+   ps2link_response_read(result, size);
+
+   // Send the response data.
+   network_send(request_socket, buffer, size);
+
+  }
+
+  // End function.
+  return 0;
 
  }
 
  int ps2link_request_write(void *packet) {
   struct { unsigned int number; unsigned short length; int fd; int size; } PACKED *request = packet;
-  int result = -1; char buffer[65536];
+  int result = -1; char buffer[65536], *bigbuffer;
 
-  // Read the request data.
-  network_receive_all(request_socket, buffer, ntohl(request->size));
+  // If a big write is requested...
+  if (ntohl(request->size) > sizeof(buffer)) {
 
-  // Perform the request.
-  result = write(ntohl(request->fd), buffer, ntohl(request->size));
+   // Allocate the bigbuffer.
+   bigbuffer = malloc(ntohl(request->size));
 
-  // Send the response.
-  return ps2link_response_write(result);
+   // Read the request data.
+   network_receive_all(request_socket, bigbuffer, ntohl(request->size));
+
+   // Perform the request.
+   result = write(ntohl(request->fd), bigbuffer, ntohl(request->size));
+
+   // Send the response.
+   ps2link_response_write(result);
+
+   // Free the bigbuffer.
+   free(bigbuffer);
+
+  // Else, a normal write is requested...
+  } else {
+
+   // Read the request data.
+   network_receive_all(request_socket, buffer, ntohl(request->size));
+
+   // Perform the request.
+   result = write(ntohl(request->fd), buffer, ntohl(request->size));
+
+   // Send the response.
+   ps2link_response_write(result);
+
+  }
+
+  // End function.
+  return 0;
 
  }
 
