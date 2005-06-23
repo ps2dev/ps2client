@@ -6,6 +6,7 @@
  #include <netdb.h>
  #include <unistd.h>
  #include <sys/socket.h>
+ #include <sys/time.h>
  #include <netinet/in.h>
 #endif
 
