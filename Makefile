@@ -12,7 +12,7 @@
 	rm -f obj/*.o bin/*client*
 
   install: bin/fsclient bin/ps2client
-	strip --strip-unneeded bin/*client*
+	strip bin/*client*
 	@mkdir -p $(PREFIX)/bin
 	cp bin/*client* $(PREFIX)/bin
 
