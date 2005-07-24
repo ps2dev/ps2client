@@ -430,6 +430,66 @@
     response.length = htons(sizeof(reponse));
     response.result = htonl(closedir((DIR *)ntohl(request->dd)));
 
+  -----------------------------
+   0xBABE0191 (remove request)
+   0xBABE0192 (remove response)
+  -----------------------------
+
+   A request from ps2link to remove the file specified by the given filename
+   'name'. The result of the remove() call is returned in the
+   response packet.
+
+   PACKET STRUCTURES
+
+    struct { int number; short length; int flags; char name[256]; } request;
+    struct { int number; short length; int result; } response;
+
+   RESPONSE VALUES
+
+    response.number = htonl(0xBABE0192);
+    response.length = htons(sizeof(response));
+    response.result = htonl(remove(request->name));
+
+  -----------------------------
+   0xBABE01a1 (mkdir request)
+   0xBABE01a2 (mkdir response)
+  -----------------------------
+
+   A request from ps2link to make a directory with the dirname
+   'name'. The result of the mkdir() call is returned in the
+   response packet.
+
+   PACKET STRUCTURES
+
+    struct { int number; short length; int flags; char name[256]; } request;
+    struct { int number; short length; int result; } response;
+
+   RESPONSE VALUES
+
+    response.number = htonl(0xBABE01a2);
+    response.length = htons(sizeof(response));
+    response.result = htonl(mkdir(request->name));
+
+  -----------------------------
+   0xBABE01b1 (rmdir request)
+   0xBABE01b2 (rmdir response)
+  -----------------------------
+
+   A request from ps2link to remove a directory with the dirname
+   'name'. The result of the rmdir() call is returned in the
+   response packet.
+
+   PACKET STRUCTURES
+
+    struct { int number; short length; int flags; char name[256]; } request;
+    struct { int number; short length; int result; } response;
+
+   RESPONSE VALUES
+
+    response.number = htonl(0xBABE01b2);
+    response.length = htons(sizeof(response));
+    response.result = htonl(rmdir(request->name));
+
  ---------------------
   PS2LINK LOG PACKETS
  ---------------------

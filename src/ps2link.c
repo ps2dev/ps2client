@@ -494,6 +494,48 @@
 
  }
 
+ int ps2link_request_remove(void *packet) {
+  struct { unsigned int number; unsigned short length; char name[256]; } PACKED *request = packet;
+  int result = -1;
+
+  // Fix the arguments.
+  fix_pathname(request->name);
+
+  // Perform the request.
+  result = remove(request->name);
+
+  // Send the response.
+  return ps2link_response_remove(result);
+ }
+
+ int ps2link_request_mkdir(void *packet) {
+  struct { unsigned int number; unsigned short length; char name[256]; } PACKED *request = packet;
+  int result = -1;
+
+  // Fix the arguments.
+  fix_pathname(request->name);
+
+  // Perform the request.
+  result = mkdir(request->name);
+
+  // Send the response.
+  return ps2link_response_mkdir(result);
+ };
+
+ int ps2link_request_rmdir(void *packet) {
+  struct { unsigned int number; unsigned short length; char name[256]; } PACKED *request = packet;
+  int result = -1;
+
+  // Fix the arguments.
+  fix_pathname(request->name);
+
+  // Perform the request.
+  result = rmdir(request->name);
+
+  // Send the response.
+  return ps2link_response_rmdir(result);
+ };
+
  ////////////////////////////////
  // PS2LINK RESPONSE FUNCTIONS //
  ////////////////////////////////
@@ -615,6 +657,42 @@
 
  }
 
+ int ps2link_response_remove(int result) {
+  struct { unsigned int number; unsigned short length; int result; } PACKED response;
+
+  // Build the response packet.
+  response.number = htonl(PS2LINK_RESPONSE_REMOVE);
+  response.length = htons(sizeof(response));
+  response.result = htonl(result);
+
+  // Send the response packet.
+  return network_send(request_socket, &response, sizeof(response));
+ }
+
+ int ps2link_response_mkdir(int result) {
+  struct { unsigned int number; unsigned short length; int result; } PACKED response;
+
+  // Build the response packet.
+  response.number = htonl(PS2LINK_RESPONSE_MKDIR);
+  response.length = htons(sizeof(response));
+  response.result = htonl(result);
+
+  // Send the response packet.
+  return network_send(request_socket, &response, sizeof(response));
+ }
+
+ int ps2link_response_rmdir(int result) {
+  struct { unsigned int number; unsigned short length; int result; } PACKED response;
+
+  // Build the response packet.
+  response.number = htonl(PS2LINK_RESPONSE_RMDIR);
+  response.length = htons(sizeof(response));
+  response.result = htonl(result);
+
+  // Send the response packet.
+  return network_send(request_socket, &response, sizeof(response));
+ }
+
  //////////////////////////////
  // PS2LINK THREAD FUNCTIONS //
  //////////////////////////////
@@ -673,7 +751,10 @@
    if (ntohl(packet.number) == PS2LINK_REQUEST_LSEEK)    { ps2link_request_lseek(&packet);    } else
    if (ntohl(packet.number) == PS2LINK_REQUEST_OPENDIR)  { ps2link_request_opendir(&packet);  } else
    if (ntohl(packet.number) == PS2LINK_REQUEST_CLOSEDIR) { ps2link_request_closedir(&packet); } else
-   if (ntohl(packet.number) == PS2LINK_REQUEST_READDIR)  { ps2link_request_readdir(&packet);  }
+   if (ntohl(packet.number) == PS2LINK_REQUEST_READDIR)  { ps2link_request_readdir(&packet);  } else
+   if (ntohl(packet.number) == PS2LINK_REQUEST_REMOVE)   { ps2link_request_remove(&packet);   } else
+   if (ntohl(packet.number) == PS2LINK_REQUEST_MKDIR)    { ps2link_request_mkdir(&packet);    } else
+   if (ntohl(packet.number) == PS2LINK_REQUEST_RMDIR)    { ps2link_request_rmdir(&packet);    }
 
    // Reset the timeout counter.
    ps2link_counter = 0;

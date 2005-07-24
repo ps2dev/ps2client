@@ -67,6 +67,9 @@
  #define PS2LINK_REQUEST_OPENDIR	0xBABE0161
  #define PS2LINK_REQUEST_CLOSEDIR	0xBABE0171
  #define PS2LINK_REQUEST_READDIR	0xBABE0181
+ #define PS2LINK_REQUEST_REMOVE		0xBABE0191
+ #define PS2LINK_REQUEST_MKDIR		0xBABE01A1
+ #define PS2LINK_REQUEST_RMDIR		0xBABE01B1
 
  int ps2link_request_open(void *packet);
 
@@ -84,6 +87,12 @@
 
  int ps2link_request_readdir(void *packet);
 
+ int ps2link_request_remove(void *packet);
+
+ int ps2link_request_mkdir(void *packet);
+
+ int ps2link_request_rmdir(void *packet);
+
  ////////////////////////////////
  // PS2LINK RESPONSE FUNCTIONS //
  ////////////////////////////////
@@ -96,6 +105,9 @@
  #define PS2LINK_RESPONSE_OPENDIR	0xBABE0162
  #define PS2LINK_RESPONSE_CLOSEDIR	0xBABE0172
  #define PS2LINK_RESPONSE_READDIR	0xBABE0182
+ #define PS2LINK_RESPONSE_REMOVE	0xBABE0192
+ #define PS2LINK_RESPONSE_MKDIR		0xBABE01A2
+ #define PS2LINK_RESPONSE_RMDIR		0xBABE01B2
 
  int ps2link_response_open(int result);
 
@@ -112,6 +124,12 @@
  int ps2link_response_closedir(int result);
 
  int ps2link_response_readdir(int result, unsigned int mode, unsigned int attr, unsigned int size, unsigned char *ctime, unsigned char *atime, unsigned char *mtime, unsigned int hisize, char *name);
+
+ int ps2link_response_remove(int result);
+
+ int ps2link_response_mkdir(int result);
+
+ int ps2link_response_rmdir(int result);
 
  //////////////////////////////
  // PS2LINK THREAD FUNCTIONS //
