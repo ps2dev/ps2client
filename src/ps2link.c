@@ -509,13 +509,14 @@
  }
 
  int ps2link_request_mkdir(void *packet) {
-  struct { unsigned int number; unsigned short length; char name[256]; } PACKED *request = packet;
+  struct { unsigned int number; unsigned short length; int mode; char name[256]; } PACKED *request = packet;
   int result = -1;
 
   // Fix the arguments.
   fix_pathname(request->name);
 
   // Perform the request.
+  // do we need to use mode in here: request->mode  ?
   result = mkdir(request->name);
 
   // Send the response.
