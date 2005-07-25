@@ -517,7 +517,7 @@
 
   // Perform the request.
   // do we need to use mode in here: request->mode  ?
-  result = mkdir(request->name);
+  result = mkdir(request->name, 0);
 
   // Send the response.
   return ps2link_response_mkdir(result);
