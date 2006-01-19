@@ -1,5 +1,6 @@
 
  #include <stdio.h>
+ #include <string.h>
  #include "utility.h"
  #include "network.h"
  #include "ps2netfs.h"
