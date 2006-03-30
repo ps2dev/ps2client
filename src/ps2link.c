@@ -289,7 +289,7 @@
   request->flags = fix_flags(ntohl(request->flags));
 
   // Perform the request.
-  result = open(request->pathname, request->flags, 0644);
+  result = open(request->pathname, request->flags|O_BINARY, 0644);
 
   // Send the response.
   return ps2link_response_open(result);
