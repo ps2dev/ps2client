@@ -107,7 +107,7 @@
 #else
   fd1 = open(destination, O_RDWR | O_CREAT, 0644);
 #endif
-  if (fd0 < 1) { printf("Error: Open destination file failed. (%d)\n", fd1); return -1; }
+  if (fd1 < 1) { printf("Error: Open destination file failed. (%d)\n", fd1); return -1; }
 
   // Output the display header.
   printf("\n [%s --> %s]\n\n  Progress: ", source, destination);
