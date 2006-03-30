@@ -289,7 +289,11 @@
   request->flags = fix_flags(ntohl(request->flags));
 
   // Perform the request.
+#if defined (__CYGWIN__) || defined (__MINGW32__)
   result = open(request->pathname, request->flags | O_BINARY, 0644);
+#else
+  result = open(request->pathname, request->flags, 0644);
+#endif
 
   // Send the response.
   return ps2link_response_open(result);

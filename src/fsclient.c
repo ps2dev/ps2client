@@ -102,7 +102,11 @@
   if (size < 0) { printf("Error: Get source file size failed. (%d)\n", size); return -1; }
 
   // Open the destination file.
+#if defined (__CYGWIN__) || defined (__MINGW32__)
   fd1 = open(destination, O_RDWR | O_CREAT | O_BINARY, 0644);
+#else
+  fd1 = open(destination, O_RDWR | O_CREAT, 0644);
+#endif
   if (fd0 < 1) { printf("Error: Open destination file failed. (%d)\n", fd1); return -1; }
 
   // Output the display header.
@@ -144,7 +148,11 @@
   int fd0, fd1, size, total = 0; char buffer[28000];
 
   // Open the source file.
+#if defined (__CYGWIN__) || defined (__MINGW32__)
   fd0 = open(source, O_RDONLY | O_BINARY);
+#else
+  fd0 = open(source, O_RDONLY);
+#endif
   if (fd0 < 0) { printf("Error: Open source file failed. (%d)\n", fd0); return -1; }
 
   // Get the source file size.
