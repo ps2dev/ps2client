@@ -27,7 +27,14 @@
 
  int ps2link_counter = 0;
 
- DIR *ps2link_dd[10] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+// ps2link_dd is now an array of structs
+ struct
+ {
+    char *pathname; // remember to free when closing dir
+    DIR *dir;
+ } ps2link_dd[10] = {
+ { NULL, NULL }, { NULL, NULL }, { NULL, NULL }, { NULL, NULL }, { NULL, NULL }, 
+ { NULL, NULL }, { NULL, NULL }, { NULL, NULL }, { NULL, NULL }, { NULL, NULL }};
 
  ///////////////////////
  // PS2LINK FUNCTIONS //
@@ -414,10 +421,16 @@
   fix_pathname(request->pathname);
 
   // Allocate an available directory descriptor.
-  for (loop0=0; loop0<10; loop0++) { if (ps2link_dd[loop0] == NULL) { result = loop0; break; } }
+  for (loop0=0; loop0<10; loop0++) { if (ps2link_dd[loop0].dir == NULL) { result = loop0; break; } }
 
   // Perform the request.
-  if (result != -1) { ps2link_dd[result] = opendir(request->pathname); }
+  if (result != -1)
+  {
+    ps2link_dd[result].pathname = (char *) malloc(strlen(request->pathname) + 1);
+    strcpy(ps2link_dd[result].pathname, request->pathname);
+    ps2link_dd[result].dir = opendir(request->pathname);
+    
+  }
 
   // Send the response.
   return ps2link_response_opendir(result);
@@ -429,10 +442,16 @@
   int result = -1;
 
   // Perform the request.
-  result = closedir(ps2link_dd[ntohl(request->dd)]);
+  result = closedir(ps2link_dd[ntohl(request->dd)].dir);
+
+  if(ps2link_dd[ntohl(request->dd)].pathname)
+  {
+    free(ps2link_dd[ntohl(request->dd)].pathname);
+    ps2link_dd[ntohl(request->dd)].pathname = NULL;
+  }
 
   // Free the directory descriptor.
-  ps2link_dd[ntohl(request->dd)] = NULL;
+  ps2link_dd[ntohl(request->dd)].dir = NULL;
 
   // Send the response.
   return ps2link_response_closedir(result);
@@ -440,12 +459,16 @@
  }
 
  int ps2link_request_readdir(void *packet) {
+    DIR *dir;
   struct { unsigned int number; unsigned short length; int dd; } PACKED *request = packet;
   struct dirent *dirent; struct stat stats; struct tm loctime;
   unsigned int mode; unsigned char ctime[8]; unsigned char atime[8]; unsigned char mtime[8];
+  char tname[512];
+
+    dir = ps2link_dd[ntohl(request->dd)].dir;
 
   // Perform the request.
-  dirent = readdir(ps2link_dd[ntohl(request->dd)]);
+  dirent = readdir(dir);
 
   // If no more entries were found...
   if (dirent <= 0) {
@@ -455,8 +478,11 @@
 
   }
 
+  // need to specify the directory as well as file name otherwise uses CWD!
+  sprintf(tname, "%s/%s", ps2link_dd[ntohl(request->dd)].pathname, dirent->d_name);
+
   // Fetch the entry's statistics.
-  stat(dirent->d_name, &stats);
+  stat(tname, &stats);
 
   // Convert the mode.
   mode = (stats.st_mode & 0x07);
@@ -518,10 +544,11 @@
 
   // Fix the arguments.
   fix_pathname(request->name);
+//  request->flags = fix_flags(ntohl(request->flags));
 
   // Perform the request.
   // do we need to use mode in here: request->mode  ?
-  result = mkdir(request->name, 0);
+  result = mkdir(request->name, request->mode);
 
   // Send the response.
   return ps2link_response_mkdir(result);
@@ -736,7 +763,7 @@
   // If the socket isn't open, this thread isn't needed.
   if (request_socket < 0) { pthread_exit(thread_id); }
 
-  // Loop forever...  
+  // Loop forever...
   for (;;) {
 
    // Wait for network activity.
@@ -767,4 +794,3 @@
   }
 
  }
-
