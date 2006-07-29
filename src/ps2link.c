@@ -296,7 +296,7 @@
   fix_pathname(request->pathname);
   request->flags = fix_flags(ntohl(request->flags));
 
-  if((stat(request->pathname, &stats) == 0) && (!S_ISDIR(stats.st_mode)))
+  if(((stat(request->pathname, &stats) == 0) && (!S_ISDIR(stats.st_mode))) || (request->flags & O_CREAT))
   {
   // Perform the request.
 #if defined (__CYGWIN__) || defined (__MINGW32__)
