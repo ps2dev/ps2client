@@ -33,7 +33,7 @@
     char *pathname; // remember to free when closing dir
     DIR *dir;
  } ps2link_dd[10] = {
- { NULL, NULL }, { NULL, NULL }, { NULL, NULL }, { NULL, NULL }, { NULL, NULL }, 
+ { NULL, NULL }, { NULL, NULL }, { NULL, NULL }, { NULL, NULL }, { NULL, NULL },
  { NULL, NULL }, { NULL, NULL }, { NULL, NULL }, { NULL, NULL }, { NULL, NULL }};
 
  ///////////////////////
@@ -290,17 +290,21 @@
  int ps2link_request_open(void *packet) {
   struct { unsigned int number; unsigned short length; int flags; char pathname[256]; } PACKED *request = packet;
   int result = -1;
+  struct stat stats;
 
   // Fix the arguments.
   fix_pathname(request->pathname);
   request->flags = fix_flags(ntohl(request->flags));
 
+  if((stat(request->pathname, &stats) == 0) && (!S_ISDIR(stats.st_mode)))
+  {
   // Perform the request.
 #if defined (__CYGWIN__) || defined (__MINGW32__)
-  result = open(request->pathname, request->flags | O_BINARY, 0644);
+    result = open(request->pathname, request->flags | O_BINARY, 0644);
 #else
-  result = open(request->pathname, request->flags, 0644);
+    result = open(request->pathname, request->flags, 0644);
 #endif
+  }
 
   // Send the response.
   return ps2link_response_open(result);
@@ -416,26 +420,28 @@
  int ps2link_request_opendir(void *packet) { int loop0 = 0;
   struct { unsigned int command; unsigned short length; int flags; char pathname[256]; } PACKED *request = packet;
   int result = -1;
+  struct stat stats;
 
   // Fix the arguments.
   fix_pathname(request->pathname);
 
-  // Allocate an available directory descriptor.
-  for (loop0=0; loop0<10; loop0++) { if (ps2link_dd[loop0].dir == NULL) { result = loop0; break; } }
-
-  // Perform the request.
-  if (result != -1)
+  if((stat(request->pathname, &stats) == 0) && (S_ISDIR(stats.st_mode)))
   {
-    ps2link_dd[result].pathname = (char *) malloc(strlen(request->pathname) + 1);
-    strcpy(ps2link_dd[result].pathname, request->pathname);
-    ps2link_dd[result].dir = opendir(request->pathname);
-    
+      // Allocate an available directory descriptor.
+      for (loop0=0; loop0<10; loop0++) { if (ps2link_dd[loop0].dir == NULL) { result = loop0; break; } }
+
+      // Perform the request.
+      if (result != -1)
+      {
+        ps2link_dd[result].pathname = (char *) malloc(strlen(request->pathname) + 1);
+        strcpy(ps2link_dd[result].pathname, request->pathname);
+        ps2link_dd[result].dir = opendir(request->pathname);
+      }
   }
 
   // Send the response.
   return ps2link_response_opendir(result);
-
- }
+}
 
  int ps2link_request_closedir(void *packet) {
   struct { unsigned int number; unsigned short length; int dd; } PACKED *request = packet;
