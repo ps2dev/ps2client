@@ -1,5 +1,6 @@
 
  #include <stdio.h>
+ #include <stdlib.h>
  #include <fcntl.h>
  #include <string.h>
  #include <dirent.h>
@@ -27,14 +28,14 @@
 
  int ps2link_counter = 0;
 
-// ps2link_dd is now an array of structs
- struct
- {
+ // ps2link_dd is now an array of structs
+ struct {
     char *pathname; // remember to free when closing dir
     DIR *dir;
  } ps2link_dd[10] = {
- { NULL, NULL }, { NULL, NULL }, { NULL, NULL }, { NULL, NULL }, { NULL, NULL },
- { NULL, NULL }, { NULL, NULL }, { NULL, NULL }, { NULL, NULL }, { NULL, NULL }};
+  { NULL, NULL }, { NULL, NULL }, { NULL, NULL }, { NULL, NULL }, { NULL, NULL },
+  { NULL, NULL }, { NULL, NULL }, { NULL, NULL }, { NULL, NULL }, { NULL, NULL }
+ };
 
  ///////////////////////
  // PS2LINK FUNCTIONS //
@@ -477,7 +478,7 @@
   dirent = readdir(dir);
 
   // If no more entries were found...
-  if (dirent <= 0) {
+  if (dirent != NULL) {
 
    // Tell the user an entry wasn't found.
    return ps2link_response_readdir(0, 0, 0, 0, NULL, NULL, NULL, 0, NULL);
@@ -550,15 +551,15 @@
 
   // Fix the arguments.
   fix_pathname(request->name);
-//  request->flags = fix_flags(ntohl(request->flags));
+  // request->flags = fix_flags(ntohl(request->flags));
 
   // Perform the request.
-  // do we need to use mode in here: request->mode  ?
+  // do we need to use mode in here: request->mode ?
   result = mkdir(request->name, request->mode);
 
   // Send the response.
   return ps2link_response_mkdir(result);
- };
+ }
 
  int ps2link_request_rmdir(void *packet) {
   struct { unsigned int number; unsigned short length; char name[256]; } PACKED *request = packet;
@@ -572,7 +573,7 @@
 
   // Send the response.
   return ps2link_response_rmdir(result);
- };
+ }
 
  ////////////////////////////////
  // PS2LINK RESPONSE FUNCTIONS //
@@ -761,6 +762,9 @@
 
   }
 
+  // End function.
+  return NULL;
+
  }
 
  void *ps2link_thread_request(void *thread_id) {
@@ -798,5 +802,8 @@
    ps2link_counter = 0;
 
   }
+
+  // End function.
+  return NULL;
 
  }

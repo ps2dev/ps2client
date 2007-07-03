@@ -3,7 +3,7 @@
    CC = gcc
   endif
 
-  CFLAGS = -O3 -I/usr/include -I/usr/local/include
+  CFLAGS = -Wall -pedantic -std=c99 -O3 -I/usr/include -I/usr/local/include
 
   LIBS = -lpthread
 
