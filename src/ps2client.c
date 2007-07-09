@@ -5,6 +5,9 @@
  #include <unistd.h>
  #include "utility.h"
  #include "ps2link.h"
+#ifdef _WIN32
+ #include "network.h"
+#endif
 
  char hostname[256] = { "192.168.0.10" };
 

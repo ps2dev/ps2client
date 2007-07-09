@@ -555,8 +555,13 @@
 
   // Perform the request.
   // do we need to use mode in here: request->mode ?
+  
+#ifdef _WIN32
+  result = mkdir(request->name);  
+#else
   result = mkdir(request->name, request->mode);
-
+#endif
+  
   // Send the response.
   return ps2link_response_mkdir(result);
  }

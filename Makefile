@@ -5,8 +5,12 @@
 
   CFLAGS = -Wall -pedantic -std=c99 -O3 -I/usr/include -I/usr/local/include
 
-  LIBS = -lpthread
-
+  ifeq "x$(MSYSTEM)" "x"
+   LIBS = -lpthread
+  else
+   LIBS = -lwsock32 -lpthreadGC2
+  endif
+  
   ifeq "x$(PREFIX)" "x"
    PREFIX = $(PS2DEV)
   endif
