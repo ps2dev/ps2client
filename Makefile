@@ -3,7 +3,7 @@
    CC = gcc
   endif
 
-  CFLAGS = -Wall -pedantic -std=c99 -O3 -I/usr/include -I/usr/local/include
+  CFLAGS = -std=gnu99 -Wall -pedantic -I/usr/include -I/usr/local/include
 
   ifeq "x$(MSYSTEM)" "x"
    LIBS = -lpthread
