@@ -478,7 +478,7 @@
   dirent = readdir(dir);
 
   // If no more entries were found...
-  if (dirent != NULL) {
+  if (dirent == NULL) {
 
    // Tell the user an entry wasn't found.
    return ps2link_response_readdir(0, 0, 0, 0, NULL, NULL, NULL, 0, NULL);
