@@ -1,7 +1,7 @@
 
                      --------------------------------
                       PS2LINK OPERATION AND PROTOCOL
-                        Dan Peori (peori@oopo.net)
+                       Naomi Peori (naomi@peori.ca)
                        Current as of: ps2link v1.22
                      --------------------------------
 
