@@ -26,11 +26,12 @@
 
   There are some build options, however:
 
-   PREFIX=/dir	- Install directory, defaults to: $PS2DEV/bin
+   PREFIX=/dir	- Install directory, defaults to: $PS2DEV. "/bin" will be automatically appended.
+                  The software will be installed to the /bin sub-directory, under PREFIX (PREFIX/bin).
 
   These options can be used as follows:
 
-   make clean; make PREFIX=$PS2DEV/bin install
+   make clean; make PREFIX=/new/path/prefix install
 
  --------------------
   BASIC CLIENT USAGE
