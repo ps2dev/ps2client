@@ -468,7 +468,7 @@
  int ps2link_request_readdir(void *packet) {
     DIR *dir;
   struct { unsigned int number; unsigned short length; int dd; } PACKED *request = packet;
-  struct dirent *dirent; struct stat stats; struct tm loctime;
+  struct dirent *dirent; struct stat stats; struct tm *loctime;
   unsigned int mode; unsigned char ctime[8]; unsigned char atime[8]; unsigned char mtime[8];
   char tname[512];
 
@@ -500,31 +500,31 @@
   if (S_ISREG(stats.st_mode)) { mode |= 0x10; }
 
   // Convert the creation time.
-  localtime_r(&(stats.st_ctime), &loctime);
-  ctime[6] = (unsigned char)loctime.tm_year;
-  ctime[5] = (unsigned char)loctime.tm_mon + 1;
-  ctime[4] = (unsigned char)loctime.tm_mday;
-  ctime[3] = (unsigned char)loctime.tm_hour;
-  ctime[2] = (unsigned char)loctime.tm_min;
-  ctime[1] = (unsigned char)loctime.tm_sec;
+  loctime = localtime(&(stats.st_ctime));
+  ctime[6] = (unsigned char)loctime->tm_year;
+  ctime[5] = (unsigned char)loctime->tm_mon + 1;
+  ctime[4] = (unsigned char)loctime->tm_mday;
+  ctime[3] = (unsigned char)loctime->tm_hour;
+  ctime[2] = (unsigned char)loctime->tm_min;
+  ctime[1] = (unsigned char)loctime->tm_sec;
 
   // Convert the access time.
-  localtime_r(&(stats.st_atime), &loctime);
-  atime[6] = (unsigned char)loctime.tm_year;
-  atime[5] = (unsigned char)loctime.tm_mon + 1;
-  atime[4] = (unsigned char)loctime.tm_mday;
-  atime[3] = (unsigned char)loctime.tm_hour;
-  atime[2] = (unsigned char)loctime.tm_min;
-  atime[1] = (unsigned char)loctime.tm_sec;
+  loctime = localtime(&(stats.st_atime));
+  atime[6] = (unsigned char)loctime->tm_year;
+  atime[5] = (unsigned char)loctime->tm_mon + 1;
+  atime[4] = (unsigned char)loctime->tm_mday;
+  atime[3] = (unsigned char)loctime->tm_hour;
+  atime[2] = (unsigned char)loctime->tm_min;
+  atime[1] = (unsigned char)loctime->tm_sec;
 
   // Convert the last modified time.
-  localtime_r(&(stats.st_mtime), &loctime);
-  mtime[6] = (unsigned char)loctime.tm_year;
-  mtime[5] = (unsigned char)loctime.tm_mon + 1;
-  mtime[4] = (unsigned char)loctime.tm_mday;
-  mtime[3] = (unsigned char)loctime.tm_hour;
-  mtime[2] = (unsigned char)loctime.tm_min;
-  mtime[1] = (unsigned char)loctime.tm_sec;
+  loctime = localtime(&(stats.st_mtime));
+  mtime[6] = (unsigned char)loctime->tm_year;
+  mtime[5] = (unsigned char)loctime->tm_mon + 1;
+  mtime[4] = (unsigned char)loctime->tm_mday;
+  mtime[3] = (unsigned char)loctime->tm_hour;
+  mtime[2] = (unsigned char)loctime->tm_min;
+  mtime[1] = (unsigned char)loctime->tm_sec;
 
   // Send the response.
   return ps2link_response_readdir(1, mode, 0, stats.st_size, ctime, atime, mtime, 0, dirent->d_name);
