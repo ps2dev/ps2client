@@ -22,8 +22,8 @@
 
   install: bin/fsclient bin/ps2client
 	strip bin/*client*
-	@mkdir -p $(PREFIX)/bin
-	cp bin/*client* $(PREFIX)/bin
+	@mkdir -p $(DESTDIR)$(PREFIX)/bin
+	cp bin/*client* $(DESTDIR)$(PREFIX)/bin
 
  ####################
  ## CLIENT MODULES ##
