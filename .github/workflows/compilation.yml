@@ -24,14 +24,18 @@ jobs:
         export PATH=$PATH:$PS2DEV/bin:$PS2DEV/ee/bin:$PS2DEV/iop/bin:$PS2DEV/dvp/bin:$PS2SDK/bin
         make clean all install
     
-    - name: Compress ps2dev folder
+    - name: Get short SHA
+      id: slug
+      run: echo "::set-output name=sha8::$(echo ${GITHUB_SHA} | cut -c1-8)"
+    
+    - name: Compress bin folder
       run: |
-        tar -zcvf ps2dev.tar.gz ps2dev
+        tar -zcvf bin.tar.gz ps2dev/bin
     
     - uses: actions/upload-artifact@v2
       with:
-        name: ps2dev-${{matrix.os}}
-        path: ps2dev.tar.gz
+        name: ps2client-${{ steps.slug.outputs.sha8 }}-${{matrix.os}}
+        path: ps2dev/bin/
     
     - name: Extract tag name
       if: startsWith(github.ref, 'refs/tags/')
