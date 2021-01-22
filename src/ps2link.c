@@ -584,13 +584,14 @@ int ps2link_request_getstat(void *packet) {
   struct { unsigned int number; unsigned short length; char name[256]; } PACKED *request = packet;
     struct stat stats; struct tm *loctime;
     int ret;
-    unsigned int mode; unsigned char ctime[8]; unsigned char atime[8]; unsigned char mtime[8];
+    unsigned int mode = 0;
+    unsigned char ctime[8]; unsigned char atime[8]; unsigned char mtime[8];
 
     // Fix the arguments.
     fix_pathname(request->name);
     
-      // Fetch the entry's statistics.
-      ret = stat(request->name, &stats);
+    // Fetch the entry's statistics.
+    ret = stat(request->name, &stats);
     
     if (ret == 0) {
         // Convert the mode.
