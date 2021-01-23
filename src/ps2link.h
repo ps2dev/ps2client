@@ -133,6 +133,17 @@
 
  int ps2link_response_rmdir(int result);
 
+ int ps2link_response_getstat(
+   int result,
+   unsigned int mode,
+   unsigned int attr,
+   unsigned int size,
+   unsigned char *ctime,
+   unsigned char *atime,
+   unsigned char *mtime,
+   unsigned int hisize
+);
+
  //////////////////////////////
  // PS2LINK THREAD FUNCTIONS //
  //////////////////////////////
