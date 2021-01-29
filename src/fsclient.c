@@ -236,7 +236,7 @@
    if (!strcmp(temp, "pfs"))   { printf("  pfs    - Playstation File System.\n");         } else
    if (!strcmp(temp, "dev9x")) { printf("  dev9x  - Blah blah blah.\n");                  } else
 
-   // 
+   //
    { printf("  %s\n", temp); }
 
    // Increment temp.

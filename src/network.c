@@ -23,7 +23,7 @@
   // Start up winsock.
   if (WSAStartup(MAKEWORD(2, 0), &wsaData) != 0) { return -1; }
 
-  // End function.  
+  // End function.
   return 0;
 
  }

@@ -10,7 +10,7 @@
   else
    LIBS = -lwsock32 -lpthreadGC2
   endif
-  
+
   ifeq "x$(PREFIX)" "x"
    PREFIX = $(PS2DEV)
   endif
