@@ -6,8 +6,6 @@
  #include <unistd.h>
 #ifndef _WIN32
  #include <netinet/in.h>
-#else
- #include <windows.h>
 #endif
  #include "utility.h"
  #include "ps2netfs.h"

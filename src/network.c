@@ -1,8 +1,5 @@
 
-#ifdef _WIN32
- #include <windows.h>
- #include <winsock2.h>
-#else
+#ifndef _WIN32
  #include <netdb.h>
  #include <unistd.h>
  #include <sys/socket.h>
