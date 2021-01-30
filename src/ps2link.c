@@ -555,13 +555,13 @@
 
   // Perform the request.
   // do we need to use mode in here: request->mode ?
-  
+
 #ifdef _WIN32
-  result = mkdir(request->name);  
+  result = mkdir(request->name);
 #else
   result = mkdir(request->name, request->mode);
 #endif
-  
+
   // Send the response.
   return ps2link_response_mkdir(result);
  }
@@ -589,10 +589,10 @@ int ps2link_request_getstat(void *packet) {
 
     // Fix the arguments.
     fix_pathname(request->name);
-    
+
     // Fetch the entry's statistics.
     ret = stat(request->name, &stats);
-    
+
     if (ret == 0) {
         // Convert the mode.
           mode = (stats.st_mode & 0x07);
@@ -601,7 +601,7 @@ int ps2link_request_getstat(void *packet) {
           if (S_ISLNK(stats.st_mode)) { mode |= 0x08; }
         #endif
           if (S_ISREG(stats.st_mode)) { mode |= 0x10; }
-        
+
           // Convert the creation time.
           loctime = localtime(&(stats.st_ctime));
           ctime[6] = (unsigned char)loctime->tm_year;
@@ -610,7 +610,7 @@ int ps2link_request_getstat(void *packet) {
           ctime[3] = (unsigned char)loctime->tm_hour;
           ctime[2] = (unsigned char)loctime->tm_min;
           ctime[1] = (unsigned char)loctime->tm_sec;
-        
+
           // Convert the access time.
           loctime = localtime(&(stats.st_atime));
           atime[6] = (unsigned char)loctime->tm_year;
@@ -619,7 +619,7 @@ int ps2link_request_getstat(void *packet) {
           atime[3] = (unsigned char)loctime->tm_hour;
           atime[2] = (unsigned char)loctime->tm_min;
           atime[1] = (unsigned char)loctime->tm_sec;
-        
+
           // Convert the last modified time.
           loctime = localtime(&(stats.st_mtime));
           mtime[6] = (unsigned char)loctime->tm_year;
@@ -629,7 +629,7 @@ int ps2link_request_getstat(void *packet) {
           mtime[2] = (unsigned char)loctime->tm_min;
           mtime[1] = (unsigned char)loctime->tm_sec;
     }
-  
+
     return ps2link_response_getstat(ret, mode, 0, stats.st_size, ctime, atime, mtime, 0);
  }
 

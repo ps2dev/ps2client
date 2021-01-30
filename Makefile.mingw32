@@ -1,7 +1,6 @@
 
- GCC = i586-mingw32msvc-gcc -Wall
- INC = -I ../pthreads-win32
- LIB = -lwsock32 -lpthreadGC2 -L ../pthreads-win32
+ #CC = i686-w64-mingw32.static-gcc -Wall
+ LIB = -lwsock32 -lpthread
 
  ifeq "x$(PREFIX)" "x"
   PREFIX = $(PS2DEV)
@@ -19,22 +18,22 @@
  OFILES += obj/network.o
  obj/network.o: src/network.c src/network.h
 	@mkdir -p obj
-	$(GCC) $(INC) -c src/network.c -o obj/network.o
+	$(CC) $(INC) -c src/network.c -o obj/network.o
 
  OFILES += obj/ps2link.o
  obj/ps2link.o: src/ps2link.c src/ps2link.h
 	@mkdir -p obj
-	$(GCC) $(INC) -c src/ps2link.c -o obj/ps2link.o
+	$(CC) $(INC) -c src/ps2link.c -o obj/ps2link.o
 
  OFILES += obj/ps2netfs.o
  obj/ps2netfs.o: src/ps2netfs.c
 	@mkdir -p obj
-	$(GCC) $(INC) -c src/ps2netfs.c -o obj/ps2netfs.o
+	$(CC) $(INC) -c src/ps2netfs.c -o obj/ps2netfs.o
 
  OFILES += obj/utility.o
  obj/utility.o: src/utility.c src/utility.h
 	@mkdir -p obj
-	$(GCC) $(INC) -c src/utility.c -o obj/utility.o
+	$(CC) $(INC) -c src/utility.c -o obj/utility.o
 
  #####################
  ## CLIENT PROGRAMS ##
@@ -42,8 +41,8 @@
 
  bin/fsclient.exe: $(OFILES) src/fsclient.c
 	@mkdir -p bin
-	$(GCC) $(INC) $(OFILES) src/fsclient.c -o bin/fsclient.exe $(LIB)
+	$(CC) $(INC) $(OFILES) src/fsclient.c -o bin/fsclient.exe $(LIB)
 
  bin/ps2client.exe: $(OFILES) src/ps2client.c
 	@mkdir -p bin
-	$(GCC) $(INC) $(OFILES) src/ps2client.c -o bin/ps2client.exe $(LIB)
+	$(CC) $(INC) $(OFILES) src/ps2client.c -o bin/ps2client.exe $(LIB)

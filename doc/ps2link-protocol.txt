@@ -31,7 +31,7 @@
   tell it what to do. These are simple commands sent as single packets for
   executing programs, resetting ps2link or other things. This list may grow
   as time goes on and new functionality is added to ps2link.
-  
+
   ----------------------------
    0xBABE0201 (reset command)
   ----------------------------
