@@ -5,20 +5,28 @@
 
   CFLAGS = -std=gnu99 -Wall -pedantic -I/usr/include -I/usr/local/include
 
-  ifeq "x$(MSYSTEM)" "x"
+  ifneq "MINGW" "$(findstring MINGW,$(MSYSTEM))"
    LIBS = -lpthread
   else
-   LIBS = -lwsock32 -lpthreadGC2
+   LIBS = -lwsock32
   endif
 
   ifeq "x$(PREFIX)" "x"
    PREFIX = $(PS2DEV)
   endif
 
-  all: bin/fsclient bin/ps2client
+  ifeq "MINGW" "$(findstring MINGW,$(MSYSTEM))"
+   all:
+	$(MAKE) -f Makefile.mingw32 all
 
-  clean:
+   clean:
+	$(MAKE) -f Makefile.mingw32 clean
+  else
+   all: bin/fsclient bin/ps2client
+
+   clean:
 	rm -f obj/*.o bin/*client*
+  endif
 
   install: bin/fsclient bin/ps2client
 	strip bin/*client*
