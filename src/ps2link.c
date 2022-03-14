@@ -418,7 +418,7 @@
 
  }
 
- int ps2link_request_opendir(void *packet) { int loop0 = 0;
+ int ps2link_request_opendir(void *packet) {
   struct { unsigned int command; unsigned short length; int flags; char pathname[256]; } PACKED *request = packet;
   int result = -1;
   struct stat stats;
@@ -429,7 +429,7 @@
   if((stat(request->pathname, &stats) == 0) && (S_ISDIR(stats.st_mode)))
   {
       // Allocate an available directory descriptor.
-      for (loop0=0; loop0<10; loop0++) { if (ps2link_dd[loop0].dir == NULL) { result = loop0; break; } }
+      for (int loop0=0; loop0<10; loop0++) { if (ps2link_dd[loop0].dir == NULL) { result = loop0; break; } }
 
       // Perform the request.
       if (result != -1)
