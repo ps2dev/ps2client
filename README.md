@@ -33,7 +33,7 @@ Build command:
 ### BASIC CLIENT USAGE
 Basic usage:
 
-```
+```txt
 ps2client [-h hostname] [-t timeout] <command> [arguments]
 fsclient [-h hostname] <command> <arguments>
 ```
