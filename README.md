@@ -39,11 +39,11 @@ ps2client [-h hostname] [-t timeout] <command> [arguments]
 fsclient [-h hostname] <command> <arguments>
 ```
 
-**[-h hostname]**
+#### \[-h hostname\]
 
 The address of the remote ps2. This can be an IP or a hostname. If none is given, the environment variable `$PS2HOSTNAME` will be checked for a valid address. If this variable isn't set, a default of 192.168.0.10 will be used.
 
-**[-t timeout]**
+#### \[-t timeout\]
 
 An idle timeout period in seconds that the client will wait before exiting. This is useful to allow a script to continue after calling ps2client to send a command to ps2link or ps2netfs.
 
