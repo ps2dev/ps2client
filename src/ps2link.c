@@ -326,13 +326,13 @@
 
  int ps2link_request_read(void *packet) {
   struct { unsigned int number; unsigned short length; int fd; int size; } PACKED *request = packet;
-  int result = -1, size = -1; char buffer[65536], *bigbuffer;
+  int result = -1, size = -1; char buffer[65536];
 
   // If a big read is requested...
   if (ntohl(request->size) > sizeof(buffer)) {
 
    // Allocate the bigbuffer.
-   bigbuffer = malloc(ntohl(request->size));
+   char *bigbuffer = malloc(ntohl(request->size));
 
    // Perform the request.
    result = size = read(ntohl(request->fd), bigbuffer, ntohl(request->size));
@@ -367,13 +367,13 @@
 
  int ps2link_request_write(void *packet) {
   struct { unsigned int number; unsigned short length; int fd; int size; } PACKED *request = packet;
-  int result = -1; char buffer[65536], *bigbuffer;
+  int result = -1; char buffer[65536];
 
   // If a big write is requested...
   if (ntohl(request->size) > sizeof(buffer)) {
 
    // Allocate the bigbuffer.
-   bigbuffer = malloc(ntohl(request->size));
+   char *bigbuffer = malloc(ntohl(request->size));
 
    // Read the request data.
    network_receive_all(request_socket, bigbuffer, ntohl(request->size));
