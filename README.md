@@ -2,7 +2,6 @@
 
 ![CI](https://github.com/ps2dev/ps2client/workflows/CI/badge.svg)
 
-
 ## PS2CLIENT USAGE AND INFORMATION
 
 ### THE INTRODUCTION
