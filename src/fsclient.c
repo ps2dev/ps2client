@@ -212,12 +212,12 @@
 
  }
 
- int fsclient_devlist(void) { int result = 0;
+ int fsclient_devlist(void) {
   int loop0, devcount; char devlist[256], *temp = devlist;
 
   // Get the device listing.
   devcount = ps2netfs_command_devlist("", 0, devlist);
-  if (devcount < 0) { printf("Error: Get device listing failed. (%d)\n", result); return -1; }
+  if (devcount < 0) { printf("Error: Get device listing failed. (%d)\n", devcount); return -1; }
 
   // Output the display header.
   printf("\n [Active Devices]\n\n");
