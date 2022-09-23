@@ -1,9 +1,16 @@
+  DEBUG = 0
 
   ifndef CC
    CC = gcc
   endif
 
   CFLAGS = -std=gnu99 -Wall -pedantic -I/usr/include -I/usr/local/include
+
+  ifeq ($(DEBUG), 1)
+   CFLAGS += -O0 -g
+  else
+   CFLAGS += -O2
+  endif
 
   ifneq "MINGW" "$(findstring MINGW,$(MSYSTEM))"
    LIBS = -lpthread
