@@ -3,6 +3,7 @@ name: CI
 on:
   push:
   pull_request:
+  workflow_dispatch: {}
 
 jobs:
   build:
@@ -12,15 +13,26 @@ jobs:
         os: [
           [macos-latest, arm64],
           [macos-15-intel, x86_64],
-          [ubuntu-latest, x86_64]
+          [ubuntu-latest, x86_64],
+          [windows-latest, x86_64],
         ]
         
     steps:       
     - uses: actions/checkout@v4
 
+    - name: Install MSYS2 packages
+      if: matrix.os[0] == 'windows-latest'
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: MINGW32
+        install: |
+          base-devel mingw-w64-i686-gcc
+        update: true
+
     - name: Compile native versions
       run: |
-        make --debug
+        make -j $(getconf _NPROCESSORS_ONLN) clean 
+        make -j $(getconf _NPROCESSORS_ONLN) all
         
     - name: Get short SHA
       id: slug
@@ -44,7 +56,8 @@ jobs:
 
     - name: Compile windows version with cross-compilator
       run: |
-        make -f Makefile.mingw32 --trace
+        make -f Makefile.mingw32 -j $(getconf _NPROCESSORS_ONLN) clean 
+        make -f Makefile.mingw32 -j $(getconf _NPROCESSORS_ONLN) all
         
     - name: Get short SHA
       id: slug
