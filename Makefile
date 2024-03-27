@@ -12,17 +12,17 @@
    CFLAGS += -O2
   endif
 
-  ifneq "MINGW" "$(findstring MINGW,$(MSYSTEM))"
-   LIBS = -lpthread
-  else
+  ifeq ($(OS),Windows_NT)
    LIBS = -lwsock32
+  else
+   LIBS = -lpthread
   endif
 
   ifeq "x$(PREFIX)" "x"
    PREFIX = $(PS2DEV)
   endif
 
-  ifeq "MINGW" "$(findstring MINGW,$(MSYSTEM))"
+  ifeq ($(OS),Windows_NT)
    all:
 	$(MAKE) -f Makefile.mingw32 all
 

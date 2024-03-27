@@ -13,18 +13,17 @@
  // NETWORK FUNCTIONS //
  ///////////////////////
 
-#ifdef _WIN32
  int network_startup(void) {
+#ifdef _WIN32
   WSADATA wsaData;
 
   // Start up winsock.
   if (WSAStartup(MAKEWORD(2, 0), &wsaData) != 0) { return -1; }
 
+#endif
   // End function.
   return 0;
-
  }
-#endif
 
  int network_connect(char *hostname, int port, int type) { int sock = -1;
   struct sockaddr_in sockaddr;

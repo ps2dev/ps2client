@@ -13,6 +13,7 @@
 #else
  #include <windows.h>
  #define sleep(x) Sleep(x * 1000)
+ #define pause() while (1) { Sleep(600000); }
 #endif
 
  #include "network.h"
@@ -59,11 +60,7 @@
   command_socket = network_connect(hostname, 0x4712, SOCK_DGRAM);
 
   // Delay for a moment to let ps2link finish setup.
-#ifdef _WIN32
-  Sleep(1);
-#else
   sleep(1);
-#endif
 
   // End function.
   return 0;
@@ -78,8 +75,8 @@
   // If no timeout was given, timeout immediately.
   if (timeout == 0) { return 0; }
 
-  // If timeout was never, loop forever.
-  if (timeout < 0) { for (;;) { sleep(600); } }
+  // If timeout was never, wait forever.
+  if (timeout < 0) { pause(); }
 
   // Increment the timeout counter until timeout is reached.
   while (ps2link_counter++ < timeout) { sleep(1); };
@@ -90,7 +87,10 @@
  }
 
  int ps2link_disconnect(void) {
-
+  // Kill created threads.
+  pthread_cancel(request_thread_id);
+  pthread_cancel(console_thread_id);
+  
   // Disconnect from the command port.
   if (network_disconnect(command_socket) < 0) { return -1; }
 

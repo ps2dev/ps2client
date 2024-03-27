@@ -5,9 +5,7 @@
  #include <unistd.h>
  #include "utility.h"
  #include "ps2link.h"
-#ifdef _WIN32
  #include "network.h"
-#endif
 
  char hostname[256] = { "192.168.0.10" };
 
@@ -65,12 +63,8 @@
   // Check to make sure a command was actually supplied.
   if (argc < 0) { printf("Error: No command was supplied.\n"); print_usage(); return -1; }
 
-#ifdef _WIN32
-
-  // Startup network, under windows.
-  if (network_startup() < 0) { printf("Error: Could not start up winsock.\n"); return 1; }
-
-#endif
+  // Startup network.
+  if (network_startup() < 0) { printf("Error: Could not startup network.\n"); return 1; }
 
   // Connect to the ps2link server.
   if (ps2link_connect(hostname) < 0) { printf("Error: Could not connect to the ps2link server. (%s)\n", hostname); return -1; }
