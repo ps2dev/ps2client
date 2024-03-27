@@ -3,20 +3,35 @@ name: CI
 on:
   push:
   pull_request:
+  workflow_dispatch: {}
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.os[0] }}
     strategy:
       matrix:
-        os: [macos-latest, ubuntu-latest]
-        
-    steps:       
+        os: [[macos-latest, bash], [ubuntu-latest, bash], [windows-latest, msys2]]
+      fail-fast: false
+    defaults:
+      run:
+        shell: ${{ matrix.os[1] }} {0}
+
+    steps:
     - uses: actions/checkout@v4
+
+    - name: Install MSYS2 packages
+      if: matrix.os[0] == 'windows-latest'
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: MINGW32
+        install: |
+          base-devel mingw-w64-i686-gcc
+        update: true
 
     - name: Compile native versions
       run: |
-        make --debug
+        make -j $(getconf _NPROCESSORS_ONLN) clean 
+        make -j $(getconf _NPROCESSORS_ONLN) all
         
     - name: Get short SHA
       id: slug
@@ -24,11 +39,13 @@ jobs:
         echo "sha8=$(echo ${GITHUB_SHA} | cut -c1-8)" >> $GITHUB_OUTPUT
 
     - name: Create tar archive (keep executable bit)
-      run: tar -zcvf ps2client-${{ steps.slug.outputs.sha8 }}-${{matrix.os}}.tar.gz bin
+      run: tar -zcvf ps2client-${{ steps.slug.outputs.sha8 }}-${{matrix.os[0]}}.tar.gz bin
         
-    - uses: actions/upload-artifact@v4
+    - name: Upload artefacts 
+      if: matrix.os[0] != 'windows-latest'
+      uses: actions/upload-artifact@v4
       with:
-        name: ps2client-${{ steps.slug.outputs.sha8 }}-${{matrix.os}}
+        name: ps2client-${{ steps.slug.outputs.sha8 }}-${{matrix.os[0]}}
         path: |
           *tar.gz
           
@@ -41,11 +58,13 @@ jobs:
 
     - name: Compile windows version with cross-compilator
       run: |
-        make -f Makefile.mingw32 --trace
+        make -f Makefile.mingw32 -j $(getconf _NPROCESSORS_ONLN) clean 
+        make -f Makefile.mingw32 -j $(getconf _NPROCESSORS_ONLN) all
         
     - name: Get short SHA
       id: slug
-      run: echo "::set-output name=sha8::$(echo ${GITHUB_SHA} | cut -c1-8)"
+      run: |
+        echo "sha8=$(echo ${GITHUB_SHA} | cut -c1-8)" >> $GITHUB_OUTPUT
 
     - name: Create tar archive
       run: tar -zcvf ps2client-${{ steps.slug.outputs.sha8 }}-windows-latest.tar.gz bin
