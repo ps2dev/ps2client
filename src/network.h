@@ -12,9 +12,7 @@
  // NETWORK FUNCTIONS //
  ///////////////////////
 
-#ifdef _WIN32
  int network_startup(void);
-#endif
 
  int network_connect(char *hostname, int port, int type);
 

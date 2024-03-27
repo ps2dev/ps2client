@@ -56,12 +56,8 @@
   // Check to make sure a command was actually supplied.
   if (argc < 0) { printf("Error: No command was supplied.\n"); print_usage(); return -1; }
 
-#ifdef _WIN32
-
-  // Startup network, under windows.
-  if (network_startup() < 0) { printf("Error: Could not start up winsock.\n"); return 1; }
-
-#endif
+  // Startup network
+  if (network_startup() < 0) { printf("Error: Could not startup network.\n"); return 1; }
 
   // Connect to the ps2netfs server.
   if (ps2netfs_connect(hostname) < 0) { printf("Error: Could not connect to the ps2netfs server. (%s)\n", hostname); return -1; }
