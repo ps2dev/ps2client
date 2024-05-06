@@ -12,8 +12,7 @@ jobs:
         os: [
           [macos-latest, arm64],
           [macos-13, x86_64],
-          [ubuntu-latest, x86_64],
-          [windows-latest, x86_64]
+          [ubuntu-latest, x86_64]
         ]
         
     steps:       
