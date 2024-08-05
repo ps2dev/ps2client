@@ -2,6 +2,12 @@
 
 ![CI](https://github.com/ps2dev/ps2client/workflows/CI/badge.svg)
 
+## **ATTENTION**
+
+If you are confused on how to start developing for PS2, see the
+[getting started](https://ps2dev.github.io/#getting-started) section on
+the ps2dev main page.  
+
 ## PS2CLIENT USAGE AND INFORMATION
 
 ### THE INTRODUCTION
@@ -106,3 +112,8 @@ I really don't know! OH NOES!!
 *   `listen`
 
 Listen to the ps2link network console.
+
+## Community
+
+Links for discussion and chat are available
+[here](https://ps2dev.github.io/#community).  
