@@ -11,7 +11,7 @@ jobs:
       matrix:
         os: [
           [macos-latest, arm64],
-          [macos-13, x86_64],
+          [macos-15-intel, x86_64],
           [ubuntu-latest, x86_64]
         ]
         
@@ -24,7 +24,7 @@ jobs:
         
     - name: Get short SHA
       id: slug
-      run: echo "::set-output name=sha8::$(echo ${GITHUB_SHA} | cut -c1-8)"
+      run: printf '%s\n' "sha8=$(printf '%s\n' ${GITHUB_SHA} | cut -c1-8)" >> $GITHUB_OUTPUT
 
     - name: Create tar archive (keep executable bit)
       run: tar -zcvf ps2client-${{ steps.slug.outputs.sha8 }}-${{ matrix.os[0] }}-${{ matrix.os[1] }}.tar.gz bin
@@ -48,7 +48,7 @@ jobs:
         
     - name: Get short SHA
       id: slug
-      run: echo "::set-output name=sha8::$(echo ${GITHUB_SHA} | cut -c1-8)"
+      run: printf '%s\n' "sha8=$(printf '%s\n' ${GITHUB_SHA} | cut -c1-8)" >> $GITHUB_OUTPUT
 
     - name: Create tar archive
       run: tar -zcvf ps2client-${{ steps.slug.outputs.sha8 }}-windows-latest-x86_64.tar.gz bin
@@ -68,12 +68,12 @@ jobs:
     
     - name: Get short SHA
       id: slug
-      run: echo "::set-output name=sha8::$(echo ${GITHUB_SHA} | cut -c1-8)"
+      run: printf '%s\n' "sha8=$(printf '%s\n' ${GITHUB_SHA} | cut -c1-8)" >> $GITHUB_OUTPUT
       
     - name: Download Mac x86_64 artifact
       uses: actions/download-artifact@v4
       with:
-        name: ps2client-${{ steps.slug.outputs.sha8 }}-macos-13-x86_64
+        name: ps2client-${{ steps.slug.outputs.sha8 }}-macos-15-intel-x86_64
 
     - name: Download Mac arm64 artifact
       uses: actions/download-artifact@v4
