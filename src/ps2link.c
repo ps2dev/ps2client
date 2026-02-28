@@ -10,6 +10,7 @@
  #include <pthread.h>
 #ifndef _WIN32
  #include <netinet/in.h>
+ #include <netinet/tcp.h>
 #else
  #include <windows.h>
  #define sleep(x) Sleep(x * 1000)
@@ -51,6 +52,14 @@
 
   // Connect to the request port.
   request_socket = network_connect(hostname, 0x4711, SOCK_STREAM);
+
+  // Disable Nagle algorithm: without TCP_NODELAY, the two-part response
+  // (small header then data) interacts with PS2's delayed-ACK and causes
+  // ~200 ms stall per read() syscall, making fread() ~400x slower than read().
+  if (request_socket > 0) {
+    int one = 1;
+    setsockopt(request_socket, IPPROTO_TCP, TCP_NODELAY, &one, sizeof(one));
+  }
 
   // Create the request thread.
   if (request_socket > 0) { pthread_create(&request_thread_id, NULL, ps2link_thread_request, (void *)&request_thread_id); }
