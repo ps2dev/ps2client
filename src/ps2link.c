@@ -58,7 +58,7 @@
   // ~200 ms stall per read() syscall, making fread() ~400x slower than read().
   if (request_socket > 0) {
     int one = 1;
-    setsockopt(request_socket, IPPROTO_TCP, TCP_NODELAY, &one, sizeof(one));
+    setsockopt(request_socket, IPPROTO_TCP, TCP_NODELAY, (const char *)&one, sizeof(one));
   }
 
   // Create the request thread.
