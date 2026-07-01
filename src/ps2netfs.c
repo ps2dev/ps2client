@@ -337,6 +337,7 @@
   struct { unsigned int number; unsigned short length; int flags; char device[256]; } PACKED command;
   struct { unsigned int number; unsigned short length; int result; } PACKED response;
 
+  (void)flags;
   // Build the command packet.
   command.number = htonl(PS2NETFS_COMMAND_UMOUNT);
   command.length = htons(sizeof(command));
