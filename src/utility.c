@@ -33,7 +33,7 @@
 
  }
 
- int fix_pathname(char *pathname) { int loop0 = 0;
+ int fix_pathname(char *pathname) { unsigned int loop0 = 0;
 
   // If empty, set a pathname default.
   if (pathname[0] == 0) { strcpy(pathname, "."); }
