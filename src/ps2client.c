@@ -20,7 +20,7 @@
   for (loop0=0; env[loop0]; loop0++) {
 
    // A hostname has been specified...
-   if (strncmp(env[loop0], "PS2HOSTNAME", 11) == 0) { strncpy(hostname, &env[loop0][12], sizeof(hostname)); }
+   if (strncmp(env[loop0], "PS2HOSTNAME", 11) == 0) { snprintf(hostname, sizeof(hostname), "%s", &env[loop0][12]); }
 
   }
 
@@ -37,7 +37,7 @@
     if (argc == loop0) { printf("Error: No hostname was supplied the '-h' option.\n"); print_usage(); return -1; }
 
     // Set the hostname to the supplied value.
-    strncpy(hostname, argv[loop0], sizeof(hostname));
+    snprintf(hostname, sizeof(hostname), "%s", argv[loop0]);
 
    }
 
