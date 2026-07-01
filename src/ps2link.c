@@ -47,13 +47,13 @@
   console_socket = network_listen(0x4712, SOCK_DGRAM);
 
   // Create the console thread.
-  if (console_socket > 0) { pthread_create(&console_thread_id, NULL, ps2link_thread_console, (void *)&console_thread_id); }
+  if (console_socket > 0) { pthread_create(&console_thread_id, NULL, ps2link_thread_console, NULL); }
 
   // Connect to the request port.
   request_socket = network_connect(hostname, 0x4711, SOCK_STREAM);
 
   // Create the request thread.
-  if (request_socket > 0) { pthread_create(&request_thread_id, NULL, ps2link_thread_request, (void *)&request_thread_id); }
+  if (request_socket > 0) { pthread_create(&request_thread_id, NULL, ps2link_thread_request, NULL); }
 
   // Connect to the command port.
   command_socket = network_connect(hostname, 0x4712, SOCK_DGRAM);
@@ -813,11 +813,12 @@ int ps2link_response_getstat(int result, unsigned int mode, unsigned int attr, u
  // PS2LINK THREAD FUNCTIONS //
  //////////////////////////////
 
- void *ps2link_thread_console(void *thread_id) {
+ void *ps2link_thread_console(void *userdata) {
   char buffer[1024];
 
+  (void)userdata;
   // If the socket isn't open, this thread isn't needed.
-  if (console_socket < 0) { pthread_exit(thread_id); }
+  if (console_socket < 0) { return NULL; }
 
   // Loop forever...
   for (;;) {
@@ -844,11 +845,12 @@ int ps2link_response_getstat(int result, unsigned int mode, unsigned int attr, u
 
  }
 
- void *ps2link_thread_request(void *thread_id) {
+ void *ps2link_thread_request(void *userdata) {
   struct { unsigned int number; unsigned short length; char buffer[512]; } PACKED packet;
 
+  (void)userdata;
   // If the socket isn't open, this thread isn't needed.
-  if (request_socket < 0) { pthread_exit(thread_id); }
+  if (request_socket < 0) { return NULL; }
 
   // Loop forever...
   for (;;) {
