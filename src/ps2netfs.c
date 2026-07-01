@@ -159,7 +159,7 @@
   command.number = htonl(PS2NETFS_COMMAND_DELETE);
   command.length = htons(sizeof(command));
   command.flags  = htonl(flags);
-  if (pathname) { strncpy(command.pathname, pathname, 256); }
+  if (pathname) { snprintf(command.pathname, sizeof(command.pathname), "%s", pathname); }
 
   // Send the command packet.
   if (network_send(ps2netfs_socket, &command, sizeof(command)) < 0) { return -1; }
@@ -180,7 +180,7 @@
   command.number = htonl(PS2NETFS_COMMAND_MKDIR);
   command.length = htons(sizeof(command));
   command.flags  = htonl(flags);
-  if (pathname) { strncpy(command.pathname, pathname, 256); }
+  if (pathname) { snprintf(command.pathname, sizeof(command.pathname), "%s", pathname); }
 
   // Send the command packet.
   if (network_send(ps2netfs_socket, &command, sizeof(command)) < 0) { return -1; }
@@ -201,7 +201,7 @@
   command.number = htonl(PS2NETFS_COMMAND_RMDIR);
   command.length = htons(sizeof(command));
   command.flags  = htonl(flags);
-  if (pathname) { strncpy(command.pathname, pathname, 256); }
+  if (pathname) { snprintf(command.pathname, sizeof(command.pathname), "%s", pathname); }
 
   // Send the command packet.
   if (network_send(ps2netfs_socket, &command, sizeof(command)) < 0) { return -1; }
@@ -222,7 +222,7 @@
   command.number = htonl(PS2NETFS_COMMAND_DOPEN);
   command.length = htons(sizeof(command));
   command.flags  = htonl(flags);
-  if (pathname) { strncpy(command.pathname, pathname, 256); }
+  if (pathname) { snprintf(command.pathname, sizeof(command.pathname), "%s", pathname); }
 
   // Send the command packet.
   if (network_send(ps2netfs_socket, &command, sizeof(command)) < 0) { return -1; }
@@ -296,7 +296,7 @@
   command.number = htonl(PS2NETFS_COMMAND_SYNC);
   command.length = htons(sizeof(command));
   command.flags  = htonl(flags);
-  if (device) { strncpy(command.device, device, 256); }
+  if (device) { snprintf(command.device, sizeof(command.device), "%s", device); }
 
   // Send the command packet.
   if (network_send(ps2netfs_socket, &command, sizeof(command)) < 0) { return -1; }
@@ -318,9 +318,9 @@
   command.length = htons(sizeof(command));
   command.flags  = htonl(flags);
   command.argc   = htonl(argc);
-  if (device) { strncpy(command.device, device, 256); }
-  if (fsname) { strncpy(command.fsname, fsname, 256); }
-  if (argv)   { strncpy(command.argv, argv, 256); }
+  if (device) { snprintf(command.device, sizeof(command.device), "%s", device); }
+  if (fsname) { snprintf(command.fsname, sizeof(command.fsname), "%s", fsname); }
+  if (argv)   { snprintf(command.argv, sizeof(command.argv), "%s", argv); }
 
   // Send the command packet.
   if (network_send(ps2netfs_socket, &command, sizeof(command)) < 0) { return -1; }
@@ -340,7 +340,7 @@
   // Build the command packet.
   command.number = htonl(PS2NETFS_COMMAND_UMOUNT);
   command.length = htons(sizeof(command));
-  if (device) { strncpy(command.device, device, 256); }
+  if (device) { snprintf(command.device, sizeof(command.device), "%s", device); }
 
   // Send the command packet.
   if (network_send(ps2netfs_socket, &command, sizeof(command)) < 0) { return -1; }
@@ -375,7 +375,7 @@
   command.number = htonl(PS2NETFS_COMMAND_DEVLIST);
   command.length = htons(sizeof(command));
   command.flags  = htonl(flags);
-  if (pathname) { strncpy(command.pathname, pathname, 256); }
+  if (pathname) { snprintf(command.pathname, sizeof(command.pathname), "%s", pathname); }
 
   // Send the command packet.
   if (network_send(ps2netfs_socket, &command, sizeof(command)) < 0) { return -1; }

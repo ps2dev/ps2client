@@ -193,7 +193,7 @@
   command.length = htons(sizeof(command));
   command.offset = htonl(offset);
   command.size   = htonl(size);
-  if (pathname) { strncpy(command.pathname, pathname, 256); }
+  if (pathname) { snprintf(command.pathname, sizeof(command.pathname), "%s", pathname); }
 
   // Send the command packet.
   return network_send(command_socket, &command, sizeof(command));
@@ -233,7 +233,7 @@
   command.number = htonl(PS2LINK_COMMAND_DUMPREG);
   command.length = htons(sizeof(command));
   command.type   = htonl(type);
-  if (pathname) { strncpy(command.pathname, pathname, 256); }
+  if (pathname) { snprintf(command.pathname, sizeof(command.pathname), "%s", pathname); }
 
   // Send the command packet.
   return network_send(command_socket, &command, sizeof(command));
@@ -247,7 +247,7 @@
   command.number = htonl(PS2LINK_COMMAND_GSEXEC);
   command.length = htons(sizeof(command));
   command.size   = htonl(size);
-  if (pathname) { strncpy(command.pathname, pathname, 256); }
+  if (pathname) { snprintf(command.pathname, sizeof(command.pathname), "%s", pathname); }
 
   // Send the command packet.
   return network_send(command_socket, &command, sizeof(command));
@@ -262,7 +262,7 @@
   command.length = htons(sizeof(command));
   command.offset = htonl(offset);
   command.size   = htonl(size);
-  if (pathname) { strncpy(command.pathname, pathname, 256); }
+  if (pathname) { snprintf(command.pathname, sizeof(command.pathname), "%s", pathname); }
 
   // Send the command packet.
   return network_send(command_socket, &command, sizeof(command));
