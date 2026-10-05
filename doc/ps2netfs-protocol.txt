@@ -35,7 +35,7 @@
     request.number = htonl(0xBEEF8011);
     request.length = htons(sizeof(request));
     request.flags  = htonl(mode);
-    if (pathname) { strncpy(request.pathname, pathname, 256); }
+    if (pathname) { snprintf(request.pathname, sizeof(request.pathname), "%s", pathname); }
 
   -----------------------------
    0xBEEF8021 (close request)
@@ -131,7 +131,7 @@
     request.number = htonl(0xBEEF8071);
     request.length = htons(sizeof(request));
     request.flags  = htonl(flags);
-    if (pathname) { strncpy(request.pathname, pathname, 256); }
+    if (pathname) { snprintf(request.pathname, sizeof(request.pathname), "%s", pathname); }
 
   -----------------------------
    0xBEEF8081 (mkdir request)
@@ -148,7 +148,7 @@
     request.number = htonl(0xBEEF8081);
     request.length = htons(sizeof(request));
     request.flags  = htonl(flags);
-    if (pathname) { strncpy(request.pathname, pathname, 256); }
+    if (pathname) { snprintf(request.pathname, sizeof(request.pathname), "%s", pathname); }
 
   -----------------------------
    0xBEEF8091 (rmdir request)
@@ -165,7 +165,7 @@
     request.number = htonl(0xBEEF8091);
     request.length = htons(sizeof(request));
     request.flags  = htonl(flags);
-    if (pathname) { strncpy(request.pathname, pathname, 256); }
+    if (pathname) { snprintf(request.pathname, sizeof(request.pathname), "%s", pathname); }
 
   ------------------------------
    0xBEEF80A1 (dopen request)
@@ -182,7 +182,7 @@
     request.number = htonl(0xBEEF80A1);
     request.length = htons(sizeof(request));
     request.flags  = htonl(flags);
-    if (pathname) { strncpy(request.pathname, pathname, 256); }
+    if (pathname) { snprintf(request.pathname, sizeof(request.pathname), "%s", pathname); }
 
   ------------------------------
    0xBEEF80B1 (dclose request)
@@ -245,7 +245,7 @@
     request.number = htonl(0xBEEF8131);
     request.length = htons(sizeof(request));
     request.flags  = htonl(flags);
-    if (device) { strncpy(request.device, device, 256); }
+    if (device) { snprintf(request.device, sizeof(request.device), "%s", device); }
 
   -----------------------------
    0xBEEF8141 (mount request)
@@ -268,9 +268,9 @@
     request.length = htons(sizeof(request));
     request.flags  = htonl(flags);
     request.argc   = htonl(argc);
-    if (device) { strncpy(request.device, device, 256); }
-    if (fsname) { strncpy(request.fsname, fsname, 256); }
-    if (argv) { strncpy(request.argv, argv, 256); }
+    if (device) { snprintf(request.device, sizeof(request.device), "%s", device); }
+    if (fsname) { snprintf(request.fsname, sizeof(request.fsname), "%s", fsname); }
+    if (argv) { snprintf(request.argv, sizeof(request.argv), "%s", argv); }
 
   ------------------------------
    0xBEEF8151 (umount request)
@@ -287,7 +287,7 @@
     request.number = htonl(0xBEEF8151);
     request.length = htons(sizeof(request));
     request.flags  = htonl(flags);
-    if (device) { strncpy(request.device, device, 256); }
+    if (device) { snprintf(request.device, sizeof(request.device), "%s", device); }
 
   -------------------------------
    0xBEEF8F21 (devlist request)
@@ -304,4 +304,4 @@
     request.number = htonl(0xBEEF8F21);
     request.length = htons(sizeof(request));
     request.flags  = htonl(flags);
-    if (pathname) { strncpy(request.pathname, pathname, 256); }
+    if (pathname) { snprintf(request.pathname, sizeof(request.pathname), "%s", pathname); }
