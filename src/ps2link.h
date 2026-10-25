@@ -5,8 +5,30 @@
  // PS2LINK FUNCTIONS //
  ///////////////////////
 
- int ps2link_connect(char *hostname);
+ // Exit statuses of ps2client (sysexits.h values where one fits).
+ #define PS2CLIENT_EXIT_OK		0
+ #define PS2CLIENT_EXIT_USAGE		64
+ #define PS2CLIENT_EXIT_NOCONNECT	69	// ps2link is not answering
+ #define PS2CLIENT_EXIT_CONNLOST	74	// ps2link closed the connection
+ #define PS2CLIENT_EXIT_PORTBUSY	75	// the console port is in use
+ #define PS2CLIENT_EXIT_TIMEOUT		124	// idle timeout before the -e marker
 
+ // What ps2link_connect sets up.
+ #define PS2LINK_CONNECT_CONSOLE	1	// receive the console output
+ #define PS2LINK_CONNECT_REQUEST	2	// serve host: file requests
+
+ // Exit the main loop when a console line contains marker (NULL: never).
+ void ps2link_set_marker(char *marker);
+
+ // Returns 0, or PS2CLIENT_EXIT_PORTBUSY / PS2CLIENT_EXIT_NOCONNECT.
+ int ps2link_connect(char *hostname, int what, int timeout_ms);
+
+ // Wait until ps2link answers a command through its host: requests, which
+ // shows that the EE side, the IOP side and the request connection all work.
+ // Returns the round trip time in ms, or -1 on timeout.
+ int ps2link_handshake(int timeout_ms);
+
+ // Returns the exit status for ps2client.
  int ps2link_mainloop(int timeout);
 
  int ps2link_disconnect(void);
@@ -31,6 +53,7 @@
 
  int ps2link_command_reset(void);
 
+ // Returns -1 if the arguments do not fit in the command packet.
  int ps2link_command_execiop(int argc, char **argv);
 
  int ps2link_command_execee(int argc, char **argv);
@@ -93,6 +116,8 @@
  int ps2link_request_mkdir(void *packet);
 
  int ps2link_request_rmdir(void *packet);
+
+ int ps2link_request_getstat(void *packet);
 
  ////////////////////////////////
  // PS2LINK RESPONSE FUNCTIONS //
