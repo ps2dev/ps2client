@@ -5,6 +5,7 @@
  #include <sys/socket.h>
  #include <sys/time.h>
  #include <netinet/in.h>
+ #include <netinet/tcp.h>
 #endif
 
  #include "network.h"
@@ -35,6 +36,15 @@
 
   // Open the socket.
   sock = socket(AF_INET, type, 0); if (sock < 0) { return -1; }
+
+  // Disable Nagle on the request channel: ps2link's fileio is a synchronous
+  // sequence of small request/response exchanges, and Nagle on this side
+  // colliding with the PS2's delayed ACKs stalls every exchange ~200ms
+  // (observed ~4 KB/s file serving; with TCP_NODELAY it is wire-speed).
+  if (type == SOCK_STREAM) {
+   int nodelay = 1;
+   setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (void *)&nodelay, sizeof(nodelay));
+  }
 
   // Connect the socket.
   if (connect(sock, (struct sockaddr *)&sockaddr, sizeof(struct sockaddr)) < 0) { return -2; }
