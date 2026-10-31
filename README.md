@@ -173,11 +173,11 @@ before they send the command, instead of waiting a fixed time.
 
 ### TESTS
 
-`make check` runs portable smoke tests (including invalid hostnames and the
-`console` command) on macOS and Linux without a PS2.
+`make check` builds and runs plain-C portable smoke tests (including invalid
+hostnames and the `console` command) on macOS and Linux without a PS2.
 
 `tests/run-tests.sh` runs the client against a fake ps2link
-(`tests/fake_ps2link.py`) in unprivileged Linux network namespaces, so no ps2
+(`tests/fake_ps2link.c`) in unprivileged Linux network namespaces, so no ps2
 is needed.
 
 ## Community

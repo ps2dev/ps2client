@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Test ps2client against tests/fake_ps2link.py (Linux only).
+# Test ps2client against tests/fake_ps2link.c (Linux only).
 #
 # ps2client and ps2link both use UDP port 0x4712, so the fake runs in its own
 # network namespace (10.0.0.2), linked by a veth pair to the client's
@@ -32,7 +32,7 @@ start_fake() {
     unshare -n sh -c '
         while ! ip link show veth1 >/dev/null 2>&1; do sleep 0.02; done
         ip link set lo up; ip addr add 10.0.0.2/24 dev veth1; ip link set veth1 up
-        exec python3 -I "$0" --bind 10.0.0.2 "$@"' "$HERE/fake_ps2link.py" "$@" &
+        exec "$0" --bind 10.0.0.2 "$@"' "$HERE/../bin/fake_ps2link" "$@" &
     FAKE_PID=$!
     # Move the link only once the child has its own namespace.
     while [ "$(readlink /proc/$FAKE_PID/ns/net)" = "$(readlink /proc/self/ns/net)" ]; do sleep 0.01; done
@@ -141,7 +141,7 @@ expect "idle timeout waits" test "$MS" -ge 990
 head -c 300000 /dev/urandom > blob.bin
 printf 'readback blob.bin\nprint @@END@@ status=0\n' > readback.elf
 check "big host: read" 0 "${H[@]}" -t 10 -e @@END@@ execee host:readback.elf
-expect "readback size and crc" grep -q "^readback 300000 $(python3 -c 'import sys,zlib;print("%08x"%zlib.crc32(open(sys.argv[1],"rb").read()))' blob.bin)$" out.txt
+expect "readback size and crc" grep -q "^readback 300000 $("$HERE/../bin/crc32" blob.bin)$" out.txt
 
 # --- second client
 "$CLIENT" "${H[@]}" -t 5 listen > /dev/null 2>&1 &
