@@ -133,7 +133,14 @@ I really don't know! OH NOES!!
 
 *   `listen`
 
-Listen to the ps2link network console.
+Listen to the ps2link network console and serve `host:` file requests, as in
+previous releases. This requires a working ps2link connection.
+
+*   `console`
+
+Listen to UDP console logs without connecting to the PS2, opening the TCP
+request channel, or serving `host:` file requests. This also works while
+ps2link is temporarily unavailable.
 
 * `ping`
 
@@ -147,6 +154,9 @@ Commands that load host files (`execee`, `execiop`, ...) do the same check
 before they send the command, instead of waiting a fixed time.
 
 ### TESTS
+
+`make check` runs portable smoke tests (including invalid hostnames and the
+`console` command) on macOS and Linux without a PS2.
 
 `tests/run-tests.sh` runs the client against a fake ps2link
 (`tests/fake_ps2link.py`) in unprivileged Linux network namespaces, so no ps2

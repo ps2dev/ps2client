@@ -16,6 +16,7 @@
  // What ps2link_connect sets up.
  #define PS2LINK_CONNECT_CONSOLE	1	// receive the console output
  #define PS2LINK_CONNECT_REQUEST	2	// serve host: file requests
+ #define PS2LINK_CONNECT_COMMAND	4	// send commands to ps2link
 
  // Exit the main loop when a console line contains marker (NULL: never).
  void ps2link_set_marker(char *marker);

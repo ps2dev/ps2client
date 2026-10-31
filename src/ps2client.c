@@ -20,7 +20,7 @@
  // The commands: their minimum number of arguments, what they need from the
  // connection, and whether they wait for output afterwards.
  enum { CMD_RESET, CMD_EXECIOP, CMD_EXECEE, CMD_POWEROFF, CMD_SCRDUMP, CMD_NETDUMP, CMD_DUMPMEM, CMD_STARTVU,
-        CMD_STOPVU, CMD_DUMPREG, CMD_GSEXEC, CMD_WRITEMEM, CMD_IOPEXCEP, CMD_LISTEN, CMD_PING };
+        CMD_STOPVU, CMD_DUMPREG, CMD_GSEXEC, CMD_WRITEMEM, CMD_IOPEXCEP, CMD_LISTEN, CMD_PING, CMD_CONSOLE };
 
  #define NEEDS_HOST 1 // ps2link reads or writes host: files, so wait until it can
  #define NO_WAIT    2 // exit right after sending the command
@@ -41,6 +41,7 @@
   { "iopexcep", CMD_IOPEXCEP, 0, NO_WAIT    },
   { "listen",   CMD_LISTEN,   0, 0          },
   { "ping",     CMD_PING,     0, NEEDS_HOST },
+  { "console",  CMD_CONSOLE,  0, 0          },
  };
 
  // Register dump types, by name.
@@ -147,11 +148,12 @@
     break;
   }
 
-  // Commands that exit right away need neither the console nor the request
-  // connection. ping needs only the request connection.
+  // Commands that exit right away need neither console nor request service.
+  // Keep listen's existing host: service; console only receives UDP logs.
   if (commands[command].flags & NO_WAIT) { timeout = 0; }
-  if (commands[command].flags & NEEDS_HOST) { what |= PS2LINK_CONNECT_REQUEST; }
-  if (!(commands[command].flags & NO_WAIT) && commands[command].id != CMD_PING) { what |= PS2LINK_CONNECT_CONSOLE | PS2LINK_CONNECT_REQUEST; }
+  if (commands[command].id != CMD_CONSOLE) { what |= PS2LINK_CONNECT_COMMAND; }
+  if ((commands[command].flags & NEEDS_HOST) || commands[command].id == CMD_LISTEN) { what |= PS2LINK_CONNECT_REQUEST; }
+  if (!(commands[command].flags & NO_WAIT) && commands[command].id != CMD_PING) { what |= PS2LINK_CONNECT_CONSOLE; }
 
   // Startup network.
   if (network_startup() < 0) { fprintf(stderr, "Error: Could not startup network.\n"); return PS2CLIENT_EXIT_NOCONNECT; }
@@ -195,6 +197,7 @@
    case CMD_WRITEMEM: result = ps2link_command_writemem(number0, number1, argv[2]); break;
    case CMD_IOPEXCEP: result = ps2link_command_iopexcep();                      break;
    case CMD_LISTEN:   result = 0;                                               break;
+   case CMD_CONSOLE:  result = 0;                                               break;
   }
   if (result < 0) { fprintf(stderr, "Error: Could not send the command.\n"); ps2link_disconnect(); return PS2CLIENT_EXIT_NOCONNECT; }
 

@@ -40,6 +40,9 @@
 	@mkdir -p $(DESTDIR)$(PREFIX)/bin
 	cp bin/*client* $(DESTDIR)$(PREFIX)/bin
 
+  check: bin/ps2client
+	python3 tests/smoke.py bin/ps2client
+
  ####################
  ## CLIENT MODULES ##
  ####################
