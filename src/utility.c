@@ -136,6 +136,7 @@
   fprintf(stderr, "   writemem <offset> <size> <filename>\n");
   fprintf(stderr, "   iopexcep\n");
   fprintf(stderr, "   listen\n");
+  fprintf(stderr, "   console  (UDP-only logging without host: service)\n");
   fprintf(stderr, "   ping\n\n");
   fprintf(stderr, " Exit status: 0 ok, 64 usage error, 69 ps2link not answering, 74 ps2link closed\n");
   fprintf(stderr, " the connection, 75 console port in use (another ps2client running?), 124 timeout\n");

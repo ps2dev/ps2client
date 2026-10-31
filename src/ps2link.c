@@ -153,11 +153,13 @@
    setsockopt(request_socket, IPPROTO_TCP, TCP_NODELAY, (const char *)&one, sizeof(one));
   }
 
-  // Connect to the command port.
-  command_socket = network_connect(hostname, 0x4712, SOCK_DGRAM);
-  if (command_socket < 0) {
-   fprintf(stderr, "Error: Could not open the command port. (%s)\n", hostname);
-   return PS2CLIENT_EXIT_NOCONNECT;
+  // The console-only command does not need an outgoing command socket.
+  if (what & PS2LINK_CONNECT_COMMAND) {
+   command_socket = network_connect(hostname, 0x4712, SOCK_DGRAM);
+   if (command_socket < 0) {
+    fprintf(stderr, "Error: Could not open the command port. (%s)\n", hostname);
+    return PS2CLIENT_EXIT_NOCONNECT;
+   }
   }
 
   // Create the threads.
