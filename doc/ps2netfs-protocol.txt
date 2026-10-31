@@ -5,7 +5,8 @@
                        Current as of March 6th, 2004
                      ---------------------------------
 
-  Communication with ps2netfs takes place on TCP socket 0x4713. A connection is
+  Communication with ps2netfs takes place on TCP socket 0x4713 (18195).
+  This is a separate service from ps2link, not an FTP connection. A connection is
   opened then a request packet is sent. Soon afterwards, a response packet will
   be received and the connection closed. Through these simple request/response
   pairs more complex functions can be created to do things like copy files to
