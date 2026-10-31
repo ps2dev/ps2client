@@ -48,9 +48,10 @@
 	cp bin/ps2symbolize $(DESTDIR)$(PREFIX)/bin
   endif
 
-  check: bin/ps2client bin/smoke bin/fake_ps2link bin/crc32 bin/ps2symbolize bin/test_symbolize
+  check: bin/ps2client bin/fsclient bin/smoke bin/fake_ps2link bin/crc32 bin/ps2symbolize bin/test_symbolize bin/fsclient_smoke
 	bin/smoke $(CURDIR)/bin/ps2client
 	bin/test_symbolize
+	bin/fsclient_smoke $(CURDIR)/bin/fsclient
 
  ####################
  ## CLIENT MODULES ##
@@ -107,3 +108,7 @@
   bin/test_symbolize: tests/test_symbolize.c tools/ps2symbolize.c
 	@mkdir -p bin
 	$(CC) $(CFLAGS) $< -o $@
+
+  bin/fsclient_smoke: tests/fsclient_smoke.c
+	@mkdir -p bin
+	$(CC) $(CFLAGS) $< -o $@ -lpthread

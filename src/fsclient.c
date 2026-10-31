@@ -24,7 +24,7 @@
   for (loop0=0; env[loop0]; loop0++) {
 
    // A hostname has been specified...
-   if (strncmp(env[loop0], "PS2HOSTNAME", 11) == 0) { snprintf(hostname, sizeof(hostname), "%s", &env[loop0][12]); }
+   if (strncmp(env[loop0], "PS2HOSTNAME=", 12) == 0) { snprintf(hostname, sizeof(hostname), "%s", &env[loop0][12]); }
 
   }
 
@@ -55,6 +55,10 @@
 
   // Check to make sure a command was actually supplied.
   if (argc < 0) { printf("Error: No command was supplied.\n"); print_usage(); return -1; }
+  if ((strcmp(argv[-1], "copyfrom") == 0 || strcmp(argv[-1], "copyto") == 0) && argc < 2) {
+   fprintf(stderr, "Error: Copy commands need source and destination paths.\n");
+   return -1;
+  }
 
   // Startup network
   if (network_startup() < 0) { printf("Error: Could not startup network.\n"); return 1; }
@@ -89,112 +93,93 @@
  // FSCLIENT FUNCTIONS //
  ////////////////////////
 
- int fsclient_copyfrom(char *source, char *destination) { int result = 0;
-  int fd0, fd1, size, total = 0; char buffer[28000];
+ int fsclient_copyfrom(char *source, char *destination) {
+  int fd0 = -1, fd1 = -1, size, total = 0, status = -1;
+  char buffer[28000];
 
-  // Open the source file.
   fd0 = ps2netfs_command_open(source, OPEN_READ);
-  if (fd0 < 0) { printf("Error: Open source file failed. (%d)\n", fd0); return -1; }
+  if (fd0 < 0) { printf("Error: Open source file failed. (%d)\n", fd0); goto done; }
 
-  // Get the source file size.
-  size = ps2netfs_command_lseek(fd0, 0, LSEEK_END); ps2netfs_command_lseek(fd0, 0, LSEEK_SET);
-  if (size < 0) { printf("Error: Get source file size failed. (%d)\n", size); return -1; }
-
-  // Open the destination file.
-#if defined (__CYGWIN__) || defined (__MINGW32__)
-  fd1 = open(destination, O_RDWR | O_CREAT | O_BINARY, 0644);
-#else
-  fd1 = open(destination, O_RDWR | O_CREAT, 0644);
-#endif
-  if (fd1 < 1) { printf("Error: Open destination file failed. (%d)\n", fd1); return -1; }
-
-  // Output the display header.
-  printf("\n [%s --> %s]\n\n  Progress: ", source, destination);
-
-  // Repeat until the copy is finished.
-  while (total < size) { printf("#");
-
-   // Read the source data.
-   result = ps2netfs_command_read(fd0, buffer, sizeof(buffer));
-   if (result < 0) { printf("Error: Read source data failed. (%d)\n", result); return -1; }
-
-   // Write the destination data.
-   result = write(fd1, buffer, result);
-   if (result < 0) { printf("Error: Write destination data failed. (%d)\n", result); return -1; }
-
-   // Increment the counter.
-   total += result;
-
+  size = ps2netfs_command_lseek(fd0, 0, LSEEK_END);
+  if (size < 0 || ps2netfs_command_lseek(fd0, 0, LSEEK_SET) < 0) {
+   printf("Error: Get source file size failed.\n"); goto done;
   }
 
-  // Output the display footer.
-  printf("\n\n [%d Bytes Copied]\n\n", total);
+#if defined (__CYGWIN__) || defined (__MINGW32__)
+  fd1 = open(destination, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, 0644);
+#else
+  fd1 = open(destination, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+#endif
+  if (fd1 < 0) { printf("Error: Open destination file failed. (%d)\n", fd1); goto done; }
 
-  // Close the source file.
-  result = ps2netfs_command_close(fd0);
-  if (result < 0) { printf("Error: Close source file failed. (%d)\n", result); return -1; }
+  printf("\n [%s --> %s]\n\n  Progress: ", source, destination);
+  while (total < size) {
+   int count = size - total < (int)sizeof(buffer) ? size - total : sizeof(buffer);
+   int bytes = ps2netfs_command_read(fd0, buffer, count);
+   int sent = 0;
+   if (bytes <= 0 || bytes > count) {
+    printf("Error: Unexpected source read result. (%d)\n", bytes); goto done;
+   }
+   while (sent < bytes) {
+    int written = write(fd1, buffer + sent, bytes - sent);
+    if (written <= 0) { printf("Error: Local file write failed.\n"); goto done; }
+    sent += written;
+   }
+   total += bytes;
+   printf("#");
+  }
 
-  // Close the destination file.
-  result = close(fd1);
-  if (result < 0) { printf("Error: Close destination file failed. (%d)\n", result); return -1; }
-
-  // End function.
-  return 0;
-
+  status = 0;
+ done:
+  if (fd0 >= 0 && ps2netfs_command_close(fd0) < 0) { status = -1; }
+  if (fd1 >= 0 && close(fd1) < 0) { status = -1; }
+  if (status == 0) { printf("\n\n [%d Bytes Copied]\n\n", total); }
+  return status;
  }
 
- int fsclient_copyto(char *source, char *destination) { int result = 0;
-  int fd0, fd1, size, total = 0; char buffer[28000];
+ int fsclient_copyto(char *source, char *destination) {
+  int fd0 = -1, fd1 = -1, size, total = 0, status = -1;
+  char buffer[28000];
 
-  // Open the source file.
 #if defined (__CYGWIN__) || defined (__MINGW32__)
   fd0 = open(source, O_RDONLY | O_BINARY);
 #else
   fd0 = open(source, O_RDONLY);
 #endif
-  if (fd0 < 0) { printf("Error: Open source file failed. (%d)\n", fd0); return -1; }
+  if (fd0 < 0) { printf("Error: Open source file failed. (%d)\n", fd0); goto done; }
 
-  // Get the source file size.
-  size = lseek(fd0, 0, SEEK_END); lseek(fd0, 0, SEEK_SET);
-  if (size < 0) { printf("Error: Get source file size failed. (%d)\n", size); return -1; }
-
-  // Open the destination file.
-  fd1 = ps2netfs_command_open(destination, OPEN_WRITE | OPEN_CREATE);
-  if (fd0 < 1) { printf("Error: Open destination file failed. (%d)\n", fd1); return -1; }
-
-  // Output the display header.
-  printf("\n [%s --> %s]\n\n  Progress: ", source, destination);
-
-  // Repeat until the copy is finished.
-  while (total < size) { printf("#");
-
-   // Read the source data.
-   result = read(fd0, buffer, sizeof(buffer));
-   if (result < 0) { printf("Error: Read source data failed. (%d)\n", result); return -1; }
-
-   // Write the destination data.
-   result = ps2netfs_command_write(fd1, buffer, result);
-   if (result < 0) { printf("Error: Write destination data failed. (%d)\n", result); return -1; }
-
-   // Increment the counter.
-   total += result;
-
+  size = lseek(fd0, 0, SEEK_END);
+  if (size < 0 || lseek(fd0, 0, SEEK_SET) < 0) {
+   printf("Error: Get source file size failed.\n"); goto done;
   }
 
-  // Output the display footer.
-  printf("\n\n [%d Bytes Copied]\n\n", total);
+  fd1 = ps2netfs_command_open(destination, OPEN_WRITE | OPEN_CREATE | OPEN_TRUNCATE);
+  if (fd1 < 0) { printf("Error: Open destination file failed. (%d)\n", fd1); goto done; }
 
-  // Close the source file.
-  result = close(fd0);
-  if (result < 0) { printf("Error: Close source file failed. (%d)\n", result); return -1; }
+  printf("\n [%s --> %s]\n\n  Progress: ", source, destination);
+  while (total < size) {
+   int count = size - total < (int)sizeof(buffer) ? size - total : sizeof(buffer);
+   // Count never exceeds buffer capacity; the destination handles partial writes.
+   int bytes = read(fd0, buffer, count); // Flawfinder: ignore
+   int sent = 0;
+   if (bytes <= 0) { printf("Error: Local file read failed. (%d)\n", bytes); goto done; }
+   while (sent < bytes) {
+    int written = ps2netfs_command_write(fd1, buffer + sent, bytes - sent);
+    if (written <= 0 || written > bytes - sent) {
+     printf("Error: Remote file write failed. (%d)\n", written); goto done;
+    }
+    sent += written;
+   }
+   total += bytes;
+   printf("#");
+  }
 
-  // Close the destination file.
-  result = ps2netfs_command_close(fd1);
-  if (result < 0) { printf("Error: Close destination file failed. (%d)\n", result); return -1; }
-
-  // End function.
-  return 0;
-
+  status = 0;
+ done:
+  if (fd0 >= 0 && close(fd0) < 0) { status = -1; }
+  if (fd1 >= 0 && ps2netfs_command_close(fd1) < 0) { status = -1; }
+  if (status == 0) { printf("\n\n [%d Bytes Copied]\n\n", total); }
+  return status;
  }
 
  int fsclient_delete(char *pathname) { int result = 0;

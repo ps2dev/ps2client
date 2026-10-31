@@ -41,12 +41,16 @@
  int ps2netfs_command_open(char *pathname, int flags) {
   struct { unsigned int number; unsigned short length; int flags; char pathname[256]; } PACKED command;
   struct { unsigned int number; unsigned short length; int result; } PACKED response;
+  int length;
 
   // Build the command packet.
+  if (pathname == NULL) { return -1; }
+  memset(&command, 0, sizeof(command));
   command.number = htonl(PS2NETFS_COMMAND_OPEN);
   command.length = htons(sizeof(command));
   command.flags  = htonl(flags);
-  if (pathname) { strcpy(command.pathname, pathname); }
+  length = snprintf(command.pathname, sizeof(command.pathname), "%s", pathname);
+  if (length < 0 || length >= (int)sizeof(command.pathname)) { return -1; }
 
   // Send the command packet.
   if (network_send(ps2netfs_socket, &command, sizeof(command)) < 0) { return -1; }
@@ -82,6 +86,9 @@
  int ps2netfs_command_read(int fd, void *buffer, int size) {
   struct { unsigned int number; unsigned short length; int fd, size; } PACKED  command;
   struct { unsigned int number; unsigned short length; int result, size; } PACKED response;
+  int received;
+
+  if (size < 0) { return -1; }
 
   // Build the command packet.
   command.number = htonl(PS2NETFS_COMMAND_READ);
@@ -96,10 +103,13 @@
   if (network_receive_all(ps2netfs_socket, &response, sizeof(response)) < 0) { return -1; }
 
   // Receive the response data.
-  if (network_receive_all(ps2netfs_socket, buffer, ntohl(response.result)) < 0) { return -1; }
+  received = ntohl(response.result);
+  if (received < 0) { return received; }
+  if (received > size) { return -1; }
+  if (network_receive_all(ps2netfs_socket, buffer, received) < 0) { return -1; }
 
   // End function.
-  return ntohl(response.result);
+  return received;
 
  }
 
