@@ -29,19 +29,28 @@
    clean:
 	$(MAKE) -f Makefile.mingw32 clean
   else
-   all: bin/fsclient bin/ps2client
+   all: bin/fsclient bin/ps2client bin/ps2symbolize
 
    clean:
-	rm -f obj/*.o bin/*client*
+	rm -f obj/*.o bin/*client* bin/ps2symbolize bin/test_symbolize
+  endif
+
+  ifneq ($(OS),Windows_NT)
+   install: bin/ps2symbolize
   endif
 
   install: bin/fsclient bin/ps2client
 	strip bin/*client*
 	@mkdir -p $(DESTDIR)$(PREFIX)/bin
 	cp bin/*client* $(DESTDIR)$(PREFIX)/bin
+  ifneq ($(OS),Windows_NT)
+	strip bin/ps2symbolize
+	cp bin/ps2symbolize $(DESTDIR)$(PREFIX)/bin
+  endif
 
-  check: bin/ps2client bin/smoke bin/fake_ps2link bin/crc32
+  check: bin/ps2client bin/smoke bin/fake_ps2link bin/crc32 bin/ps2symbolize bin/test_symbolize
 	bin/smoke $(CURDIR)/bin/ps2client
+	bin/test_symbolize
 
  ####################
  ## CLIENT MODULES ##
@@ -88,5 +97,13 @@
 	$(CC) $(CFLAGS) $< -o $@ -lpthread
 
   bin/crc32: tests/crc32.c
+	@mkdir -p bin
+	$(CC) $(CFLAGS) $< -o $@
+
+  bin/ps2symbolize: tools/ps2symbolize.c
+	@mkdir -p bin
+	$(CC) $(CFLAGS) $< -o $@
+
+  bin/test_symbolize: tests/test_symbolize.c tools/ps2symbolize.c
 	@mkdir -p bin
 	$(CC) $(CFLAGS) $< -o $@

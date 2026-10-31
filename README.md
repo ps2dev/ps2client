@@ -171,6 +171,25 @@ old one: do not ping while another client is serving a running program.
 Commands that load host files (`execee`, `execiop`, ...) do the same check
 before they send the command, instead of waiting a fixed time.
 
+### SYMBOLIZING EXCEPTION LOGS
+
+The optional `bin/ps2symbolize` annotates ps2link's EE/IOP exception logs
+with function names and source locations from matching **unstripped** ELF files.
+It does not change ps2link or require a new wire protocol. For example:
+
+```sh
+ps2client console | bin/ps2symbolize --ee game.elf
+bin/ps2symbolize --ee game.elf crash.log
+bin/ps2symbolize --iop mydriver=driver.elf crash.log
+```
+
+The C tool uses the PS2DEV `mips64r5900el-ps2-elf-addr2line` and
+`mipsel-none-elf-addr2line` tools found on `PATH`; override them with
+`--ee-tool` or `--iop-tool`. For IOP modules, the file must have debug symbols
+and the logged **relative EPC** must match its ELF section addresses. Keep the
+ELFs from the exact build being debugged. Unresolved locations are left as
+original log text.
+
 ### TESTS
 
 `make check` builds and runs plain-C portable smoke tests (including invalid
