@@ -5,17 +5,19 @@
                        Current as of: ps2link v1.22
                      --------------------------------
 
-  Communication with ps2link takes place on three ports. I'm not entirely
-  sure why, but it does. One udp port is used to send commands to ps2link
-  in the form of command packets. A tcp port is used to receive requests
-  and send responses during program runtime. And another udp port is used
-  to receive log text from ps2link for debug or informational purposes.
+  Communication with ps2link uses three socket channels, but only two
+  distinct port numbers. The UDP command socket on the PS2 receives
+  commands, the TCP request connection carries host: file operations, and
+  UDP console output is sent back from the PS2 to the host computer.
 
    PS2LINK PORT NUMBERS
 
-    Command (UDP) 0x4712 - One way communication to send commands.
-    Request (TCP) 0x4711 - Two way communication to serve requests.
-    Log (UDP)     0x4712 - One way communication to receive log text.
+    Command (UDP) 0x4712 (18194) - Host -> PS2, send commands.
+    Request (TCP) 0x4711 (18193) - Host -> PS2, bidirectional host: requests.
+    Log (UDP)     0x4712 (18194) - PS2 -> Host, receive console text.
+
+  The command and log channels use the same UDP port number on different
+  devices. Receiving UDP logs does not require the TCP host: file service.
 
   Typical operation is to send a command, then enter a loop that waits for
   requests and log text from ps2link. If at any time contact is lost with
