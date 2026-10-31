@@ -8,8 +8,11 @@
 
  all: bin/fsclient.exe bin/ps2client.exe
 
+ check: bin/ps2client.exe obj/smoke_windows.exe
+	obj/smoke_windows.exe
+
  clean:
-	rm -f obj/*.o bin/*client*
+	rm -f obj/*.o obj/smoke_windows.exe bin/*client*
 
  #################
  ## CLIENT LIBS ##
@@ -46,3 +49,7 @@
  bin/ps2client.exe: $(OFILES) src/ps2client.c
 	@mkdir -p bin
 	$(CC) $(INC) $(OFILES) src/ps2client.c -o bin/ps2client.exe $(LIB)
+
+ obj/smoke_windows.exe: tests/smoke_windows.c
+	@mkdir -p obj
+	$(CC) -Wall -Wextra $< -o $@ -lws2_32

@@ -199,6 +199,21 @@ hostnames and the `console` command) on macOS and Linux without a PS2.
 (`tests/fake_ps2link.c`) in unprivileged Linux network namespaces, so no ps2
 is needed.
 
+CI also runs the full Linux protocol suite in isolated network namespaces
+with `sudo unshare --net` on the GitHub-hosted runner. The job covers
+handshakes, host-file transfers, timeouts, disconnects and console packets
+against the native C fake server. On Windows, the native C smoke test runs
+through `make -f Makefile.mingw32 check`. Neither test needs Python.
+
+The Linux integration suite can be reproduced on a machine that supports
+network namespaces using:
+
+```sh
+make all bin/fake_ps2link bin/crc32
+sudo unshare --net -- env PS2CLIENT_TEST_NS=1 \
+  bash tests/run-tests.sh "$(pwd)/bin/ps2client"
+```
+
 ## Community
 
 Links for discussion and chat are available
