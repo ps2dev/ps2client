@@ -4,7 +4,7 @@
 import os
 import socket
 import struct
-import subprocess
+import subprocess  # nosec B404
 import sys
 import time
 import unittest
@@ -21,7 +21,9 @@ class SmokeTests(unittest.TestCase):
         cls.client = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else "bin/ps2client")
 
     def run_client(self, *args, env=None):
-        return subprocess.run(
+        # The test runner supplies a local executable and fixed argument lists;
+        # no shell is involved.
+        return subprocess.run(  # nosec B603
             [self.client, *args], capture_output=True, text=True, timeout=8, env=env
         )
 
@@ -40,7 +42,8 @@ class SmokeTests(unittest.TestCase):
     def test_console_without_ps2_or_resolvable_host(self):
         # console must bind the UDP console port without trying to resolve
         # the PS2 address or connect to the request/command channels.
-        proc = subprocess.Popen(
+        # The executable and command arguments are controlled by this test.
+        proc = subprocess.Popen(  # nosec B603
             [self.client, "-h", BAD_HOST, "-t", "1", "console"],
             stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
         )

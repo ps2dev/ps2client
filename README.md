@@ -136,7 +136,7 @@ I really don't know! OH NOES!!
 Listen to the ps2link network console and serve `host:` file requests, as in
 previous releases. This requires a working ps2link connection.
 
-*   `console`
+* `console`
 
 Listen to UDP console logs without connecting to the PS2, opening the TCP
 request channel, or serving `host:` file requests. This also works while
