@@ -70,16 +70,16 @@ These are the default ports used by `ps2client` and `fsclient`:
 | Purpose | Protocol | Port (decimal) | Direction |
 | --- | --- | --- | --- |
 | ps2link commands | UDP | 18194 (`0x4712`) | Host to PS2 |
-| ps2link host: file requests | TCP | 18193 (`0x4711`) | Host to PS2 (bidirectional connection) |
+| ps2link host: requests | TCP | 18193 (`0x4711`) | Host to PS2 |
 | ps2link console logs | UDP | 18194 (`0x4712`) | PS2 to host |
-| ps2netfs file operations | TCP | 18195 (`0x4713`) | Host to PS2 (bidirectional connection) |
+| ps2netfs file operations | TCP | 18195 (`0x4713`) | Host to PS2 |
 
 The command and console channels use the same UDP port number on different
 machines; they are not separate ports on the same device. `ps2netfs` is a
 separate service, not FTP. Commands such as `reset` use only the UDP command
 channel, while `ping`, `listen` and commands that access `host:` also use the
-TCP request connection.
-The console log channel is independent of the TCP host: file-serving service.
+TCP request connection. TCP connections are bidirectional, while the console
+log channel is independent of the TCP host: file-serving service.
 
 ### EXIT STATUS
 
