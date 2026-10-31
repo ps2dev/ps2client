@@ -89,6 +89,8 @@ check "missing arguments" 64 "${H[@]}" dumpmem 0x100000
 check "bad register type" 64 "${H[@]}" dumpreg eeregs x.bin
 check "-e without marker" 64 "${H[@]}" -e
 check "arguments too long" 64 "${H[@]}" execee host:x.elf "$(printf 'a%.0s' $(seq 300))"
+PS2HOSTNAME=1.1.l.1 check "invalid PS2HOSTNAME" 69 ping
+expect "invalid hostname has an error, not a crash" test -n "$ERR"
 
 start_fake
 
