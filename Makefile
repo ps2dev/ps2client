@@ -40,8 +40,8 @@
 	@mkdir -p $(DESTDIR)$(PREFIX)/bin
 	cp bin/*client* $(DESTDIR)$(PREFIX)/bin
 
-  check: bin/ps2client
-	python3 tests/smoke.py bin/ps2client
+  check: bin/ps2client bin/smoke bin/fake_ps2link bin/crc32
+	bin/smoke $(CURDIR)/bin/ps2client
 
  ####################
  ## CLIENT MODULES ##
@@ -78,3 +78,15 @@
   bin/ps2client: $(OFILES) src/ps2client.c
 	@mkdir -p bin
 	$(CC) $(CFLAGS) $(OFILES) src/ps2client.c -o bin/ps2client $(LIBS)
+
+  bin/smoke: tests/smoke.c
+	@mkdir -p bin
+	$(CC) $(CFLAGS) $< -o $@
+
+  bin/fake_ps2link: tests/fake_ps2link.c
+	@mkdir -p bin
+	$(CC) $(CFLAGS) $< -o $@ -lpthread
+
+  bin/crc32: tests/crc32.c
+	@mkdir -p bin
+	$(CC) $(CFLAGS) $< -o $@
