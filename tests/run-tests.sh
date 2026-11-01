@@ -143,6 +143,12 @@ printf 'readback blob.bin\nprint @@END@@ status=0\n' > readback.elf
 check "big host: read" 0 "${H[@]}" -t 10 -e @@END@@ execee host:readback.elf
 expect "readback size and crc" grep -q "^readback 300000 $("$HERE/../bin/crc32" blob.bin)$" out.txt
 
+# --- a host: file opened for reading and writing (PS2 flags 3) can be read,
+# and is not truncated
+printf 'rdwrback blob.bin\nprint @@END@@ status=0\n' > rdwr.elf
+check "host: read of a read-write file" 0 "${H[@]}" -t 10 -e @@END@@ execee host:rdwr.elf
+expect "read-write: size and crc" grep -q "^rdwrback 300000 $("$HERE/../bin/crc32" blob.bin)$" out.txt
+
 # --- second client
 "$CLIENT" "${H[@]}" -t 5 listen > /dev/null 2>&1 &
 LISTENER=$!
