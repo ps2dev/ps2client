@@ -17,9 +17,14 @@
 
  int fix_flags(int flags) { int result = 0;
 
-  // Fix the flags.
-  if (flags & 0x0001) { result |= O_RDONLY;           }
-  if (flags & 0x0002) { result |= O_WRONLY | O_TRUNC; } // FIXME: Truncate is needed for some programs.
+  // Fix the flags: the access mode is the low two bits (1 read, 2 write,
+  // 3 both). Read and write is O_RDWR, not O_RDONLY | O_WRONLY (which is
+  // O_WRONLY on most hosts, so reads fail).
+  switch (flags & 0x0003) {
+   case 0x0001: result |= O_RDONLY;           break;
+   case 0x0002: result |= O_WRONLY | O_TRUNC; break; // FIXME: Truncate is needed for some programs.
+   case 0x0003: result |= O_RDWR;             break;
+  }
 #ifndef _WIN32
   if (flags & 0x0010) { result |= O_NONBLOCK;         }
 #endif

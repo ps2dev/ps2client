@@ -129,12 +129,12 @@ static int fake_write(int fd, const unsigned char *data, int length)
     pthread_mutex_unlock(&fake.lock);
     return result;
 }
-static unsigned char *load_file(const char *path, size_t *length)
+static unsigned char *load_file(const char *path, int flags, size_t *length)
 {
     unsigned char *data = NULL;
     unsigned char chunk[128 * 1024];
     size_t allocated = 0;
-    int fd = fake_open(path, 1), n;
+    int fd = fake_open(path, flags), n;
     *length = 0;
     if (fd < 0) return NULL;
     while ((n = fake_read(fd, chunk, sizeof(chunk))) > 0) {
@@ -217,12 +217,15 @@ static void *run_script(void *context)
             }
             pthread_mutex_unlock(&fake.lock);
             break;
-        } else if (!strcmp(line, "readback")) {
+        } else if (!strcmp(line, "readback") || !strcmp(line, "rdwrback")) {
+            /* rdwrback: the same, the file opened for reading and writing
+             * (PS2 flags 3) */
+            int rdwr = !strcmp(line, "rdwrback");
             size_t length = 0;
-            unsigned char *data = load_file(arg, &length);
+            unsigned char *data = load_file(arg, rdwr ? 3 : 1, &length);
             if (data) {
                 char report[128];
-                snprintf(report, sizeof(report), "readback %zu %08x",
+                snprintf(report, sizeof(report), "%s %zu %08x", line,
                          length, crc32_bytes(data, length));
                 line_out(report);
                 free(data);
@@ -261,7 +264,7 @@ static void command_packet(unsigned char *packet, size_t length)
         args[255] = '\0';
         first = args;
         path = strncmp(first, "host:", 5) == 0 ? first + 5 : first;
-        script = load_file(path, &size);
+        script = load_file(path, 1, &size);
         if (!script) { line_out("fake: could not load script"); return; }
         offset = strnlen(first, sizeof(args)) + 1;
         for (i = 1; i < count && offset < 256; i++) {
