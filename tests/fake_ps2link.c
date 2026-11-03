@@ -15,6 +15,7 @@
 #include <unistd.h>
 #include <time.h>
 
+#define CMD_RESET 0xBABE0201u
 #define CMD_EXECEE 0xBABE0203u
 #define CMD_DUMPREG 0xBABE020Au
 #define REQ_OPEN 0xBABE0111u
@@ -27,9 +28,17 @@ struct fake {
     struct sockaddr_in client_addr;
     pthread_mutex_t lock;
     int ignore_dumpreg;
+    int reset_outage_ms;
+    long long unavailable_until_ms;
 };
 static struct fake fake = {.client = -1, .lock = PTHREAD_MUTEX_INITIALIZER};
 
+static long long now_ms(void)
+{
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return (long long)ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
+}
 static uint32_t get32(const unsigned char *p)
 {
     uint32_t n;
@@ -239,10 +248,22 @@ static void *run_script(void *context)
 static void command_packet(unsigned char *packet, size_t length)
 {
     uint32_t type;
-    if (length < 10) return;
+    if (length < 6) return;
     type = get32(packet);
-    if (type == CMD_DUMPREG && length >= 266) {
+    if (type == CMD_RESET && length == 6) {
+        if (fake.reset_outage_ms > 0) {
+            fake.unavailable_until_ms = now_ms() + fake.reset_outage_ms;
+            pthread_mutex_lock(&fake.lock);
+            if (fake.client >= 0) {
+                shutdown(fake.client, SHUT_RDWR);
+                close(fake.client);
+                fake.client = -1;
+            }
+            pthread_mutex_unlock(&fake.lock);
+        }
+    } else if (type == CMD_DUMPREG && length >= 266) {
         int fd;
+        if (fake.unavailable_until_ms > now_ms()) return;
         if (fake.ignore_dumpreg > 0) { fake.ignore_dumpreg--; return; }
         fd = fake_open((char *)packet + 10, 0x0202);
         if (fd >= 0) {
@@ -303,9 +324,11 @@ int main(int argc, char **argv)
         if (!strcmp(argv[i], "--bind") && i + 1 < argc) ip = argv[++i];
         else if (!strcmp(argv[i], "--ignore-dumpreg") && i + 1 < argc)
             fake.ignore_dumpreg = atoi(argv[++i]);
+        else if (!strcmp(argv[i], "--reset-outage-ms") && i + 1 < argc)
+            fake.reset_outage_ms = atoi(argv[++i]);
         else { fprintf(stderr, "Unknown option: %s\n", argv[i]); return 2; }
     }
-    if (!ip) { fprintf(stderr, "Usage: fake_ps2link --bind IPV4 [--ignore-dumpreg N]\n"); return 2; }
+    if (!ip) { fprintf(stderr, "Usage: fake_ps2link --bind IPV4 [--ignore-dumpreg N] [--reset-outage-ms N]\n"); return 2; }
     fake.listener = bind_port(SOCK_STREAM, ip, 0x4711);
     fake.commands = bind_port(SOCK_DGRAM, ip, 0x4712);
     if (fake.listener < 0 || fake.commands < 0 || listen(fake.listener, 5) < 0) {

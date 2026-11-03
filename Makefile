@@ -72,6 +72,11 @@
 	@mkdir -p obj
 	$(CC) $(CFLAGS) -c src/ps2netfs.c -o obj/ps2netfs.o
 
+  OFILES += obj/resetcheck.o
+  obj/resetcheck.o: src/resetcheck.c src/resetcheck.h src/ps2link.h src/utility.h
+	@mkdir -p obj
+	$(CC) $(CFLAGS) -c src/resetcheck.c -o obj/resetcheck.o
+
   OFILES += obj/utility.o
   obj/utility.o: src/utility.c src/utility.h
 	@mkdir -p obj

@@ -118,6 +118,59 @@ static void test_reset(void)
           packet[4] == 0 && packet[5] == 6,
           "reset uses command UDP without TCP");
 }
+
+static void test_resetcheck_unreachable(void)
+{
+    struct sockaddr_in address = {0};
+    struct timeval timeout = {0, 250000};
+    unsigned char packet[32];
+    char output[1024];
+    char *const args[] = {(char *)client, "-h", "127.0.0.1",
+                          "-t", "1", "resetcheck", NULL};
+    int fd = socket(AF_INET, SOCK_DGRAM, 0), rc;
+    ssize_t n;
+    if (fd < 0) { check(0, "resetcheck UDP safety socket"); return; }
+    address.sin_family = AF_INET;
+    address.sin_port = htons(0x4712);
+    address.sin_addr.s_addr = htonl(0x7f000001u);
+    setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
+    if (bind(fd, (struct sockaddr *)&address, sizeof(address)) < 0) {
+        check(0, "resetcheck UDP safety bind");
+        close(fd);
+        return;
+    }
+    rc = run(args, NULL, output, sizeof(output));
+    n = recv(fd, packet, sizeof(packet), 0);
+    close(fd);
+    check(rc == 69 && n < 0 && strstr(output, "RESET was NOT sent"),
+          "resetcheck refuses to send RESET without a healthy EE handshake");
+}
+static void test_resetcheck_fake(int outage_ms, const char *timeout,
+                                 int expected, const char *message)
+{
+    char output[2048];
+    char *const args[] = {(char *)client, "-h", "127.0.0.1",
+                          "-t", (char *)timeout, "resetcheck", NULL};
+    pid_t server = fork();
+    int rc;
+    if (server < 0) { check(0, message); return; }
+    if (server == 0) {
+        char outage[24];
+        snprintf(outage, sizeof(outage), "%d", outage_ms);
+        execl("bin/fake_ps2link", "fake_ps2link", "--bind", "127.0.0.1",
+              "--reset-outage-ms", outage, (char *)NULL);
+        _exit(127);
+    }
+    pause_ms(300);
+    rc = run(args, NULL, output, sizeof(output));
+    kill(server, SIGTERM);
+    waitpid(server, NULL, 0);
+    check(rc == expected &&
+          (expected == 0 ? strstr(output, "recovery observed") != NULL :
+           strstr(output, "UNCONFIRMED") != NULL),
+          message);
+}
+
 int main(int argc, char **argv)
 {
     char text[4096];
@@ -138,5 +191,22 @@ int main(int argc, char **argv)
     check(rc == 69, "legacy listen requires host: service");
     test_console();
     test_reset();
+    { char output[1024];
+      char *const invalid_timeout[] = {(char *)client, "-t", "0",
+                                        "resetcheck", NULL};
+      char *const extra_argument[] = {(char *)client, "resetcheck",
+                                      "unexpected", NULL};
+      check(run(invalid_timeout, NULL, output, sizeof(output)) == 64,
+            "resetcheck rejects zero timeout");
+      check(run(extra_argument, NULL, output, sizeof(output)) == 64,
+            "resetcheck rejects extra arguments");
+    }
+    test_resetcheck_unreachable();
+    test_resetcheck_fake(1600, "6", 0,
+                         "resetcheck detects simulated loss and recovery");
+    test_resetcheck_fake(0, "2", 124,
+                         "resetcheck refuses to claim success without a loss");
+    test_resetcheck_fake(15000, "2", 124,
+                         "resetcheck reports a failed recovery");
     return failures ? 1 : 0;
 }

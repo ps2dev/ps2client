@@ -127,6 +127,7 @@
   fprintf(stderr, "                number after 'status=' on that line (0 if there is none)\n\n");
   fprintf(stderr, " Available commands:\n\n");
   fprintf(stderr, "   reset\n");
+  fprintf(stderr, "   resetcheck  preflight EE ping, send RESET, observe loss and recovery (-t default 10)\n");
   fprintf(stderr, "   execiop <filename> [arguments]\n");
   fprintf(stderr, "   execee <filename> [arguments]\n");
   fprintf(stderr, "   poweroff\n");
