@@ -6,6 +6,7 @@
  #include "utility.h"
  #include "ps2link.h"
  #include "network.h"
+#include "resetcheck.h"
 
  char hostname[256] = { "192.168.0.10" };
 
@@ -19,7 +20,7 @@
 
  // The commands: their minimum number of arguments, what they need from the
  // connection, and whether they wait for output afterwards.
- enum { CMD_RESET, CMD_EXECIOP, CMD_EXECEE, CMD_POWEROFF, CMD_SCRDUMP, CMD_NETDUMP, CMD_DUMPMEM, CMD_STARTVU,
+ enum { CMD_RESET, CMD_RESETCHECK, CMD_EXECIOP, CMD_EXECEE, CMD_POWEROFF, CMD_SCRDUMP, CMD_NETDUMP, CMD_DUMPMEM, CMD_STARTVU,
         CMD_STOPVU, CMD_DUMPREG, CMD_GSEXEC, CMD_WRITEMEM, CMD_IOPEXCEP, CMD_LISTEN, CMD_PING, CMD_CONSOLE };
 
  #define NEEDS_HOST 1 // ps2link reads or writes host: files, so wait until it can
@@ -27,6 +28,7 @@
 
  struct { char *name; int id; int args; int flags; } commands[] = {
   { "reset",    CMD_RESET,    0, NO_WAIT    },
+  { "resetcheck", CMD_RESETCHECK, 0, NO_WAIT },
   { "execiop",  CMD_EXECIOP,  1, NEEDS_HOST },
   { "execee",   CMD_EXECEE,   1, NEEDS_HOST },
   { "poweroff", CMD_POWEROFF, 0, NO_WAIT    },
@@ -64,6 +66,7 @@
  }
 
  int main(int argc, char **argv, char **env) { int loop0 = 0, command = -1, result = 0, what = 0;
+  const char *executable = argv[0];
   unsigned int number0 = 0, number1 = 0;
 
   // Turn off stdout buffering.
@@ -146,6 +149,12 @@
    case CMD_STARTVU: case CMD_STOPVU: case CMD_GSEXEC:
     if (parse_number(argv[0], &number0) < 0) { fprintf(stderr, "Error: Bad number. (%s)\n", argv[0]); return PS2CLIENT_EXIT_USAGE; }
     break;
+  }
+
+  // Opt-in host-only reset observer; the legacy reset stays unchanged.
+  if (commands[command].id == CMD_RESETCHECK) {
+   if (argc != 0) { fprintf(stderr, "Error: resetcheck takes no arguments.\n"); return PS2CLIENT_EXIT_USAGE; }
+   return ps2client_resetcheck(executable, hostname, timeout < 0 ? 10 : timeout);
   }
 
   // Commands that exit right away need neither console nor request service.

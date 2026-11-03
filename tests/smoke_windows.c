@@ -117,6 +117,10 @@ int main(void)
     SetEnvironmentVariableA("PS2HOSTNAME", NULL);
     test_console();
     test_reset();
+    check(run("-h 1.1.l.1 -t 1 resetcheck") == 69,
+          "resetcheck refuses to send RESET to an unreachable PS2");
+    check(run("-h 127.0.0.1 -t 0 resetcheck") == 64,
+          "resetcheck rejects an invalid observation timeout");
 
     WSACleanup();
     return failures ? 1 : 0;

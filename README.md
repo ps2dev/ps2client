@@ -97,7 +97,35 @@ Error messages go to stderr; stdout carries only the console output of the ps2.
 
 *   `reset`
 
-Send a reset request to ps2link.
+Send an unacknowledged UDP reset request to ps2link. A zero exit code
+only means the host sent a packet; it does **not** prove that the EE
+processed the reset. In particular, a level-2 EE exception or wedged
+EE command thread can prevent PS2Link from restarting.
+
+* `resetcheck`
+
+An opt-in, host-only reset observer compatible with **existing PS2Link
+binaries** (no change to the PS2 required):
+
+```sh
+ps2client -h 192.168.31.10 -t 10 resetcheck
+```
+
+It first requires a successful EE/IOP `host:` handshake. If PS2Link is
+unreachable, **it sends no reset** and exits 69. Otherwise it sends
+one legacy UDP RESET packet, then looks for a loss and subsequent
+recovery of the `host:` round trip. Exit status 0 means that transition
+was observed, **not** that RESET was acknowledged. Exit status 124
+means the transition was not observed within the timeout (default
+10 seconds, valid range 1–120). A very quick reboot can be missed,
+and unrelated network loss/recovery can mimic a reboot; neither
+outcome proves whether the reset command executed. This command
+does not provide out-of-band recovery for an EE stuck in a hardware
+exception. Use a physical restart if the EE is wedged.
+
+Like `ping`, `resetcheck` temporarily takes over the single `host:`
+request connection. Do not run it alongside an active `ps2client`
+session servicing application files.
 
 *   `execiop <filename> [arguments]`
 
