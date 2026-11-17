@@ -171,6 +171,36 @@ static void test_resetcheck_fake(int outage_ms, const char *timeout,
           message);
 }
 
+static void test_health_fake(int max_replies, int expected,
+                             const char *message)
+{
+    char output[2048];
+    char *const args[] = {(char *)client, "-h", "127.0.0.1",
+                          "-t", "1", "health", NULL};
+    pid_t server = fork();
+    int rc;
+    if (server < 0) { check(0, message); return; }
+    if (server == 0) {
+        char replies[24];
+        snprintf(replies, sizeof(replies), "%d", max_replies);
+        execl("bin/fake_ps2link", "fake_ps2link", "--bind", "127.0.0.1",
+              "--max-dumpreg", replies, (char *)NULL);
+        _exit(127);
+    }
+    pause_ms(300);
+    rc = run(args, NULL, output, sizeof(output));
+    kill(server, SIGTERM);
+    waitpid(server, NULL, 0);
+    check(rc == expected &&
+          (max_replies == 2 ?
+           strstr(output, "round trip 2/2 OK") != NULL :
+           max_replies == 1 ?
+           (strstr(output, "round trip 1/2 OK") &&
+            strstr(output, "round trip 2/2 FAILED")) :
+           strstr(output, "round trip 1/2 FAILED") != NULL),
+          message);
+}
+
 int main(int argc, char **argv)
 {
     char text[4096];
@@ -208,5 +238,22 @@ int main(int argc, char **argv)
                          "resetcheck refuses to claim success without a loss");
     test_resetcheck_fake(15000, "2", 124,
                          "resetcheck reports a failed recovery");
+    { char output[1024];
+      char *const invalid_timeout[] = {(char *)client, "-t", "0",
+                                        "health", NULL};
+      char *const extra_argument[] = {(char *)client, "health",
+                                      "unexpected", NULL};
+      char *const unreachable[] = {(char *)client, "-h", "127.0.0.1",
+                                   "-t", "1", "health", NULL};
+      check(run(invalid_timeout, NULL, output, sizeof(output)) == 64,
+            "health rejects zero timeout");
+      check(run(extra_argument, NULL, output, sizeof(output)) == 64,
+            "health rejects extra arguments");
+      check(run(unreachable, NULL, output, sizeof(output)) == 69,
+            "health rejects missing PS2Link without side effects");
+    }
+    test_health_fake(2, 0, "health verifies two independent EE round trips");
+    test_health_fake(1, 69, "health fails if EE stops answering second probe");
+    test_health_fake(0, 69, "health fails when TCP responds but EE does not");
     return failures ? 1 : 0;
 }

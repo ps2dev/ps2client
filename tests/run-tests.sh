@@ -167,5 +167,11 @@ check "handshake retries" 0 "${H[@]}" -t 10 -e @@END@@ execee host:nostatus.elf
 expect "retried after 1 s" test "$MS" -ge 990
 stop_fake
 
+start_fake --max-dumpreg 1
+check "health needs two EE round trips" 69 "${H[@]}" -t 1 health
+expect "health reports first successful round trip" grep -q "round trip 1/2 OK" out.txt
+expect "health rejects missing second EE response" grep -q "round trip 2/2 FAILED" err.txt
+stop_fake
+
 echo "passed $PASS, failed $FAIL"
 [ "$FAIL" = 0 ]
