@@ -17,10 +17,12 @@
 
 /* Separate processes avoid changing ps2client's legacy network/thread state. */
 static int run_command(const char *executable, const char *hostname,
-                       const char *name, int quiet)
+                       const char *name, int timeout_seconds, int quiet)
 {
+    char timeout_text[16];
+    snprintf(timeout_text, sizeof(timeout_text), "%d", timeout_seconds);
     char *const args[] = {
-        (char *)executable, "-h", (char *)hostname, "-t", "1",
+        (char *)executable, "-h", (char *)hostname, "-t", timeout_text,
         (char *)name, NULL
     };
 #ifdef _WIN32
@@ -65,13 +67,13 @@ int ps2client_resetcheck(const char *executable, const char *hostname,
     }
 
     fprintf(stderr, "resetcheck: checking the EE/IOP round trip before RESET...\n");
-    if (run_command(executable, hostname, "ping", 1) != PS2CLIENT_EXIT_OK) {
+    if (run_command(executable, hostname, "ping", 1, 1) != PS2CLIENT_EXIT_OK) {
         fprintf(stderr, "resetcheck: PS2Link is not responding; RESET was NOT sent.\n");
         return PS2CLIENT_EXIT_NOCONNECT;
     }
 
     fprintf(stderr, "resetcheck: sending one legacy UDP RESET request...\n");
-    status = run_command(executable, hostname, "reset", 1);
+    status = run_command(executable, hostname, "reset", 1, 1);
     if (status != PS2CLIENT_EXIT_OK) {
         fprintf(stderr, "resetcheck: failed to send RESET (%d).\n", status);
         return PS2CLIENT_EXIT_NOCONNECT;
@@ -82,7 +84,7 @@ int ps2client_resetcheck(const char *executable, const char *hostname,
      * not proof that the reset command was processed. */
     deadline = time_ms() + (long long)timeout_seconds * 1000;
     while (time_ms() < deadline) {
-        status = run_command(executable, hostname, "ping", 1);
+        status = run_command(executable, hostname, "ping", 1, 1);
         if (status != PS2CLIENT_EXIT_OK) {
             if (!saw_outage) {
                 saw_outage = 1;
@@ -100,4 +102,34 @@ int ps2client_resetcheck(const char *executable, const char *hostname,
     else
         fprintf(stderr, "resetcheck: PS2Link did not recover; reset UNCONFIRMED.\n");
     return PS2CLIENT_EXIT_TIMEOUT;
+}
+
+/* Each child gets its own TCP host: session and sends a read-only EE
+ * DUMP_REG command. Merely answering ICMP or accepting IOP TCP does not
+ * satisfy either probe: the EE command thread must complete both. */
+int ps2client_health(const char *executable, const char *hostname,
+                     int timeout_seconds)
+{
+    int probe;
+
+    if (timeout_seconds < 1 || timeout_seconds > 120) {
+        fprintf(stderr, "health requires a -t timeout between 1 and 120 seconds.\n");
+        return PS2CLIENT_EXIT_USAGE;
+    }
+
+    for (probe = 1; probe <= 2; ++probe) {
+        long long start = time_ms();
+        int status = run_command(executable, hostname, "ping", timeout_seconds, 1);
+        if (status != PS2CLIENT_EXIT_OK) {
+            fprintf(stderr,
+                    "health: EE/IOP round trip %d/2 FAILED (status %d).\n",
+                    probe, status);
+            return PS2CLIENT_EXIT_NOCONNECT;
+        }
+        printf("health: EE/IOP round trip %d/2 OK (%lld ms).\n",
+               probe, time_ms() - start);
+    }
+    printf("health: PS2Link EE command and IOP host: services responded twice (%s).\n",
+           hostname);
+    return PS2CLIENT_EXIT_OK;
 }

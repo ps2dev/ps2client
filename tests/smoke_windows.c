@@ -121,6 +121,12 @@ int main(void)
           "resetcheck refuses to send RESET to an unreachable PS2");
     check(run("-h 127.0.0.1 -t 0 resetcheck") == 64,
           "resetcheck rejects an invalid observation timeout");
+    check(run("-h 1.1.l.1 -t 1 health") == 69,
+          "health rejects an unreachable PS2Link EE handler");
+    check(run("-t 0 health") == 64,
+          "health rejects an invalid probe timeout");
+    check(run("health unexpected") == 64,
+          "health rejects extra arguments");
 
     WSACleanup();
     return failures ? 1 : 0;

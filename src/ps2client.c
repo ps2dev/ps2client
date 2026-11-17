@@ -21,7 +21,7 @@
  // The commands: their minimum number of arguments, what they need from the
  // connection, and whether they wait for output afterwards.
  enum { CMD_RESET, CMD_RESETCHECK, CMD_EXECIOP, CMD_EXECEE, CMD_POWEROFF, CMD_SCRDUMP, CMD_NETDUMP, CMD_DUMPMEM, CMD_STARTVU,
-        CMD_STOPVU, CMD_DUMPREG, CMD_GSEXEC, CMD_WRITEMEM, CMD_IOPEXCEP, CMD_LISTEN, CMD_PING, CMD_CONSOLE };
+        CMD_STOPVU, CMD_DUMPREG, CMD_GSEXEC, CMD_WRITEMEM, CMD_IOPEXCEP, CMD_LISTEN, CMD_PING, CMD_HEALTH, CMD_CONSOLE };
 
  #define NEEDS_HOST 1 // ps2link reads or writes host: files, so wait until it can
  #define NO_WAIT    2 // exit right after sending the command
@@ -43,6 +43,7 @@
   { "iopexcep", CMD_IOPEXCEP, 0, NO_WAIT    },
   { "listen",   CMD_LISTEN,   0, 0          },
   { "ping",     CMD_PING,     0, NEEDS_HOST },
+  { "health",   CMD_HEALTH,   0, NO_WAIT    },
   { "console",  CMD_CONSOLE,  0, 0          },
  };
 
@@ -155,6 +156,10 @@
   if (commands[command].id == CMD_RESETCHECK) {
    if (argc != 0) { fprintf(stderr, "Error: resetcheck takes no arguments.\n"); return PS2CLIENT_EXIT_USAGE; }
    return ps2client_resetcheck(executable, hostname, timeout < 0 ? 10 : timeout);
+  }
+  if (commands[command].id == CMD_HEALTH) {
+   if (argc != 0 || marker != NULL) { fprintf(stderr, "Error: health takes no arguments or marker.\n"); return PS2CLIENT_EXIT_USAGE; }
+   return ps2client_health(executable, hostname, timeout < 0 ? 2 : timeout);
   }
 
   // Commands that exit right away need neither console nor request service.

@@ -128,6 +128,7 @@
   fprintf(stderr, " Available commands:\n\n");
   fprintf(stderr, "   reset\n");
   fprintf(stderr, "   resetcheck  preflight EE ping, send RESET, observe loss and recovery (-t default 10)\n");
+  fprintf(stderr, "   health      check two independent EE/IOP round trips (read-only, -t default 2 each)\n");
   fprintf(stderr, "   execiop <filename> [arguments]\n");
   fprintf(stderr, "   execee <filename> [arguments]\n");
   fprintf(stderr, "   poweroff\n");
@@ -143,7 +144,7 @@
   fprintf(stderr, "   iopexcep\n");
   fprintf(stderr, "   listen\n");
   fprintf(stderr, "   console  (UDP-only logging without host: service)\n");
-  fprintf(stderr, "   ping\n\n");
+  fprintf(stderr, "   ping        verify EE/IOP host: round trip (not ICMP)\n\n");
   fprintf(stderr, " Exit status: 0 ok, 64 usage error, 69 ps2link not answering, 74 ps2link closed\n");
   fprintf(stderr, " the connection, 75 console port in use (another ps2client running?), 124 timeout\n");
   fprintf(stderr, " before the -e marker. With -e: the status from the marker line.\n\n");

@@ -5,4 +5,8 @@
 int ps2client_resetcheck(const char *executable, const char *hostname,
                          int timeout_seconds);
 
+/* Read-only health check: two independent EE/IOP host: round trips. */
+int ps2client_health(const char *executable, const char *hostname,
+                     int timeout_seconds);
+
 #endif

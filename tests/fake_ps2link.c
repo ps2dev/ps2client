@@ -28,10 +28,14 @@ struct fake {
     struct sockaddr_in client_addr;
     pthread_mutex_t lock;
     int ignore_dumpreg;
+    int max_dumpreg;
+    int dumpreg_count;
     int reset_outage_ms;
     long long unavailable_until_ms;
 };
-static struct fake fake = {.client = -1, .lock = PTHREAD_MUTEX_INITIALIZER};
+static struct fake fake = {
+    .client = -1, .lock = PTHREAD_MUTEX_INITIALIZER, .max_dumpreg = -1
+};
 
 static long long now_ms(void)
 {
@@ -265,6 +269,8 @@ static void command_packet(unsigned char *packet, size_t length)
         int fd;
         if (fake.unavailable_until_ms > now_ms()) return;
         if (fake.ignore_dumpreg > 0) { fake.ignore_dumpreg--; return; }
+        if (fake.max_dumpreg >= 0 &&
+            fake.dumpreg_count++ >= fake.max_dumpreg) return;
         fd = fake_open((char *)packet + 10, 0x0202);
         if (fd >= 0) {
             unsigned char zeros[8] = {0};
@@ -324,11 +330,13 @@ int main(int argc, char **argv)
         if (!strcmp(argv[i], "--bind") && i + 1 < argc) ip = argv[++i];
         else if (!strcmp(argv[i], "--ignore-dumpreg") && i + 1 < argc)
             fake.ignore_dumpreg = atoi(argv[++i]);
+        else if (!strcmp(argv[i], "--max-dumpreg") && i + 1 < argc)
+            fake.max_dumpreg = atoi(argv[++i]);
         else if (!strcmp(argv[i], "--reset-outage-ms") && i + 1 < argc)
             fake.reset_outage_ms = atoi(argv[++i]);
         else { fprintf(stderr, "Unknown option: %s\n", argv[i]); return 2; }
     }
-    if (!ip) { fprintf(stderr, "Usage: fake_ps2link --bind IPV4 [--ignore-dumpreg N] [--reset-outage-ms N]\n"); return 2; }
+    if (!ip) { fprintf(stderr, "Usage: fake_ps2link --bind IPV4 [--ignore-dumpreg N] [--max-dumpreg N] [--reset-outage-ms N]\n"); return 2; }
     fake.listener = bind_port(SOCK_STREAM, ip, 0x4711);
     fake.commands = bind_port(SOCK_DGRAM, ip, 0x4712);
     if (fake.listener < 0 || fake.commands < 0 || listen(fake.listener, 5) < 0) {

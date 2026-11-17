@@ -95,6 +95,34 @@ Error messages go to stderr; stdout carries only the console output of the ps2.
 
 ### PS2LINK COMMANDS
 
+* `health`
+
+A read-only health check that performs two independent EE/IOP `host:`
+round trips, compatible with existing PS2Link binaries:
+
+```sh
+ps2client -h 192.168.31.10 -t 3 health
+```
+
+Each round trip sends a `DUMP_REG` request for two INTC registers to the
+EE command handler, then verifies that the PS2Link IOP file service
+completes the `host:` open, write and close cycle. The register data is
+discarded. Exit status 0 means both checks succeeded; status 69 means
+either check failed. `-t` specifies each probe's timeout in seconds
+(default 2, range 1–120).
+
+Unlike ordinary ICMP `ping`, this requires the EE command handler and
+IOP host-file service to be responsive. Existing `ps2client ping`
+already tests one such EE round trip; `health` explicitly tests two
+fresh connections and reports them separately. It does **not** prove
+that the debugged user thread is making progress, nor that every PS2Link
+service is healthy. Neither check resets, changes EE state, or launches
+an ELF.
+
+Like `ping`, `health` temporarily opens the single `host:` service
+connection. Do not run it concurrently with another `ps2client` session
+serving application files, since that connection can be displaced.
+
 *   `reset`
 
 Send an unacknowledged UDP reset request to ps2link. A zero exit code
